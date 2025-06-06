@@ -3,13 +3,13 @@
  * Plugin Name: Elaia
  * Plugin URI: https://ela-ia.com/
  * Description: Plugin WordPress pour utiliser Elaia
- * Version: 1.1
+ * Version: 1.1.1
  * Author: Elaia
  * Author URI: https://ela-ia.com/
  */
 
 if (!defined('ABSPATH')) exit;
-
+require_once plugin_dir_path( __FILE__ ) . 'elaia-update-checker.php';
 require_once plugin_dir_path(__FILE__) . 'elaia-logs.php';
 require_once plugin_dir_path(__FILE__) . 'elaia-updates.php';
 
@@ -85,7 +85,7 @@ function elaia_admin_page() {
     global $wpdb;
 
     $host = get_site_url();  // Récupère l'URL du site courant
-    $api_url = 'https://4961-45-84-137-51.ngrok-free.app/api/v1';  // L'URL de ton API Laravel
+    $api_url = 'https://app.ela-ia.com/api/v1';  // L'URL de ton API Laravel
 
     // Appel à l'API Laravel pour vérifier la synchronisation
     $response = wp_remote_get($api_url . '?key=' . urlencode($host));
