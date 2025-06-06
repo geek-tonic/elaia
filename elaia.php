@@ -11,6 +11,7 @@
 if (!defined('ABSPATH')) exit;
 
 require_once plugin_dir_path(__FILE__) . 'elaia-logs.php';
+require_once plugin_dir_path(__FILE__) . 'elaia-updates.php';
 
 add_action('plugins_loaded', function () {
     if (!elaia_is_log_table_created()) {
@@ -25,7 +26,7 @@ register_deactivation_hook(__FILE__, 'elaia_logger_uninstall');
 // Injecte le script dans le footer
 add_action('wp_footer', function() {
     echo '<!-- Elaia Chatbot -->';
-    echo '<script type="text/javascript" src="https://chatbot.ela-ia.com/chatbot-v1.js" defer></script>';
+    echo '<script type="text/javascript" src="https://chatbot.ela-ia.com/chatbot-v1.js?v=' . time() . '" defer></script>';
 });
 
 // Ajoute une page de présentation dans l'admin
@@ -82,8 +83,30 @@ function elaia_vider_le_cache() {
 
 function elaia_admin_page() {
     global $wpdb;
-    $table = $wpdb->prefix . 'elaia_logs';
 
+    $host = get_site_url();  // Récupère l'URL du site courant
+    $api_url = 'https://4961-45-84-137-51.ngrok-free.app/api/v1';  // L'URL de ton API Laravel
+
+    // Appel à l'API Laravel pour vérifier la synchronisation
+    $response = wp_remote_get($api_url . '?key=' . urlencode($host));
+    
+    if (is_wp_error($response)) {
+        $message = 'Erreur lors de la connexion avec Elaia. Veuillez réessayer.';
+        $status = 'error';
+    } else {
+        $response_body = wp_remote_retrieve_body($response);
+        $data = json_decode($response_body, true);
+
+        if (isset($data['error'])) {
+            $message = 'Le site n\'est pas encore synchronisé avec Elaia.';
+            $status = 'warning';
+        } else {
+            $message = 'Le site est déjà synchronisé avec Elaia.';
+            $status = 'success';
+        }
+    }
+
+    // Affichage de la page d'administration
     echo '<div class="wrap">';
     echo '<h1>Chatbot Elaia</h1>';
     echo '<p>Le script du chatbot est automatiquement injecté dans le footer de votre site.</p>';
@@ -92,111 +115,37 @@ function elaia_admin_page() {
 
     echo '<hr>';
 
-    // -- Statut de la table --
-    echo '<h2>Statut de la table de logs</h2>';
-    if (elaia_is_log_table_created()) {
-        echo '<p style="color: green;">✅ Table <code>elaia_logs</code> détectée.</p>';
+    // -- Synchronisation avec Elaia --
+    echo '<h2>Synchronisation avec Elaia</h2>';
+    if ($status == 'success') {
+        echo "<p><strong>✅ $message</strong></p>";
     } else {
-        echo '<p style="color: red;">❌ Table <code>elaia_logs</code> non trouvée.</p>';
-        echo '<form method="post"><input type="hidden" name="force_create_table" value="1">';
-        submit_button('Créer la table maintenant');
-        echo '</form>';
-    }
-
-    // -- Derniers logs --
-    if (elaia_is_log_table_created()) {
-        echo '<h3>Derniers logs enregistrés</h3>';
-        $logs = $wpdb->get_results("SELECT * FROM $table ORDER BY created_at DESC LIMIT 5", ARRAY_A);
-
-        if ($logs) {
-            echo '<table class="widefat"><thead><tr>
-                <th>Type</th><th>Message</th><th>Fichier</th><th>Ligne</th><th>Date</th>
-            </tr></thead><tbody>';
-            foreach ($logs as $log) {
-                echo '<tr>';
-                echo "<td>{$log['type']}</td>";
-                echo "<td>{$log['message']}</td>";
-                echo "<td>{$log['file']}</td>";
-                echo "<td>{$log['line']}</td>";
-                echo "<td>{$log['created_at']}</td>";
-                echo '</tr>';
-            }
-            echo '</tbody></table>';
-        } else {
-            echo '<p>Aucun log enregistré pour le moment.</p>';
-        }
-
-        // -- Statut du flush
-        echo '<h3>État du flush automatique</h3>';
-        $count = $wpdb->get_var("SELECT COUNT(*) FROM $table");
-        $next = wp_next_scheduled('elaia_flush_logs_event');
-
-        if (!$next) {
-            echo '<p style="color:red;">❌ Cron non planifié.</p>';
-        } else {
-            $remaining = $next - time();
-            $minutes = floor($remaining / 60);
-            $seconds = $remaining % 60;
-
-            echo "<p>🧮 Nombre de logs en base : <strong>$count</strong></p>";
-            echo "<p>⏳ Prochain vidage automatique dans <strong id='elaia-countdown'>$minutes min $seconds sec</strong></p>";
-
-            echo '<script>
-            (function(){
-                let secondsLeft = ' . intval($remaining) . ';
-                const countdownEl = document.getElementById("elaia-countdown");
-
-                function updateCountdown() {
-                    if (secondsLeft <= 0) {
-                        countdownEl.innerText = "En cours...";
-                        return;
-                    }
-                    const min = Math.floor(secondsLeft / 60);
-                    const sec = secondsLeft % 60;
-                    countdownEl.innerText = `${min} min ${sec < 10 ? "0" : ""}${sec} sec`;
-                    secondsLeft--;
-                }
-
-                updateCountdown();
-                setInterval(updateCountdown, 1000);
-            })();
-            </script>';
-        }
-
-        echo '<form method="post">
-            <input type="hidden" name="force_flush_now" value="1">';
-        submit_button('Forcer le flush maintenant');
+        echo "<p><strong>❌ $message</strong></p>";
+        echo '<form method="post"><input type="hidden" name="force_sync" value="1">';
+        submit_button('Synchroniser avec Elaia');
         echo '</form>';
     }
 
     echo '<hr>';
 
-    // -- Maintenance : vider le cache
-    echo '<h2>Maintenance</h2>';
-    echo '<p>Vous pouvez ici vider les caches du site si nécessaire.</p>';
-    echo '<form method="post"><input type="hidden" name="vider_cache" value="1">';
-    submit_button('Vider le cache du site');
-    echo '</form>';
+    // -- Actions POST pour la synchronisation --
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['force_sync'])) {
+        // Effectuer la synchronisation avec l'API Laravel
+        elaia_sync_with_elaia();  // Cette fonction devrait gérer la synchronisation réelle
+        echo '<div class="updated notice"><p>✅ Synchronisation réussie.</p></div>';
+    }
 
     echo '</div>';
 
+    // -- Flush --
+    echo '<h2>Flush des logs</h2>';
+    echo '<p>Vous pouvez ici forcer le vidage des logs.</p>';
+    echo '<form method="post"><input type="hidden" name="force_flush_now" value="1">';
+    submit_button('Forcer le flush maintenant');
+    echo '</form>';
+
     // -- Actions POST
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (isset($_POST['vider_cache'])) {
-            elaia_vider_le_cache();
-            echo '<div class="updated notice"><p>✅ Cache vidé.</p></div>';
-        }
-
-        if (isset($_POST['purge_logs'])) {
-            $wpdb->query("TRUNCATE TABLE $table");
-            echo '<div class="updated notice"><p>✅ Table des logs vidée.</p></div>';
-        }
-
-        if (isset($_POST['force_create_table'])) {
-            elaia_logger_install();
-            echo '<div class="updated notice"><p>✅ Table recréée (si manquante).</p></div>';
-        }
-
         if (isset($_POST['force_flush_now'])) {
             elaia_flush_logs();
             echo '<div class="updated notice"><p>✅ Flush manuel effectué.</p></div>';
@@ -204,4 +153,25 @@ function elaia_admin_page() {
     }
 }
 
+function elaia_sync_with_elaia() {
+    $host = get_site_url();  // URL du site
+    $api_url = 'https://ton-api.com/v1';  // L'URL de ton API Laravel
 
+    // Effectuer l'appel API pour lier le site avec Elaia
+    $response = wp_remote_get($api_url . '?key=' . urlencode($host));
+
+    if (is_wp_error($response)) {
+        echo '<div class="error notice"><p>Erreur lors de la synchronisation avec Elaia.</p></div>';
+    } else {
+        $response_body = wp_remote_retrieve_body($response);
+        $data = json_decode($response_body, true);
+
+        if (isset($data['error'])) {
+            echo '<div class="error notice"><p>Erreur : ' . $data['error'] . '</p></div>';
+        } else {
+            // Mise à jour de l'option de synchronisation ou autre action
+            update_option('elaia_last_sync_time', time());  // Enregistrer l'heure de la dernière synchronisation
+            echo '<div class="updated notice"><p>✅ Synchronisation réussie avec Elaia.</p></div>';
+        }
+    }
+}
