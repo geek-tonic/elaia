@@ -1,6 +1,15 @@
 # Changelog
 
 Toutes les modifications notables du plugin sont listées ici.
+## [1.1.1] - 2025-06-10
+### Ajouté
+- Possibilité de mettre à jour le plugin directement depuis l’interface WordPress
+
+### Modifié
+- Rien pour cette version
+
+### Supprimé
+- Rien pour cette version
 
 ## [1.1.0] - 2025-06-03
 ### Ajouté
