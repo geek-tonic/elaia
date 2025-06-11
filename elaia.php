@@ -155,7 +155,7 @@ function elaia_admin_page() {
 
 function elaia_sync_with_elaia() {
     $host = get_site_url();  // URL du site
-    $api_url = 'https://ton-api.com/v1';  // L'URL de ton API Laravel
+    $api_url = 'https://app.ela-ia.com/api/v1';  
 
     // Effectuer l'appel API pour lier le site avec Elaia
     $response = wp_remote_get($api_url . '?key=' . urlencode($host));
