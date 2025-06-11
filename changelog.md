@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.2] - 2025-06-17
+### Modifié
+- Changement de l’URL pour la synchronisation
+
+### Ajouté
+- Rien pour cette version
+
+### Supprimé
+- Rien pour cette version
+
+
 Toutes les modifications notables du plugin sont listées ici.
 ## [1.1.1] - 2025-06-10
 ### Ajouté
