@@ -3,7 +3,7 @@
  * Plugin Name: Elaia
  * Plugin URI: https://ela-ia.com/
  * Description: Plugin WordPress pour utiliser Elaia
- * Version: 1.1.1
+ * Version: 1.1.2
  * Author: Elaia
  * Author URI: https://ela-ia.com/
  */
