@@ -1,4 +1,13 @@
 # Changelog
+## [1.1.3] - 2025-06-24
+### Ajouté
+- Ajout d’un fichier README
+
+### Modifié
+- Rien pour cette version
+
+### Supprimé
+- Rien pour cette version
 
 ## [1.1.2] - 2025-06-17
 ### Modifié
