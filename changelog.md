@@ -1,4 +1,14 @@
 # Changelog
+## [1.1.4] - 2025-07-01
+### Ajouté
+- Ajout d’un système de vérification des mises à jour pour permettre la mise à jour automatique du plugin
+
+### Modifié
+- Rien pour cette version
+
+### Supprimé
+- Rien pour cette version
+
 ## [1.1.3] - 2025-06-24
 ### Ajouté
 - Ajout d’un fichier README

@@ -1,63 +1,117 @@
 <?php
 
-function elaia_check_for_updates($transient) {
-    // URL du fichier JSON contenant les informations de mise à jour
-    $update_info_url = 'https://raw.githubusercontent.com/geek-tonic/elaia/main/update-info.json';
+if ( ! class_exists( 'ElaiaUpdateChecker' ) ) {
 
-    // Récupérer les données du fichier JSON
-    $response = @file_get_contents($update_info_url);
+	class ElaiaUpdateChecker {
 
-    if ($response === false) {
-        error_log('Erreur lors de la récupération du fichier JSON depuis : ' . $update_info_url);
-        return $transient; // Retourner sans mise à jour si échec
-    }
+		private $plugin_slug;
+		private $version;
+		private $cache_key;
+		private $cache_allowed;
 
-    // Décoder la réponse JSON
-    $update_info = json_decode($response, true);
+		public function __construct() {
+			$this->plugin_slug    = 'elaia/elaia.php'; // doit correspondre au chemin relatif dans WP
+			$this->version        = '1.1.4'; // version actuelle
+			$this->cache_key      = 'elaia_update_info';
+			$this->cache_allowed  = false;
 
-    if (!$update_info) {
-        error_log('Erreur lors du décodage du fichier JSON ou données manquantes.');
-        return $transient; // Retourner sans mise à jour si échec
-    }
+			add_filter( 'plugins_api', array( $this, 'info' ), 20, 3 );
+			add_filter( 'site_transient_update_plugins', array( $this, 'update' ) );
+			add_action( 'upgrader_process_complete', array( $this, 'purge' ), 10, 2 );
+		}
 
-    // Assurer que les informations nécessaires sont présentes dans le fichier JSON
-    if (!isset($update_info['version']) || !isset($update_info['download_url'])) {
-        error_log('Fichier JSON mal formé, version ou download_url manquant.');
-        return $transient;
-    }
+		private function request() {
+			$remote = get_transient( $this->cache_key );
 
-    // Vérifier la version actuelle du plugin
-    $current_version = get_plugin_data(plugin_dir_path(__FILE__) . 'elaia.php')['Version'];
-    error_log('Version actuelle du plugin Elaia : ' . $current_version);
-    error_log('Version disponible dans le fichier JSON : ' . $update_info['version']);
+			if ( false === $remote || ! $this->cache_allowed ) {
+				$remote = wp_remote_get(
+					'https://ela-ia.com/wp-content/uploads/elaia/info.json',
+					array(
+						'timeout' => 10,
+						'headers' => array( 'Accept' => 'application/json' )
+					)
+				);
 
-    // Comparer la version actuelle avec la version disponible dans le fichier JSON
-    if (version_compare($update_info['version'], $current_version, '>')) {
-        // Créer un objet de mise à jour
-        $plugin_update = (object) [
-            'slug' => 'elaia',
-            'plugin' => 'elaia/elaia.php',
-            'new_version' => $update_info['version'],
-            'url' => $update_info['download_url'],
-            'package' => $update_info['download_url']
-        ];
+				if (
+					is_wp_error( $remote ) ||
+					200 !== wp_remote_retrieve_response_code( $remote ) ||
+					empty( wp_remote_retrieve_body( $remote ) )
+				) {
+					return false;
+				}
 
-        // Ajouter cette mise à jour à l'objet $transient
-        if (isset($transient->response)) {
-            $transient->response['elaia/elaia.php'] = $plugin_update;
-        } else {
-            $transient->response = ['elaia/elaia.php' => $plugin_update];
-        }
+				set_transient( $this->cache_key, $remote, DAY_IN_SECONDS );
+			}
 
-        // Log de la mise à jour ajoutée
-        error_log('Mise à jour détectée pour Elaia: Version ' . $update_info['version']);
-    } else {
-        // Si la version installée est la même ou plus récente
-        error_log('Aucune mise à jour disponible, version actuelle est plus récente ou identique.');
-    }
+			return json_decode( wp_remote_retrieve_body( $remote ) );
+		}
 
-    return $transient;
+		public function info( $res, $action, $args ) {
+			if ( 'plugin_information' !== $action ) {
+				return $res;
+			}
+
+			if ( $args->slug !== $this->plugin_slug && $args->slug !== dirname( $this->plugin_slug ) ) {
+				return $res;
+			}
+
+			$remote = $this->request();
+			if ( ! $remote ) return $res;
+
+			$res = new stdClass();
+			$res->name           = $remote->name;
+			$res->slug           = $this->plugin_slug;
+			$res->version        = $remote->version;
+			$res->tested         = $remote->tested;
+			$res->requires       = $remote->requires;
+			$res->requires_php   = $remote->requires_php;
+			$res->download_link  = $remote->download_url;
+			$res->trunk          = $remote->download_url;
+			$res->last_updated   = $remote->last_updated;
+			$res->sections       = (array) $remote->sections;
+
+			if ( ! empty( $remote->banners ) ) {
+				$res->banners = (array) $remote->banners;
+			}
+
+			return $res;
+		}
+
+		public function update( $transient ) {
+			if ( empty( $transient->checked ) ) {
+				return $transient;
+			}
+
+			$remote = $this->request();
+			if (
+				$remote &&
+				version_compare( $this->version, $remote->version, '<' ) &&
+				version_compare( $remote->requires, get_bloginfo( 'version' ), '<=' ) &&
+				version_compare( $remote->requires_php, PHP_VERSION, '<=' )
+			) {
+				$res = new stdClass();
+				$res->slug        = $this->plugin_slug;
+				$res->plugin      = $this->plugin_slug;
+				$res->new_version = $remote->version;
+				$res->tested      = $remote->tested;
+				$res->package     = $remote->download_url;
+
+				$transient->response[ $this->plugin_slug ] = $res;
+			}
+
+			return $transient;
+		}
+
+		public function purge( $upgrader, $options ) {
+			if (
+				$this->cache_allowed &&
+				$options['action'] === 'update' &&
+				$options['type'] === 'plugin'
+			) {
+				delete_transient( $this->cache_key );
+			}
+		}
+	}
+
+	new ElaiaUpdateChecker();
 }
-
-// Utiliser le filtre pour enregistrer la mise à jour dans WordPress
-add_filter('pre_set_site_transient_update_plugins', 'elaia_check_for_updates');
