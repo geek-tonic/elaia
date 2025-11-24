@@ -1,5 +1,7 @@
 <?php
 
+if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit;
+
 add_action('wp_enqueue_scripts', function () {
 
     // Langue courte (ex: "fr" depuis "fr-FR")
@@ -131,12 +133,10 @@ JS,
                         
                         if (prevState !== currentState) {
                             if (currentState) {
-                                console.log(`✅ Classe ajoutée au formulaire`);
                                 // Masquer le chatbot
                                 const chatbot = document.getElementById('elaia-chatbot-button');
                                 if (chatbot) chatbot.style.display = 'none';
                             } else {
-                                console.log(`❌ Classe supprimée du formulaire`);
                                 // Réafficher le chatbot  
                                 const chatbot = document.getElementById('elaia-chatbot-button');
                                 if (chatbot) chatbot.style.display = 'flex';

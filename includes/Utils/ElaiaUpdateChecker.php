@@ -2,6 +2,8 @@
 
 namespace Elaia\Utils;
 
+if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit;
+
 class ElaiaUpdateChecker
 {
 
@@ -13,7 +15,7 @@ class ElaiaUpdateChecker
   public function __construct()
   {
     $this->plugin_slug    = 'elaia/elaia.php'; // doit correspondre au chemin relatif dans WP
-    $this->version        = '1.1.17'; // version actuelle
+    $this->version        = '1.1.18'; // version actuelle
     $this->cache_key      = 'elaia_update_info';
     $this->cache_allowed  = false;
 
@@ -28,7 +30,7 @@ class ElaiaUpdateChecker
 
     if (false === $remote || ! $this->cache_allowed) {
       $remote = wp_remote_get(
-        'https://ressources.geek-tonic.dev/elaia/plugin_infos.json',
+        'https://ela-ia.com/wp-content/uploads/elaia/info.json',
         array(
           'timeout' => 10,
           'headers' => array('Accept' => 'application/json')

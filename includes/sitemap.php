@@ -1,14 +1,20 @@
 <?php
 
+if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit;
+
 /**********************************************
  * 
  * W O R D P R E S S   N A T I F
  * 
  **********************************************/
-add_filter('wp_sitemaps_add_provider', function ($providers) {
-  $providers['elaia-chatbot'] = new \Elaia\Utils\ElaiaChatbotSitemapProvider();
-  return $providers;
-});
+add_action('init', function () {
+    if (function_exists('wp_register_sitemap_provider')) {
+        wp_register_sitemap_provider(
+            'elaia',
+            new \Elaia\Utils\ElaiaChatbotSitemapProvider()
+        );
+    }
+}, 0);
 
 
 /**********************************************
@@ -93,3 +99,16 @@ add_filter('seopress_sitemaps_single', function ($urls, $type) {
 
   return $urls;
 }, 10, 2);
+
+
+/**********************************************
+ *
+ * A J O U T   A U   S I T E M A P   I N D E X
+ *
+ **********************************************/
+add_filter('wp_sitemaps_index', function ($sitemaps) {
+    $sitemaps['elaia'] = [
+        'loc' => home_url('wp-sitemap-elaia-1.xml'),
+    ];
+    return $sitemaps;
+});

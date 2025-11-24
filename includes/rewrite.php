@@ -1,5 +1,7 @@
 <?php
 
+if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit;
+
 // Register rewrite rules for Elaia Pages
 function elaia_register_rewrites()
 {
@@ -41,12 +43,14 @@ add_action('init', 'elaia_maybe_flush_rules', 99);
 // Gestion des pages spécifiques via l'action template_redirect
 add_action('template_redirect', function () {
   if (get_query_var(ELAIA_PAGE_FAQ_PARAM) == 1) {
-    include plugin_dir_path(__FILE__) . 'includes/Pages/Faq.php';
+    include ELAIA_PLUGIN_DIR . 'includes/Pages/Faq.php';
+    elaia_prepare_faq_payload();
     exit;
   }
 
   if (get_query_var(ELAIA_PAGE_METADATA_PARAM) == 1) {
-    include plugin_dir_path(__FILE__) . 'includes/Pages/Metadata.php';
+    include ELAIA_PLUGIN_DIR . 'includes/Pages/Metadata.php';
+    elaia_prepare_metadata_payload();
     exit;
   }
 });

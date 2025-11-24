@@ -1,6 +1,8 @@
 <?php
 
-namespace Elaia\Pages;
+namespace Elaia\Utils;
+
+if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit;
 
 class ElaiaPagesMethods
 {

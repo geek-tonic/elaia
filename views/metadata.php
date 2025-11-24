@@ -1,3 +1,4 @@
+<?php if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit; ?>
 <!doctype html>
 <html <?php language_attributes(); ?>>
 
