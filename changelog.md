@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.0] - 2025-11-24
+### Ajouté
+- N/A
+
+### Modifié
+- Soucis de déploiement automatisé
+
+### Supprimé
+- N/A
+
 ## [1.1.19] - 2025-11-24
 ### Ajouté
 - Gestion PHP7.4
