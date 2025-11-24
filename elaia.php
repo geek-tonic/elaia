@@ -4,7 +4,7 @@
  * Plugin Name: Elaia
  * Plugin URI: https://ela-ia.com/
  * Description: Intégration du chatbot Elaia en mode fenêtre overlay
- * Version: 1.1.18
+ * Version: 1.2.0
  * Author: Elaia
  * Author URI: https://ela-ia.com/
  * 
