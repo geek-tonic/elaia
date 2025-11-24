@@ -1,0 +1,64 @@
+name: "Release WP plugin"
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Extract version
+        id: version
+        run: |
+          echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Update plugin_infos.json
+        run: |
+          RELEASE_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          sed -i "s#%RELEASE_VERSION%#${{ steps.version.outputs.VERSION }}#g" plugin_infos.json
+          sed -i "s#%RELEASE_DATE%#${RELEASE_DATE}#g" plugin_infos.json
+
+      - name: Build plugin ZIP
+        run: |
+          mkdir dist
+          rsync -av . dist/elaia \
+            --exclude='.github' \
+            --exclude='plugin_infos.json' \
+            --exclude='dist'
+
+          cd dist
+          zip -r elaia.zip elaia
+          cd ..
+
+      - name: Create deployment tar
+        run: |
+          mkdir deploy
+          cp dist/elaia.zip deploy/
+          cp plugin_infos.json deploy/
+          tar -czvf plugin.tar.gz deploy
+
+      - name: Copy tar archive to remote
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          password: ${{ secrets.PROD_PASSWORD }}
+          source: "plugin.tar.gz"
+          target: "./www/elaia/"
+
+      - name: Connect and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          password: ${{ secrets.PROD_PASSWORD }}
+          script: |
+            cd www/elaia
+            tar -xvzf plugin.tar.gz
+            rm plugin.tar.gz

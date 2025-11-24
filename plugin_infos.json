@@ -1,0 +1,25 @@
+{
+  "name": "Elaia",
+  "slug": "elaia/elaia.php",
+  "author": "<a href='https://ela-ia.com'>Elaia</a>",
+  "author_profile": "https://geek-tonic.com",
+  "version": "%RELEASE_VERSION%",
+  "download_url": "https://app.ela-ia.com/wp/elaia.zip",
+  "requires": "5.5",
+  "requires_php": "7.4",
+  "tested": "6.5.3",
+  "last_updated": "%RELEASE_DATE%",
+  "sections": {
+    "description": "Elaia WP Plugin",
+    "installation": "Install and activate our plugin",
+    "changelog": "<h2>%RELEASE_VERSION%</h2>"
+  },
+  "banners": {
+    "low": "https://ela-ia.com/wp-content/uploads/elaia/banniere-elaia-772x250.jpg",
+    "high": "https://ela-ia.com/wp-content/uploads/elaia/banniere-elaia-1544x500.jpg"
+  },
+  "icons": {
+    "1x": "https://ela-ia.com/wp-content/uploads/elaia/assets/icon-128x128.png",
+    "2x": "https://ela-ia.com/wp-content/uploads/elaia/assets/icon-256x256.png"
+  }
+}
