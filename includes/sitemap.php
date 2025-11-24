@@ -8,12 +8,12 @@ if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit;
  * 
  **********************************************/
 add_action('init', function () {
-    if (function_exists('wp_register_sitemap_provider')) {
-        wp_register_sitemap_provider(
-            'elaia',
-            new \Elaia\Utils\ElaiaChatbotSitemapProvider()
-        );
-    }
+  if (function_exists('wp_register_sitemap_provider')) {
+    wp_register_sitemap_provider(
+      'elaia',
+      new \Elaia\Utils\ElaiaChatbotSitemapProvider()
+    );
+  }
 }, 0);
 
 
@@ -26,7 +26,7 @@ add_filter('wpseo_sitemap_entries_per_page', function () {
   return 1000;
 });
 
-add_filter('wpseo_sitemap_page_content', function ($content, $type) {
+add_filter('wpseo_sitemap_page_content', function ($content, $type = 'page') {
 
   // Nous n’ajoutons les URLs que dans le sitemap des pages
   if ($type !== 'page') {
@@ -107,8 +107,8 @@ add_filter('seopress_sitemaps_single', function ($urls, $type) {
  *
  **********************************************/
 add_filter('wp_sitemaps_index', function ($sitemaps) {
-    $sitemaps['elaia'] = [
-        'loc' => home_url('wp-sitemap-elaia-1.xml'),
-    ];
-    return $sitemaps;
+  $sitemaps['elaia'] = [
+    'loc' => home_url('/wp-sitemap-elaia-1.xml'),
+  ];
+  return $sitemaps;
 });
