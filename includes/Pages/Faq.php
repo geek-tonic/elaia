@@ -1,12 +1,15 @@
 <?php
 
+use Elaia\Utils\ElaiaPagesMethods;
+
 if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit;
 
-if(!function_exists('elaia_prepare_faq_payload')){
-    function elaia_prepare_faq_payload() {
+if (!function_exists('elaia_prepare_faq_payload')) {
+    function elaia_prepare_faq_payload()
+    {
 
-        $domain  = Elaia\Utils\ElaiaPagesMethods::detect_domain();
-        $referer = Elaia\Utils\ElaiaPagesMethods::detect_referer();
+        $domain  = ElaiaPagesMethods::detect_domain();
+        $referer = ElaiaPagesMethods::detect_referer();
 
         $API_URL = 'https://app.ela-ia.com/api/v1/chatbot/corpus';
 
@@ -57,6 +60,5 @@ if(!function_exists('elaia_prepare_faq_payload')){
 
         // Ne pas laisser WordPress continuer à rendre le thème
         exit;
-
     }
 }

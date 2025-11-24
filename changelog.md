@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.19] - 2025-11-24
+### Ajouté
+- Gestion PHP7.4
+
+### Modifié
+- Ajout de sécurité et retours de tests
+
+### Supprimé
+- N/A
+
 ## [1.1.18] - 2025-11-24
 ### Ajouté
 - Gestion de la mise en sitemap des pages de Glossaire et de Metadatas
