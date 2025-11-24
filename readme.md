@@ -4,11 +4,11 @@ Ce plugin WordPress permet d'intégrer les fonctionnalités de [https://app.ela-
 
 ## Version
 
-Actuellement à la version **1.2.0**.
+Actuellement à la version **%RELEASE_VERSION%**.
 
 ## Installation
 
-1. Téléchargez le fichier ZIP de la version 1.2.0.
+1. Téléchargez le fichier ZIP de la version %RELEASE_VERSION%.
 2. Rendez-vous dans l'administration WordPress, section **Extensions > Ajouter**.
 3. Cliquez sur **Téléverser une extension** et sélectionnez le ZIP téléchargé.
 4. Activez le plugin après l'installation.

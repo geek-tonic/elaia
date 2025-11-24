@@ -1,38 +1,22 @@
 # Changelog
 
-## [1.2.0] - 2025-11-24
-### Ajouté
-- N/A
+## [1.2.1] - 2025-11-24
+- Modification du hook pour Yoast SEO (gestion avec multi CPT actif)
 
-### Modifié
+## [1.2.0] - 2025-11-24
 - Soucis de déploiement automatisé
 
-### Supprimé
-- N/A
-
 ## [1.1.19] - 2025-11-24
-### Ajouté
 - Gestion PHP7.4
-
-### Modifié
 - Ajout de sécurité et retours de tests
 
-### Supprimé
-- N/A
-
 ## [1.1.18] - 2025-11-24
-### Ajouté
 - Gestion de la mise en sitemap des pages de Glossaire et de Metadatas
 - Gestion du cache et de l'exclusion dans WP-ROCKET
 - Gestion des rewrites proprement et suppression des soucis de Permalinks
 - Gestion des insertions de Elaia dans les sites
 - Ajout de sécurité
-
-### Modifié
 - Restructuration complète du code source
-
-### Supprimé
-- N/A
 
 
 ## [1.1.17] - 2025-11-06
