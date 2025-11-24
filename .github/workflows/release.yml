@@ -60,5 +60,6 @@ jobs:
           password: ${{ secrets.PROD_PASSWORD }}
           script: |
             cd www/elaia
+            rm elaia.zip
             tar -xvzf plugin.tar.gz
             rm plugin.tar.gz
