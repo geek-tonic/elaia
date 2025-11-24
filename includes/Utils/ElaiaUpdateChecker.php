@@ -28,7 +28,7 @@ class ElaiaUpdateChecker
 
     if (false === $remote || ! $this->cache_allowed) {
       $remote = wp_remote_get(
-        'https://ela-ia.com/wp-content/uploads/elaia/info.json',
+        'https://ressources.geek-tonic.dev/elaia/plugin_infos.json',
         array(
           'timeout' => 10,
           'headers' => array('Accept' => 'application/json')

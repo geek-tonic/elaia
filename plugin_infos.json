@@ -4,7 +4,7 @@
   "author": "<a href='https://ela-ia.com'>Elaia</a>",
   "author_profile": "https://geek-tonic.com",
   "version": "%RELEASE_VERSION%",
-  "download_url": "https://app.ela-ia.com/wp/elaia.zip",
+  "download_url": "https://ressources.geek-tonic.dev/elaia/elaia.zip",
   "requires": "5.5",
   "requires_php": "7.4",
   "tested": "6.5.3",
