@@ -23,6 +23,8 @@ jobs:
           RELEASE_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           sed -i "s#%RELEASE_VERSION%#${{ steps.version.outputs.VERSION }}#g" plugin_infos.json
           sed -i "s#%RELEASE_DATE%#${RELEASE_DATE}#g" plugin_infos.json
+          sed -i "s#%RELEASE_VERSION%#${{ steps.version.outputs.VERSION }}#g" readme.md
+          sed -i "s#%RELEASE_VERSION%#${{ steps.version.outputs.VERSION }}#g" elaia.php
 
       - name: Build plugin ZIP
         run: |
