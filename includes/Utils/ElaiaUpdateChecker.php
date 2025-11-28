@@ -15,7 +15,7 @@ class ElaiaUpdateChecker
   public function __construct()
   {
     $this->plugin_slug    = 'elaia/elaia.php'; // doit correspondre au chemin relatif dans WP
-    $this->version        = '1.1.18'; // version actuelle
+    $this->version        = '%RELEASE_VERSION%'; // version actuelle
     $this->cache_key      = 'elaia_update_info';
     $this->cache_allowed  = false;
 
