@@ -26,23 +26,24 @@ add_filter('wpseo_sitemap_entries_per_page', function () {
   return 1000;
 });
 
-add_filter('wpseo_sitemap_entries', function ($entries, $post_type) {
+add_filter('wpseo_sitemap_page_content', function ($content, $type = 'page') {
 
-  if ($post_type !== 'page') {
-    return $entries;
+  // Nous n’ajoutons les URLs que dans le sitemap des pages
+  if ($type !== 'page') {
+    return $content;
   }
 
-  $entries[] = [
-    'loc' => home_url('/' . ELAIA_PAGE_FAQ_REWRITE . '/'),
-    'prio' => 0.5,
+  $extra  = '';
+  $urls   = [
+    home_url('/' . ELAIA_PAGE_FAQ_REWRITE . '/'),
+    home_url('/' . ELAIA_PAGE_METADATA_REWRITE . '/'),
   ];
 
-  $entries[] = [
-    'loc' => home_url('/' . ELAIA_PAGE_METADATA_REWRITE . '/'),
-    'prio' => 0.5,
-  ];
+  foreach ($urls as $url) {
+    $extra .= '<url><loc>' . esc_url($url) . '</loc><priority>0.8</priority></url>';
+  }
 
-  return $entries;
+  return $content . $extra;
 }, 10, 2);
 
 
