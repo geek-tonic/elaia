@@ -25,6 +25,7 @@ jobs:
           sed -i "s#%RELEASE_DATE%#${RELEASE_DATE}#g" plugin_infos.json
           sed -i "s#%RELEASE_VERSION%#${{ steps.version.outputs.VERSION }}#g" readme.md
           sed -i "s#%RELEASE_VERSION%#${{ steps.version.outputs.VERSION }}#g" elaia.php
+          sed -i "s#%RELEASE_VERSION%#${{ steps.version.outputs.VERSION }}#g" includes/Utils/ElaiaUpdateChecker.php
 
       - name: Build plugin ZIP
         run: |

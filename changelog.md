@@ -1,4 +1,6 @@
 # Changelog
+## [1.2.2] - 2025-11-28
+- Suppression de la mise en cache de WP-Rocket
 
 ## [1.2.1] - 2025-11-24
 - Modification du hook pour Yoast SEO (gestion avec multi CPT actif)
