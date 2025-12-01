@@ -2,10 +2,54 @@
 
 if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit;
 
+/**
+ * Récupère la langue courante, quel que soit le plugin utilisé.
+ *
+ * Retourne un code langue court (ex: "fr", "en").
+ */
+function get_current_language()
+{
+    // --- Polylang ---
+    if (function_exists('pll_current_language')) {
+        $lang = pll_current_language();
+        if (!empty($lang)) {
+            return $lang;
+        }
+    }
+
+    // --- WPML ---
+    if (defined('ICL_LANGUAGE_CODE')) {
+        return ICL_LANGUAGE_CODE;
+    }
+
+    // --- TranslatePress ---
+    if (function_exists('trp_get_current_language')) {
+        $lang = trp_get_current_language();
+        if (!empty($lang)) {
+            return $lang;
+        }
+    }
+
+    // --- Fallback WordPress natif ---
+    // get_locale() sort un code long "fr_FR" → on garde la première partie
+    $locale = get_locale();
+    if (!empty($locale)) {
+        return substr($locale, 0, 2);
+    }
+
+    // Dernier filet de sécurité, langue du site
+    $bloginfo = get_bloginfo('language');
+    if (!empty($bloginfo)) {
+        return substr($bloginfo, 0, 2);
+    }
+
+    return 'en'; // Par défaut si on n'a pas la langue....
+}
+
 add_action('wp_enqueue_scripts', function () {
 
     // Langue courte (ex: "fr" depuis "fr-FR")
-    $lang = substr(get_bloginfo('language'), 0, 2) ?: 'fr';
+    $lang = get_current_language();
 
     // 1. Styles
     wp_register_style('elaia-window-style', false);
