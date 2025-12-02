@@ -1,6 +1,7 @@
 <?php
 
-if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit;
+if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR'))
+  exit;
 
 // Register rewrite rules for Elaia Pages
 function elaia_register_rewrites()
@@ -25,19 +26,7 @@ function elaia_register_rewrites()
 add_action('init', 'elaia_register_rewrites');
 
 
-// Refresh permalinks only if rules change
-function elaia_maybe_flush_rules()
-{
-  $current = 1;
-  $saved   = (int) get_option('elaia_rewrite_version', 0);
 
-  if ($saved !== $current) {
-    elaia_register_rewrites();
-    flush_rewrite_rules();
-    update_option('elaia_rewrite_version', $current);
-  }
-}
-add_action('init', 'elaia_maybe_flush_rules', 99);
 
 
 // Gestion des pages spécifiques via l'action template_redirect
