@@ -11,7 +11,8 @@
  * @package elaia
  */
 
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH'))
+  exit;
 
 try {
   define('ELAIA_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -23,6 +24,13 @@ try {
   require_once ELAIA_PLUGIN_DIR . 'autoload.php';
 
   new Elaia\Utils\ElaiaUpdateChecker();
+
+  // Activation du plugin : enregistrer les règles de réécriture
+  register_activation_hook(__FILE__, 'elaia_activate_plugin');
+
+  // Désactivation du plugin : nettoyer les règles de réécriture
+  register_deactivation_hook(__FILE__, 'elaia_deactivate_plugin');
+
 } catch (Exception $e) {
   throw new WP_Exception($e->getMessage());
 }
