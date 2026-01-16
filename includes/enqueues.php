@@ -2,56 +2,11 @@
 
 if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit;
 
-/**
- * Récupère la langue courante, quel que soit le plugin utilisé.
- *
- * Retourne un code langue court (ex: "fr", "en").
- */
-function get_current_language()
-{
-    // --- Polylang ---
-    if (function_exists('pll_current_language')) {
-        $lang = pll_current_language();
-        if (!empty($lang)) {
-            return $lang;
-        }
-    }
-
-    // --- WPML ---
-    if (defined('ICL_LANGUAGE_CODE')) {
-        return ICL_LANGUAGE_CODE;
-    }
-
-    // --- TranslatePress ---
-    if (function_exists('trp_get_current_language')) {
-        $lang = trp_get_current_language();
-        if (!empty($lang)) {
-            return $lang;
-        }
-    }
-
-    // --- Fallback WordPress natif ---
-    // get_locale() sort un code long "fr_FR" → on garde la première partie
-    $locale = get_locale();
-    if (!empty($locale)) {
-        return substr($locale, 0, 2);
-    }
-
-    // Dernier filet de sécurité, langue du site
-    $bloginfo = get_bloginfo('language');
-    if (!empty($bloginfo)) {
-        return substr($bloginfo, 0, 2);
-    }
-
-    return 'en'; // Par défaut si on n'a pas la langue....
-}
-
 add_action('wp_enqueue_scripts', function () {
 
-    // Langue courte (ex: "fr" depuis "fr-FR")
-    $lang = get_current_language();
-
-    // 1. Styles
+    /**
+     * 1) Styles
+     */
     wp_register_style('elaia-window-style', false);
     wp_enqueue_style('elaia-window-style');
     wp_add_inline_style(
@@ -79,26 +34,76 @@ add_action('wp_enqueue_scripts', function () {
 CSS
     );
 
-    wp_enqueue_script(
-        'elaia-chatbot',
-        "https://chatbot.ela-ia.com/chatbot-v1.js?lang={$lang}&v=" . time(),
-        [],
-        false,
-        ['strategy'  => 'defer']
-    );
-    // 2. Script distant
-    wp_enqueue_script(
-        'elaia-window',
-        "https://chatbot.ela-ia.com/window-v1.js?lang={$lang}&v=" . time(),
-        [],
-        false,
-        ['strategy'  => 'defer']
-    );
+    /**
+     * 2) Loader inline (détection langue côté DOM + injection des scripts distants AVEC lang=)
+     *
+     * - Supporte : espagnol, français, néerlandais, anglais, allemand, catalan, italien, portugais
+     * - Déduit "de" depuis <html lang="de-DE">, ou depuis l'URL (/de/...)
+     * - Fallback : en
+     */
+    wp_register_script('elaia-loader', false, [], null, true);
+    wp_enqueue_script('elaia-loader');
 
-
-    // 3. Script inline : gestion open/close
     wp_add_inline_script(
-        'elaia-window',
+        'elaia-loader',
+        <<<JS
+(function () {
+  // Langues autorisées côté Elaia
+  var ALLOWED = ['es','fr','nl','en','de','ca','it','pt'];
+
+  function normalizeLang(input) {
+    if (!input) return '';
+    input = ('' + input).trim().toLowerCase();
+
+    // "de-DE" => "de", "pt_BR" => "pt"
+    if (input.indexOf('-') !== -1) input = input.split('-')[0];
+    if (input.indexOf('_') !== -1) input = input.split('_')[0];
+
+    return input;
+  }
+
+  function getLangFromHtml() {
+    return normalizeLang(document.documentElement && document.documentElement.lang);
+  }
+
+  // Fallback URL : "/de/..." "/es/..." etc.
+  function getLangFromPath() {
+    var p = (location.pathname || '').toLowerCase();
+    var match = p.match(/^\\/(es|fr|nl|en|de|ca|it|pt)(\\/|$)/);
+    return match ? match[1] : '';
+  }
+
+  function getFinalLang() {
+    var lang = getLangFromHtml() || getLangFromPath();
+    if (ALLOWED.indexOf(lang) === -1) lang = 'en';
+    return lang;
+  }
+
+  function loadScript(src) {
+    var s = document.createElement('script');
+    s.src = src;
+    s.defer = true;
+    document.head.appendChild(s);
+  }
+
+  var lang = getFinalLang();
+  var v = Date.now();
+
+  // IMPORTANT : on passe impérativement lang=
+  loadScript('https://chatbot.ela-ia.com/chatbot-v1.js?lang=' + encodeURIComponent(lang) + '&v=' + v);
+  loadScript('https://chatbot.ela-ia.com/window-v1.js?lang=' + encodeURIComponent(lang) + '&v=' + v);
+
+})();
+JS,
+        'after'
+    );
+
+    /**
+     * 3) Script inline : gestion open/close
+     *    (accroché à elaia-loader puisque les scripts distants ne sont plus des handles WP)
+     */
+    wp_add_inline_script(
+        'elaia-loader',
         <<<JS
 (function(){
     const iframeReady = () => {
@@ -111,7 +116,12 @@ CSS
         const container = document.getElementById('elaia-window');
         if (!iframe || !container) return;
 
-        const IFRAME_ORIGIN = new URL(iframe.src).origin;
+        let IFRAME_ORIGIN = '';
+        try {
+            IFRAME_ORIGIN = new URL(iframe.src).origin;
+        } catch (e) {
+            return;
+        }
 
         window.addEventListener('message', (event) => {
             if (event.origin !== IFRAME_ORIGIN) return;
@@ -124,12 +134,13 @@ CSS
                     container.classList.remove('elaia-window-close');
                     container.classList.add('elaia-window-open');
                     break;
+
                 case 'elaia:close':
                     document.querySelector('main')?.style.removeProperty('z-index');
                     container.classList.remove('elaia-window-open');
                     container.classList.add('elaia-window-close');
                     break;
-                
+
                 case 'form:open':
                     // redimensionner l’iframe
                     iframe.style.height = '500px';
@@ -145,24 +156,28 @@ CSS
             init();
         }
     });
+
     observer.observe(document.body, { childList: true, subtree: true });
 })();
 JS,
         'after'
     );
 
-    // NOUVEAU : Ajouter la détection des formulaires séparément
+    /**
+     * 4) NOUVEAU : Détection des formulaires (masquer/afficher le bouton du chatbot)
+     *    (accroché à elaia-loader)
+     */
     wp_add_inline_script(
-        'elaia-chatbot',
+        'elaia-loader',
         <<<JS
 (function(){
     const TARGET_CLASSES = ['opened', 'toggled'];
     let formStates = new Map();
 
     const observeForm = (form, index) => {
-        const formKey = form.id || 'form-' + index;
+        const formKey = form.id || 'form-' + index; // gardé si tu l'utilises plus tard
         const initialState = {};
-        
+
         TARGET_CLASSES.forEach(className => {
             initialState[className] = form.classList.contains(className);
         });
@@ -174,16 +189,11 @@ JS,
                     TARGET_CLASSES.forEach(className => {
                         const currentState = mutation.target.classList.contains(className);
                         const prevState = formStates.get(form)[className];
-                        
+
                         if (prevState !== currentState) {
-                            if (currentState) {
-                                // Masquer le chatbot
-                                const chatbot = document.getElementById('elaia-chatbot-button');
-                                if (chatbot) chatbot.style.display = 'none';
-                            } else {
-                                // Réafficher le chatbot  
-                                const chatbot = document.getElementById('elaia-chatbot-button');
-                                if (chatbot) chatbot.style.display = 'flex';
+                            const chatbot = document.getElementById('elaia-chatbot-button');
+                            if (chatbot) {
+                                chatbot.style.display = currentState ? 'none' : 'flex';
                             }
                             formStates.get(form)[className] = currentState;
                         }
@@ -191,17 +201,18 @@ JS,
                 }
             });
         });
-        
+
         observer.observe(form, { attributes: true });
     };
 
-    // Initialiser quand le DOM est prêt
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('form').forEach(observeForm);
-        });
-    } else {
+    const init = () => {
         document.querySelectorAll('form').forEach(observeForm);
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
     }
 })();
 JS,
