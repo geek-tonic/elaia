@@ -13,6 +13,7 @@ require_once ELAIA_PLUGIN_DIR . 'includes/activation.php';
 require_once ELAIA_PLUGIN_DIR . 'includes/rewrite.php';
 require_once ELAIA_PLUGIN_DIR . 'includes/enqueues.php';
 require_once ELAIA_PLUGIN_DIR . 'includes/sitemap.php';
+require_once ELAIA_PLUGIN_DIR . 'includes/shortcodes.php';
 
 // Les pages dédiées Ela-IA
 require_once ELAIA_PLUGIN_DIR . 'includes/Pages/Faq.php';
