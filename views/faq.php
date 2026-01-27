@@ -31,9 +31,10 @@
   }
 
   .elaia-faq__grid details {
-    border: 1px solid #cecece;
+    border: 1px solid #e2e2e2;
     padding: 0 1rem;
     background: white;
+    border-radius: 9px;
   }
 
   .elaia-faq__grid details+details {}
