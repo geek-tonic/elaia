@@ -44,7 +44,7 @@ function elaia_create_or_update_pages()
     // Metadatas
     elaia_create_or_update_page(
         ELAIA_PAGE_METADATA_REWRITE,
-        'Déouvrez autour de vous',
+        'Découvrez autour de vous',
         '[elaia_metadatas]'
     );
 }
