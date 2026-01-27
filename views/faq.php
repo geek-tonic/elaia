@@ -36,9 +36,7 @@
     background: white;
   }
 
-  .elaia-faq__grid details+details {
-    border-top: none;
-  }
+  .elaia-faq__grid details+details {}
 
   .elaia-faq__grid details[open] {
     padding-bottom: 1em;
@@ -51,11 +49,11 @@
     cursor: pointer;
   }
 
-  .elaia-faq__a {
-    display: none !important;
-    padding: 0 0 6px !important;
-    color: #374151 !important;
-    line-height: 1.6 !important;
+  .elaia-faq__grid .elaia-faq__p {
+    margin: 0;
+    padding: 0;
+    font-style: normal;
+    font-size: 1rem;
   }
 
   .elaia-faq__error {
@@ -95,7 +93,7 @@
       }
       echo '<details>';
       echo '<summary for="faq-' . $i . '" class="elaia-faq__q">' . $qname . '</summary>';
-      echo '<p class="elaia-faq__a">' . $atext . '</p>';
+      echo '<p class="elaia-faq__p">' . $atext . '</p>';
       echo '</details>';
       $i++;
     }
