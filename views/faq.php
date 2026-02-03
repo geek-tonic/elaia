@@ -35,16 +35,27 @@
     padding: 1rem;
     background: white;
     border-radius: 9px;
+
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
-  .elaia-faq__grid details.elaia-faq__item:open {
+  .elaia-faq__grid details.elaia-faq__item[open] {
     padding-bottom: 1em;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   .elaia-faq__grid details.elaia-faq__item>summary {
     font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
+
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   .elaia-faq__grid details.elaia-faq__item>p {
@@ -104,3 +115,20 @@
   ?>
 
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Sécurité ++ parce qu'il y a des scripts qui forcent des hauteurs fixes
+    document.querySelectorAll('.elaia-faq__grid details').forEach(d => {
+      // Nettoyage initial
+      d.style.height = 'auto';
+      d.style.overflow = 'visible';
+
+      // A chaque toggle, on re-nettoie si un script externe réinjecte
+      d.addEventListener('toggle', () => {
+        d.style.height = 'auto';
+        d.style.overflow = 'visible';
+      });
+    });
+  });
+</script>
