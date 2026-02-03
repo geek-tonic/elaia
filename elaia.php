@@ -15,6 +15,8 @@ if (!defined('ABSPATH'))
   exit;
 
 try {
+  define('ELAIA_VERSION', '%RELEASE_VERSION%');
+  define('ELAIA_PLUGIN_BASENAME', plugin_basename(__FILE__));
   define('ELAIA_PLUGIN_DIR', plugin_dir_path(__FILE__));
   define('ELAIA_PAGE_FAQ_REWRITE', 'elaia-glossary');
   define('ELAIA_PAGE_FAQ_PARAM', 'elaia_faq');
@@ -30,7 +32,6 @@ try {
 
   // Désactivation du plugin : nettoyer les règles de réécriture
   register_deactivation_hook(__FILE__, 'elaia_deactivate_plugin');
-
 } catch (Exception $e) {
   throw new WP_Exception($e->getMessage());
 }

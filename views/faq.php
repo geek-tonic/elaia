@@ -30,29 +30,26 @@
     gap: 12px !important;
   }
 
-  .elaia-faq__grid details {
+  .elaia-faq__grid details.elaia-faq__item {
     border: 1px solid #e2e2e2;
-    padding: 0 1rem;
+    padding: 1rem;
     background: white;
     border-radius: 9px;
   }
 
-  .elaia-faq__grid details+details {}
-
-  .elaia-faq__grid details[open] {
+  .elaia-faq__grid details.elaia-faq__item:open {
     padding-bottom: 1em;
   }
 
-  .elaia-faq__grid summary {
-    padding: 1rem 2em 1rem 0;
+  .elaia-faq__grid details.elaia-faq__item>summary {
     font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
   }
 
-  .elaia-faq__grid .elaia-faq__p {
-    margin: 0;
-    padding: 0;
+  .elaia-faq__grid details.elaia-faq__item>p {
+    margin: 0 !important;
+    padding: 1rem 0 0 0 !important;
     font-style: normal;
     font-size: 1rem;
   }
@@ -92,16 +89,16 @@
       } else {
         $atext = '<em>Réponse à renseigner.</em>';
       }
-      echo '<details>';
-      echo '<summary for="faq-' . $i . '" class="elaia-faq__q">' . $qname . '</summary>';
-      echo '<p class="elaia-faq__p">' . $atext . '</p>';
+      echo '<details class="elaia-faq__item">';
+      echo '<summary >' . $qname . '</summary>';
+      echo '<p>' . $atext . '</p>';
       echo '</details>';
       $i++;
     }
     echo '</div>';
   } else {
     if ($api_ok && $api_code >= 200 && $api_code < 300) {
-      echo '<div class="elaia-faq__loading">Aucune question trouvée dans la réponse.</div>';
+      echo '<div class="elaia-faq__loading">Aucune question n\'a été trouvée pour le site.</div>';
     }
   }
   ?>
