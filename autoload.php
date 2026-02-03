@@ -10,6 +10,7 @@ require_once ELAIA_PLUGIN_DIR . 'includes/Utils/ElaiaPagesMethods.php';
 
 // Les fichiers de base pour le fonctionnement
 require_once ELAIA_PLUGIN_DIR . 'includes/activation.php';
+require_once ELAIA_PLUGIN_DIR . 'includes/upgrade.php';
 require_once ELAIA_PLUGIN_DIR . 'includes/rewrite.php';
 require_once ELAIA_PLUGIN_DIR . 'includes/enqueues.php';
 require_once ELAIA_PLUGIN_DIR . 'includes/sitemap.php';
