@@ -1,4 +1,7 @@
 # Changelog
+## [1.2.10] - 2026-02-03
+- Version pour déclencher l'auto-upgrade
+
 ## [1.2.9] - 2026-02-03
 - Création de pages pour Metadatas et FAQ Elaia
 - Gestion propre du sitemap
