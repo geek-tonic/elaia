@@ -41,9 +41,10 @@ function elaia_maybe_run_upgrade_fallback()
 function elaia_run_upgrade_tasks($from_version, $to_version)
 {
   // Version où tu introduis la migration (mets la vraie)
-  if (version_compare($from_version, '1.2.7', '<')) {
+  if (version_compare($from_version, '1.2.9', '<')) {
     if (function_exists('elaia_create_or_update_pages')) {
       elaia_create_or_update_pages();
+      flush_rewrite_rules(); // pour flush les rewrite et éviter les boucles de redirection
     }
   }
 }
