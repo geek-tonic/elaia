@@ -1,4 +1,9 @@
 # Changelog
+## [1.2.9] - 2026-02-03
+- Création de pages pour Metadatas et FAQ Elaia
+- Gestion propre du sitemap
+- Auto-upgrade des données et gestion de cache transient
+
 ## [1.2.2] - 2025-11-28
 - Suppression de la mise en cache de WP-Rocket
 
