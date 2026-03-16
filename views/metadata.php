@@ -487,7 +487,12 @@ if (is_array($geoMetadatas) && !empty($geoMetadatas)) {
           $link = $data['link'] ?? '';
           $img = $data['image'] ?? $data['images'] ?? '';
           if (is_string($img) && strpos($img, "\n") !== false) {
+            // PLusieurs images séparées par des sauts de ligne => on prend la première
             $img = explode("\n", $img)[0];
+          }
+          if (is_array($img)) {
+            // Cas particulier : on récupère une liste, donc on prend la première entrée
+            $img = $img[0] ?? '';
           }
           $img = trim($img);
 
