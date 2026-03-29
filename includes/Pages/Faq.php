@@ -7,8 +7,10 @@ if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit;
 if (!function_exists('elaia_prepare_faq_payload')) {
     function elaia_prepare_faq_payload()
     {
-        $domain  = ElaiaPagesMethods::detect_domain();
+        global $elaia_faq_domain;
+        $domain  = $elaia_faq_domain ?: ElaiaPagesMethods::detect_domain();
         $referer = ElaiaPagesMethods::detect_referer();
+        
 
         $API_URL = 'https://app.ela-ia.com/api/v1/chatbot/corpus';
 

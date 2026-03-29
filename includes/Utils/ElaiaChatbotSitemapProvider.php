@@ -27,7 +27,11 @@ class ElaiaChatbotSitemapProvider extends \WP_Sitemaps_Provider
       [
         'loc' => home_url('/' . ELAIA_PAGE_METADATA_REWRITE . '/'),
         'lastmod' => gmdate('Y-m-d\TH:i:s\Z'),
-      ]
+      ],
+      [
+        'loc' => home_url('/' . ELAIA_PAGE_CORPUS_REWRITE . '/'),
+        'lastmod' => gmdate('Y-m-d\TH:i:s\Z'),
+      ],
     ];
   }
 
