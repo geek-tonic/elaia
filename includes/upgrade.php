@@ -44,6 +44,7 @@ function elaia_run_upgrade_tasks($from_version, $to_version)
   if (version_compare($from_version, '1.2.10', '<')) {
     if (function_exists('elaia_create_or_update_pages')) {
       elaia_create_or_update_pages();
+      flush_rewrite_rules(false);
     }
   }
 }

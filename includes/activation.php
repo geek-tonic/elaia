@@ -8,7 +8,12 @@ if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR'))
  */
 function elaia_activate_plugin()
 {
-    elaia_create_or_update_pages();
+    try {
+        elaia_create_or_update_pages();
+    } catch (\Throwable $e) {
+        error_log('Elaia activation error: ' . $e->getMessage());
+    }
+    set_transient('elaia_needs_flush', true);
 }
 
 /**
