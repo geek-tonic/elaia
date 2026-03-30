@@ -111,26 +111,6 @@ function elaia_get_myelaia_domains()
 
     $domain = parse_url(home_url(), PHP_URL_HOST);
 
-    // Override pour ela-ia.com (dev/test)
-    if ($domain == 'ela-ia.com') {
-        return [
-            'has_subscription' => true,
-            'domains' => [
-                [
-                    'domain' => 'ela-ia.com',
-                    'path'   => '',
-                    'name'   => 'Elaia',
-                ],
-                [
-                    'domain' => 'ela-ia.com/mentions-legales',
-                    'path'   => 'mentions-legales',
-                    'name'   => 'Elaia ML',
-                ],
-            ],
-        ];
-    }
-
-
     $api_host = defined('ELAIA_API_HOST') ? ELAIA_API_HOST : 'https://app.ela-ia.com';
     $url = $api_host . 'v1/has-my-elaia?domain=' . urlencode($domain);
 
