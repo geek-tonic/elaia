@@ -32,9 +32,9 @@ add_action('parse_request', function ($wp) {
 
     if ($page && $page->post_status === 'publish') {
         unset($wp->query_vars['elaia_virtual_page']);
+        $wp->query_vars['pagename'] = $slug;
     }
 });
-
 // ── Redirections 301 des anciennes URLs rewrite ──
 add_action('template_redirect', function () {
     if (get_query_var(ELAIA_PAGE_FAQ_PARAM) == 1) {

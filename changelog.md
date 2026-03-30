@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.1] - 2026-03-30
+### Corrigé
+- **activation.php** : `elaia_get_myelaia_domains()` retourne désormais toujours un tableau associatif `['domains' => [], 'has_subscription' => false]` — corrige le parsing qui renvoyait systématiquement `null` pour les domaines et l'abonnement
+- **activation.php** : support du format de réponse API avec ou sans wrapper `data` (fallback `$body['data']['key'] ?? $body['key']`)
+- **activation.php** : suppression de `flush_rewrite_rules()` à l'activation et à la désactivation — évite la réécriture du `.htaccess` qui cassait certains sites (erreurs 500)
+- **rewrite.php** : regex corrigée — les rewrite rules ne matchent plus que la racine (`^(slug)/?$`), suppression du pattern `(?:.+/)?` qui interceptait les pages enfants du mode groupe
+- **rewrite.php** : ajout du hook `parse_request` pour éviter le conflit entre rewrite rule et vraie page WP (redirige vers `pagename` au lieu de laisser WP sans contexte)
+- **rewrite.php** : le corpus utilise `template_redirect` + `exit` (priorité 5) au lieu de `template_include` — corrige le rendu sans header/footer, notamment sur les thèmes FSE
+- **rewrite.php** : suppression du `register_activation_hook(__FILE__)` qui pointait vers `rewrite.php` au lieu du fichier principal du plugin
+- **rewrite.php** : restauration des redirections 301 des anciennes URLs rewrite et des query vars legacy
+
 ## [1.3.0] - 2026-03-30
 ### Ajouté
 - **Mode groupe mono-domaine** : support des clients avec un seul domaine et plusieurs sous-sites (ex: Campasun avec `www.campasun.eu/international/le-camping`, `www.campasun.eu/lesoleil/le-camping`)

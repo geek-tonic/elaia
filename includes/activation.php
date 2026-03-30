@@ -9,7 +9,6 @@ if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR'))
 function elaia_activate_plugin()
 {
     elaia_create_or_update_pages();
-    flush_rewrite_rules();
 }
 
 /**
@@ -17,7 +16,7 @@ function elaia_activate_plugin()
  */
 function elaia_deactivate_plugin()
 {
-    flush_rewrite_rules();
+    
 }
 
 /**
