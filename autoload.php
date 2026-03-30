@@ -19,3 +19,6 @@ require_once ELAIA_PLUGIN_DIR . 'includes/shortcodes.php';
 // Les pages dédiées Ela-IA
 require_once ELAIA_PLUGIN_DIR . 'includes/Pages/Faq.php';
 require_once ELAIA_PLUGIN_DIR . 'includes/Pages/Metadata.php';
+require_once ELAIA_PLUGIN_DIR . 'includes/Pages/Corpus.php';
+
+require_once ELAIA_PLUGIN_DIR . 'includes/shortcodes-corpus.php';

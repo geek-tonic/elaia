@@ -22,6 +22,9 @@ try {
   define('ELAIA_PAGE_FAQ_PARAM', 'elaia_faq');
   define('ELAIA_PAGE_METADATA_REWRITE', 'elaia-metadatas');
   define('ELAIA_PAGE_METADATA_PARAM', 'elaia_metadata');
+  define('ELAIA_PAGE_CORPUS_REWRITE', 'my-elaia-plugin');
+  define('ELAIA_PAGE_CORPUS_PARAM', 'elaia_corpus');
+
 
   require_once ELAIA_PLUGIN_DIR . 'autoload.php';
 

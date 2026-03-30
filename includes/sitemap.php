@@ -37,6 +37,8 @@ add_filter('wpseo_sitemap_page_content', function ($content, $type = 'page') {
   $urls   = [
     home_url('/' . ELAIA_PAGE_FAQ_REWRITE . '/'),
     home_url('/' . ELAIA_PAGE_METADATA_REWRITE . '/'),
+    home_url('/' . ELAIA_PAGE_CORPUS_REWRITE . '/'),
+
   ];
 
   foreach ($urls as $url) {

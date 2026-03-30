@@ -4,6 +4,9 @@ if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit;
 
 add_action('wp_enqueue_scripts', function () {
 
+    global $post;
+    if ($post && $post->post_name === ELAIA_PAGE_CORPUS_REWRITE) return;
+
     /**
      * 1) Styles
      */

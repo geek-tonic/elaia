@@ -33,6 +33,7 @@ jobs:
           rsync -av . dist/elaia \
             --exclude='.github' \
             --exclude='plugin_infos.json' \
+            --exclude='architecture.md' \
             --exclude='dist'
 
           cd dist

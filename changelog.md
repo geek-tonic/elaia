@@ -1,4 +1,31 @@
 # Changelog
+
+## [1.3.0] - 2026-03-30
+### Ajouté
+- **Mode groupe mono-domaine** : support des clients avec un seul domaine et plusieurs sous-sites (ex: Campasun avec `www.campasun.eu/international/le-camping`, `www.campasun.eu/lesoleil/le-camping`)
+- Création automatique des pages Elaia comme pages enfants WordPress sous chaque path du mode groupe
+- Nouvel endpoint API `GET /api/elaiaapp/domains/resolve?domain={host}` pour la résolution des domaines rattachés à un site
+- Système de résolution par candidats (du plus spécifique au plus générique) sur `getCorpus` et `getMetadatas`, aligné sur le pattern de `integration()`
+- Attribut `domain` sur les shortcodes `[elaia_faq]` et `[elaia_metadatas]` (déjà existant sur `[elaia_corpus]`)
+- Page corpus (`my-elaia-plugin`) rendue sans header/footer du thème via `template_redirect`
+- Fichier `ARCHITECTURE.md` pour documenter le système et guider les agents IA
+
+### Modifié
+- `activation.php` : logique de création de pages refactorisée — les 3 pages (FAQ, Metadatas, Corpus) sont créées selon `has_subscription` retourné par l'API ; FAQ et Metadatas sont toujours créées, Corpus uniquement pour les abonnés
+- `activation.php` : suppression de `elaia_has_chatbot()` (tous les sites avec le plugin ont forcément un chatbot)
+- `activation.php` : cache transient uniquement sur succès API (HTTP 200), pas de cache si erreur réseau
+- `rewrite.php` : rewrite rules simplifiées (racine uniquement), les sous-chemins sont gérés par les vraies pages WP
+- `rewrite.php` : ajout de `parse_request` pour éviter le conflit entre rewrite rule et vraie page WP
+- `sitemap.php` : suppression du provider custom `ElaiaChatbotSitemapProvider` et des ajouts manuels Yoast/RankMath/SEOPress (les vraies pages WP apparaissent automatiquement)
+- `shortcodes.php` : les shortcodes `elaia_faq` et `elaia_metadatas` acceptent et transmettent l'attribut `domain` via globales
+- `Faq.php` / `Metadata.php` : utilisent le domaine du shortcode en priorité, fallback sur `detect_domain()`
+- `views/metadata.php` : refactoring complet — variables renommées pour lisibilité, commentaires ajoutés sur chaque section (CSS, PHP, JS)
+- API Laravel `getCorpus` / `getMetadatas` : vérification referer sur le host uniquement, résolution chatbot par système de candidats
+- API Laravel `hasMyElaia` : ne retourne plus tous les clients, uniquement ceux rattachés au domaine demandé
+
+### Sécurité
+- Suppression de l'endpoint `/clients` qui exposait tous les domaines clients — remplacé par `domains/resolve` filtré par domaine
+
 ## [1.2.10] - 2026-02-03
 - Version pour déclencher l'auto-upgrade
 
@@ -28,191 +55,65 @@
 - Ajout de sécurité
 - Restructuration complète du code source
 
-
 ## [1.1.17] - 2025-11-06
-### Ajouté
-- Rien
-
-### Modifié
-- Correction height 
-
-### Supprimé
-- Rien pour cette version
-
+- Correction height
 
 ## [1.1.16] - 2025-11-06
-### Ajouté
-- Rien
-
-### Modifié
 - Correction z-index
 
-### Supprimé
-- Rien pour cette version
-
-
 ## [1.1.15] - 2025-10-09
-### Ajouté
 - Cache le chatbot si form ouvert
-
-### Modifié
 - Bug corrigé sur placeholder
-
-### Supprimé
-- Rien pour cette version
-
 
 ## [1.1.14] - 2025-10-09
-### Ajouté
 - Cache le chatbot si form ouvert
-
-### Modifié
 - Bug corrigé sur placeholder
 
-### Supprimé
-- Rien pour cette version
-
 ## [1.1.13] - 2025-10-08
-### Ajouté
 - Ajout du geo pour metadatas
-
-### Modifié
 - !important sur le design faq
 
-### Supprimé
-- Rien pour cette version
-
 ## [1.1.12] - 2025-10-06
-### Ajouté
 - Ajout page elaia-metadata
 
-### Modifié
-- Rien pour cette version
-
-### Supprimé
-- Rien pour cette version
-
 ## [1.1.11] - 2025-09-30
-### Ajouté
 - Ajout page elaia-faq
 
-### Modifié
-- Rien pour cette version
-
-### Supprimé
-- Rien pour cette version
-
-
 ## [1.1.8] - 2025-09-22
-### Ajouté
 - Balise script pour encart overview
 
-### Modifié
-- Rien pour cette version
-
-### Supprimé
-- Rien pour cette version
-
 ## [1.1.7] - 2025-07-28
-### Ajouté
-- Rien pour cette version
-
-### Modifié
-- L'ajout de la balise script
-
-### Supprimé
-- Rien pour cette version
-
-
+- Ajout de la balise script
 
 ## [1.1.6] - 2025-07-18
-### Ajouté
-- Rien pour cette version
-
-### Modifié
-- Rien pour cette version
-
-### Supprimé
-- Checker et mettre à jours les plugins
-- Les logs 
-
+- Suppression du checker de mise à jour des plugins
+- Suppression des logs
 
 ## [1.1.5] - 2025-07-11
-### Ajouté
 - Ajout de la langue du site dans l'url pour appeler le chatbot
 
-### Modifié
-- L'url pour appeler le chatbot
-
-### Supprimé
-- Rien pour cette version
-
-
-# Changelog
 ## [1.1.4] - 2025-07-01
-### Ajouté
-- Ajout d’un système de vérification des mises à jour pour permettre la mise à jour automatique du plugin
-
-### Modifié
-- Rien pour cette version
-
-### Supprimé
-- Rien pour cette version
+- Ajout d'un système de vérification des mises à jour pour permettre la mise à jour automatique du plugin
 
 ## [1.1.3] - 2025-06-24
-### Ajouté
-- Ajout d’un fichier README
-
-### Modifié
-- Rien pour cette version
-
-### Supprimé
-- Rien pour cette version
+- Ajout d'un fichier README
 
 ## [1.1.2] - 2025-06-17
-### Modifié
-- Changement de l’URL pour la synchronisation
+- Changement de l'URL pour la synchronisation
 
-### Ajouté
-- Rien pour cette version
-
-### Supprimé
-- Rien pour cette version
-
-
-Toutes les modifications notables du plugin sont listées ici.
 ## [1.1.1] - 2025-06-10
-### Ajouté
-- Possibilité de mettre à jour le plugin directement depuis l’interface WordPress
-
-### Modifié
-- Rien pour cette version
-
-### Supprimé
-- Rien pour cette version
+- Possibilité de mettre à jour le plugin directement depuis l'interface WordPress
 
 ## [1.1.0] - 2025-06-03
 ### Ajouté
-- Système de logs tampon (`elaia_logs`) avec :
-  - type, message, fichier, ligne, code d’erreur, date
-  - création automatique de la table à l’activation
-  - purge horaire via cron
+- Système de logs tampon (`elaia_logs`) avec type, message, fichier, ligne, code d'erreur, date
+- Création automatique de la table à l'activation
+- Purge horaire via cron
 - Fonction `elaia_log()` pour enregistrer des événements manuellement
 - Capture automatique des erreurs PHP, exceptions et erreurs fatales
 
 ### Modifié
 - Séparation du code en `elaia-plugin.php` et `elaia-logs.php`
 
-### Supprimé
-- Rien pour cette version
-
-
 ## [1.0.0] - 2025-04-16
-### Ajouté
-- Ajout automatique du script dans le footer
-
-### Modifié
-- Rien pour cette version
-
-### Supprimé
-- Rien pour cette version
+- Version initiale — ajout automatique du script chatbot dans le footer
