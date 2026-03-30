@@ -90,6 +90,7 @@ if (!function_exists('elaia_prepare_corpus_payload')) {
         // Extraire les variables pour la vue
         $agent_name = $settings['agent_name'] ?? '';
         $agent_picture = $settings['agent_picture'] ?? null;
+        $default_picture = $settings['default_picture'] ?? null;
         $hook_text = $settings['hook'] ?? '';
         $primary_color = $settings['primary_color'] ?? '#16a34a';
         $chat_host = 'https://chatbot.ela-ia.com';
