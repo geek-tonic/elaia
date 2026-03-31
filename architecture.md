@@ -56,10 +56,10 @@ elaia/
 │
 ├── includes/
 │   ├── activation.php                     # Création/mise à jour des pages WP à l'activation
-│   ├── rewrite.php                        # Rewrite rules (fallback) + template_redirect corpus
+│   ├── rewrite.php                        # Redirections 301 legacy + template_redirect corpus
 │   ├── shortcodes.php                     # Shortcodes [elaia_faq] et [elaia_metadatas]
 │   ├── shortcodes-corpus.php              # Shortcode [elaia_corpus] (séparé car logique spécifique)
-│   ├── sitemap.php                        # Intégration sitemap (Yoast, RankMath, SEOPress, natif WP)
+│   ├── sitemap.php                        # Fichier vide — les vraies pages WP gèrent le sitemap nativement
 │   ├── enqueues.php                       # Enregistrement des styles/scripts front
 │   ├── upgrade.php                        # Logique de migration entre versions
 │   │
@@ -96,10 +96,12 @@ elaia/
 ```
 1. Appel API : GET /api/v1/has-my-elaia?domain={host}
 2. Réponse : { has_subscription: bool, domains: [...] }
+   (avec ou sans wrapper "data" — le plugin gère les deux formats)
 3. Selon la réponse :
    ├─ domains non vide + has_subscription → Crée FAQ + Metadatas + Corpus (sous chaque path)
    ├─ domains non vide + !has_subscription → Crée FAQ + Metadatas seulement (sous chaque path)
    └─ domains vide → Crée FAQ + Metadatas à la racine, dépublie Corpus
+4. Pose un transient `elaia_needs_flush` → flush_rewrite_rules(false) au prochain init
 ```
 
 ### 3.2. Rendu d'une page (ex: `/international/le-camping/elaia-glossary`)
@@ -137,16 +139,14 @@ GET /api/v1/has-my-elaia?domain={host}
 
 - **Rôle** : Retourne tous les domaines/paths rattachés à un host WordPress, et si le client a l'abonnement My Elaia
 - **Sécurité** : Vérification du header Referer (host uniquement)
-- **Réponse** :
+- **Format de réponse** : L'API retourne actuellement sans wrapper `data`. Le plugin gère les deux formats via fallback (`$body['data']['key'] ?? $body['key']`).
   ```json
   {
-    "data": {
-      "has_subscription": true,
-      "domains": [
-        { "domain": "www.campasun.eu", "path": "", "name": "Campasun" },
-        { "domain": "www.campasun.eu/international/le-camping", "path": "international/le-camping", "name": "Campasun International" }
-      ]
-    }
+    "has_subscription": true,
+    "domains": [
+      { "domain": "www.campasun.eu", "path": "", "name": "Campasun" },
+      { "domain": "www.campasun.eu/international/le-camping", "path": "international/le-camping", "name": "Campasun International" }
+    ]
   }
   ```
 - **Logique abonnement** : `has_subscription` est `true` si au moins un client sur ce domaine est dans la liste des IDs My Elaia (hardcodée pour l'instant, à migrer vers un champ en base)
@@ -249,11 +249,14 @@ if ($domain_host !== $referer_host) { /* 403 */ }
 | Clé                           | TTL     | Contenu                          | Invalidation              |
 |-------------------------------|---------|----------------------------------|---------------------------|
 | `elaia_myelaia_domains`       | 1h      | `{has_subscription, domains[]}` | Réactivation plugin       |
+| `elaia_needs_flush`           | —       | `true` (flag one-shot)           | Consommé au prochain `init` |
 | `elaia_faq_{md5(domain)}_data`| 30 min  | Payload API FAQ                  | `?elaia_nocache=1` ou `?elaia_clear_cache=1` (admin) |
 | `elaia_metadatas_{md5(domain)}_data` | 30 min | Payload API métadonnées | Idem |
 | `elaia_corpus_{md5(domain)}_data` | 30 min | Payload API corpus          | Idem |
 
 **Règle de cache pour `elaia_myelaia_domains`** : On cache uniquement si l'API répond correctement (HTTP 200). Si l'API est down, pas de cache → retry à chaque page load.
+
+**Format de cache pour `elaia_myelaia_domains`** : Le transient stocke un tableau associatif `['domains' => [...], 'has_subscription' => bool]`. En cas d'erreur API, la fonction retourne `['domains' => [], 'has_subscription' => false]` sans cacher (pour permettre le retry).
 
 ### Côté Laravel (Cache)
 
@@ -288,39 +291,36 @@ if ($domain_host !== $referer_host) { /* 403 */ }
 
 Les pages Elaia sont de **vraies pages WordPress**. Elles apparaissent automatiquement dans les sitemaps de Yoast, RankMath, SEOPress et du sitemap natif WP.
 
-Le fichier `sitemap.php` :
-- **Désactive** le provider custom `ElaiaChatbotSitemapProvider` (qui créait des doublons)
-- **N'ajoute plus** manuellement les URLs dans les sitemaps des plugins SEO
+Le fichier `sitemap.php` est **vide** (guard clause uniquement). Aucun ajout manuel n'est fait :
+- **Pas** de provider custom `ElaiaChatbotSitemapProvider` (créait des doublons)
+- **Pas** d'ajout manuel dans Yoast, RankMath ou SEOPress (créait des doublons)
+- **Pas** d'entrée custom dans le sitemap index WP natif
 
 Les pages enfants (mode groupe) apparaissent aussi automatiquement.
 
 ---
 
-## 9. Rewrite Rules
+## 9. Rewrite Rules & Routing
+
+Le plugin **n'utilise plus de rewrite rules**. Toutes les pages Elaia sont de vraies pages WordPress — le routage est natif.
 
 Le fichier `rewrite.php` gère deux choses :
 
-### 9.1. Fallback pages virtuelles (rewrite rules)
+### 9.1. Redirections 301 legacy
 
-Pour les sites qui n'ont pas encore de vraies pages WP (premier chargement avant activation) :
-
-```php
-add_rewrite_rule(
-    '^(elaia-glossary|elaia-metadatas|my-elaia-plugin)/?$',
-    'index.php?elaia_virtual_page=$matches[1]',
-    'top'
-);
-```
-
-**Uniquement à la racine** — les sous-chemins sont gérés par les vraies pages WP.
-
-Le `parse_request` empêche le conflit entre rewrite rule et vraie page WP : si une page publiée existe pour le slug, la query var `elaia_virtual_page` est supprimée.
+Les anciennes URLs basées sur les query params (`?elaia_faq=1`, `?elaia_metadata=1`) sont redirigées en 301 vers les nouvelles URLs propres. Cela concerne uniquement les premiers clients (eldapi, cosycamp) qui avaient les versions pre-1.2.9.
 
 ### 9.2. Template redirect pour le corpus
 
 Le corpus (`my-elaia-plugin`) doit s'afficher SANS header/footer du thème. Le hook `template_redirect` (priorité 5) intercepte avant le rendu du thème et fait un rendu HTML complet + `exit`.
 
 **Exception** : Les crawlers internes (Yoast, etc.) sont laissés passer pour que le sitemap fonctionne.
+
+### ⚠️ Flush des rewrite rules
+
+Le plugin n'appelle **jamais** `flush_rewrite_rules()` directement ni `flush_rewrite_rules(true)`. Cela réécrirait le `.htaccess` et casserait les sites avec des règles custom.
+
+À la place, l'activation pose un transient `elaia_needs_flush`. Au prochain chargement de page, un hook `init` (priorité 99) consomme ce transient et appelle `flush_rewrite_rules(false)` — qui vide les règles en base de données **sans toucher au `.htaccess`**. Ce mécanisme nettoie les éventuelles anciennes rewrite rules en base (héritées de versions précédentes du plugin).
 
 ---
 
@@ -356,27 +356,38 @@ Le corpus (`my-elaia-plugin`) doit s'afficher SANS header/footer du thème. Le h
 - **Toujours comparer le referer sur le host uniquement**, jamais sur le domaine complet avec path
 - **Toujours passer le domaine via l'attribut shortcode** pour les pages en mode groupe
 - **Toujours cacher uniquement sur succès API** (HTTP 200) — pas de cache si erreur
+- **Toujours retourner un format cohérent** dans `elaia_get_myelaia_domains()` : `['domains' => [], 'has_subscription' => false]`
+- **Toujours gérer les deux formats de réponse API** (avec ou sans wrapper `data`)
 - **Toujours préfixer** les fonctions PHP avec `elaia_`, les classes CSS avec `em-` ou `ec-`
 - **Toujours tester** sur un site simple (ex: `ela-ia.com`) ET un site en mode groupe (ex: `campasun.eu`)
+- **Toujours utiliser le mécanisme transient** pour le flush : `set_transient('elaia_needs_flush', true)` → consommé au prochain `init` via `flush_rewrite_rules(false)`
 
 ### À ne pas faire
 
+- **Ne JAMAIS appeler `flush_rewrite_rules()` directement** ni avec `true` — ça réécrit le `.htaccess` et peut casser des sites (erreurs 500). Utiliser le mécanisme transient + `flush_rewrite_rules(false)`.
+- **Ne JAMAIS ajouter de rewrite rules** (`add_rewrite_rule`) — les vraies pages WP gèrent tout le routage nativement. Les rewrite rules créent des doublons sitemap et des conflits de routage.
+- **Ne pas ajouter manuellement** les pages Elaia dans les sitemaps — les vraies pages WP y apparaissent automatiquement (Yoast, RankMath, SEOPress, natif WP)
 - **Ne pas utiliser `detect_domain()`** comme source unique de domaine pour les appels API — toujours vérifier la global du shortcode d'abord
 - **Ne pas appeler `exit`** dans un shortcode — ça casse le sitemap et les crawlers
 - **Ne pas cacher les erreurs API** — un tableau vide valide est différent d'une erreur réseau
-- **Ne pas ajouter manuellement** les pages Elaia dans les sitemaps — les vraies pages WP y apparaissent automatiquement
 - **Ne pas supprimer le `www.`** lors des comparaisons de domaines — on garde le domaine tel quel
 - **Ne pas hardcoder** la liste des IDs clients My Elaia dans le plugin WP — c'est l'API qui sait
 
 ### Pièges connus
 
-1. **Double rendu** : Si une rewrite rule et une vraie page WP coexistent pour le même slug, le template virtuel et le shortcode s'exécutent tous les deux → crash. Le `parse_request` dans `rewrite.php` prévient ce cas.
+1. **Doublons sitemap** : Si des rewrite rules ou des ajouts manuels coexistent avec les vraies pages WP, chaque URL apparaît deux fois dans le sitemap. Solution : pas de rewrite rules, pas d'ajout manuel — les vraies pages suffisent.
 
 2. **Thème FSE (block theme)** : Les thèmes Full Site Editing injectent le header/footer via `wp_head()`/`wp_footer()` et les block templates, pas via `get_header()`/`get_footer()`. Un simple template custom ne suffit pas → il faut `template_redirect` + `exit`.
 
 3. **Cache transient et domaine** : La clé de cache inclut un `md5()` du domaine. Si le même chatbot est accessible via `campasun.eu` et `www.campasun.eu`, ce sont deux caches différents. Le domaine doit être cohérent partout.
 
 4. **`include_once` vs `include`** : Les fichiers `Faq.php`, `Metadata.php`, `Corpus.php` utilisent `include_once` pour la définition de fonction. Si le même fichier est inclus par le shortcode ET par le template, la fonction n'est définie qu'une fois — c'est voulu.
+
+5. **`.htaccess` et `flush_rewrite_rules()`** : Certains sites ont des règles custom dans le `.htaccess` (RewriteBase modifié, règles d'autres plugins). `flush_rewrite_rules()` ou `flush_rewrite_rules(true)` réécrit tout le fichier et écrase ces règles → erreurs 500. Toujours utiliser `flush_rewrite_rules(false)` via le mécanisme transient.
+
+6. **Format de réponse API** : L'API `has-my-elaia` retourne sans wrapper `data`, contrairement à la convention documentée. Le plugin gère les deux formats via fallback, mais si l'API est modifiée, garder la compatibilité.
+
+7. **Anciennes rewrite rules en base** : Quand on supprime des `add_rewrite_rule()` du code, les anciennes règles restent en base (`wp_options → rewrite_rules`) tant qu'un flush n'est pas fait. C'est pourquoi l'activation pose le transient `elaia_needs_flush` → le flush au prochain `init` nettoie ces règles orphelines.
 
 ---
 
@@ -404,3 +415,4 @@ tests/
 
 - [ ] Migrer la liste des IDs clients My Elaia vers un champ en base (`has_myelaia_subscription` sur le modèle `Client` ou via l'offre)
 - [ ] Ajouter un WP-Cron ou un hook `admin_init` pour la synchro périodique des pages (sans réactivation manuelle)
+- [ ] Standardiser le format de réponse API `has-my-elaia` avec le wrapper `data` (aligner sur les autres endpoints)

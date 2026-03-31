@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.1] - 2026-03-30
+### Corrigé
+- **activation.php** : `elaia_get_myelaia_domains()` retourne désormais toujours un tableau associatif `['domains' => [], 'has_subscription' => false]` — corrige le parsing qui renvoyait systématiquement `null` pour les domaines et l'abonnement
+- **activation.php** : support du format de réponse API avec ou sans wrapper `data` (fallback `$body['data']['key'] ?? $body['key']`)
+- **activation.php** : suppression de `flush_rewrite_rules()` directe — remplacé par un transient `elaia_needs_flush` consommé au prochain `init` via `flush_rewrite_rules(false)` (ne touche pas au `.htaccess`)
+- **rewrite.php** : suppression complète des rewrite rules fallback (`elaia_virtual_page`, `parse_request`, `template_include`) — les vraies pages WP gèrent tout, les rewrite rules causaient des doublons sitemap et des conflits de routage
+- **rewrite.php** : le corpus utilise `template_redirect` + `exit` (priorité 5) au lieu de `template_include` — corrige le rendu sans header/footer, notamment sur les thèmes FSE
+- **rewrite.php** : restauration des redirections 301 des anciennes URLs rewrite (`?elaia_faq=1`, `?elaia_metadata=1`)
+- **sitemap.php** : suppression de tous les ajouts manuels (Yoast, RankMath, SEOPress, natif WP) et du provider custom `ElaiaChatbotSitemapProvider` — les vraies pages WP apparaissent automatiquement dans les sitemaps, les ajouts manuels créaient des doublons
+
 ## [1.3.0] - 2026-03-30
 ### Ajouté
 - **Mode groupe mono-domaine** : support des clients avec un seul domaine et plusieurs sous-sites (ex: Campasun avec `www.campasun.eu/international/le-camping`, `www.campasun.eu/lesoleil/le-camping`)
@@ -14,8 +24,6 @@
 - `activation.php` : logique de création de pages refactorisée — les 3 pages (FAQ, Metadatas, Corpus) sont créées selon `has_subscription` retourné par l'API ; FAQ et Metadatas sont toujours créées, Corpus uniquement pour les abonnés
 - `activation.php` : suppression de `elaia_has_chatbot()` (tous les sites avec le plugin ont forcément un chatbot)
 - `activation.php` : cache transient uniquement sur succès API (HTTP 200), pas de cache si erreur réseau
-- `rewrite.php` : rewrite rules simplifiées (racine uniquement), les sous-chemins sont gérés par les vraies pages WP
-- `rewrite.php` : ajout de `parse_request` pour éviter le conflit entre rewrite rule et vraie page WP
 - `sitemap.php` : suppression du provider custom `ElaiaChatbotSitemapProvider` et des ajouts manuels Yoast/RankMath/SEOPress (les vraies pages WP apparaissent automatiquement)
 - `shortcodes.php` : les shortcodes `elaia_faq` et `elaia_metadatas` acceptent et transmettent l'attribut `domain` via globales
 - `Faq.php` / `Metadata.php` : utilisent le domaine du shortcode en priorité, fallback sur `detect_domain()`

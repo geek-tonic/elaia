@@ -8,8 +8,12 @@ if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR'))
  */
 function elaia_activate_plugin()
 {
-    elaia_create_or_update_pages();
-    flush_rewrite_rules();
+    try {
+        elaia_create_or_update_pages();
+    } catch (\Throwable $e) {
+        error_log('Elaia activation error: ' . $e->getMessage());
+    }
+    set_transient('elaia_needs_flush', true);
 }
 
 /**
@@ -17,7 +21,7 @@ function elaia_activate_plugin()
  */
 function elaia_deactivate_plugin()
 {
-    flush_rewrite_rules();
+    
 }
 
 /**
@@ -110,34 +114,31 @@ function elaia_get_myelaia_domains()
     if ($cached !== false) return $cached;
 
     $domain = parse_url(home_url(), PHP_URL_HOST);
-
     $api_host = defined('ELAIA_API_HOST') ? ELAIA_API_HOST : 'https://app.ela-ia.com';
-    $url = $api_host . 'v1/has-my-elaia?domain=' . urlencode($domain);
+    $url = $api_host . '/api/v1/has-my-elaia?domain=' . urlencode($domain);
 
     $response = wp_remote_get($url, [
         'timeout' => 10,
         'headers' => ['Accept' => 'application/json'],
     ]);
 
-    if (is_wp_error($response)) return [];
+    $default = ['domains' => [], 'has_subscription' => false];
+
+    if (is_wp_error($response)) return $default;
 
     $code = wp_remote_retrieve_response_code($response);
-    if ($code !== 200) return [];
+    if ($code !== 200) return $default;
 
     $body = json_decode(wp_remote_retrieve_body($response), true);
 
-    $has_subscription = $body['data']['has_subscription'] ?? false;
-    if (!$has_subscription) {
-        // Cache le résultat négatif aussi (c'est un résultat valide, pas une erreur)
-        set_transient('elaia_myelaia_domains', [], HOUR_IN_SECONDS);
-        return [];
-    }
+    $result = [
+        'domains'          => $body['data']['domains'] ?? $body['domains'] ?? [],
+        'has_subscription'  => $body['data']['has_subscription'] ?? $body['has_subscription'] ?? false,
+    ];
 
-    $domains = $body['data']['domains'] ?? [];
+    set_transient('elaia_myelaia_domains', $result, HOUR_IN_SECONDS);
 
-    set_transient('elaia_myelaia_domains', $domains, HOUR_IN_SECONDS);
-
-    return $domains;
+    return $result;
 }
 
 /**
