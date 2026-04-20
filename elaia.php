@@ -30,11 +30,14 @@ try {
 
   new Elaia\Utils\ElaiaUpdateChecker();
 
-  // Activation du plugin : enregistrer les règles de réécriture
-  register_activation_hook(__FILE__, 'elaia_activate_plugin');
+  // Activation du plugin (compatible multisite)
+  register_activation_hook(__FILE__, 'elaia_activate_plugin_handler');
 
-  // Désactivation du plugin : nettoyer les règles de réécriture
-  register_deactivation_hook(__FILE__, 'elaia_deactivate_plugin');
+  // Désactivation du plugin (compatible multisite)
+  register_deactivation_hook(__FILE__, 'elaia_deactivate_plugin_handler');
+
+  // Multisite : créer les pages quand un nouveau sous-site est ajouté
+  add_action('wp_insert_site', 'elaia_on_new_site');
 } catch (Exception $e) {
   throw new WP_Exception($e->getMessage());
 }

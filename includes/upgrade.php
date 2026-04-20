@@ -18,11 +18,18 @@ function elaia_on_upgrader_complete($upgrader, $options)
   $my_plugin = ELAIA_PLUGIN_BASENAME;
   if (!in_array($my_plugin, $options['plugins'], true)) return;
 
-  // Lance la migration
-  elaia_run_upgrade_tasks(get_option('elaia_plugin_version', '0.0.0'), ELAIA_VERSION);
-
-  // Sauvegarde la version installée
-  update_option('elaia_plugin_version', ELAIA_VERSION, false);
+  if (is_multisite() && is_plugin_active_for_network($my_plugin)) {
+    $site_ids = get_sites(['fields' => 'ids', 'number' => 0]);
+    foreach ($site_ids as $site_id) {
+      switch_to_blog($site_id);
+      elaia_run_upgrade_tasks(get_option('elaia_plugin_version', '0.0.0'), ELAIA_VERSION);
+      update_option('elaia_plugin_version', ELAIA_VERSION, false);
+      restore_current_blog();
+    }
+  } else {
+    elaia_run_upgrade_tasks(get_option('elaia_plugin_version', '0.0.0'), ELAIA_VERSION);
+    update_option('elaia_plugin_version', ELAIA_VERSION, false);
+  }
 }
 
 add_action('admin_init', 'elaia_maybe_run_upgrade_fallback', 1);

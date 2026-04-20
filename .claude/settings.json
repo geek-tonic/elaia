@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/geektonic/Documents/elaia -name \"*.php\" -exec grep -l \"wp_rewrite\\\\|rewrite_rules_array\\\\|rewrite_tag\" {} \\\\;)",
+      "WebFetch(domain:www.campingsaintamand.com)",
+      "Bash(curl -sI -L \"https://www.campingsaintamand.com/elaia-metadatas/\")",
+      "Bash(curl -s -L \"https://www.campingsaintamand.com/elaia-metadatas/?elaia_nocache=1\")",
+      "Read(//tmp/**)",
+      "Read(//private/tmp/**)",
+      "Bash(curl -s -X POST https://app.ela-ia.com/api/v1/chatbot/metadatas -H 'Accept: application/json' -H 'Content-Type: application/x-www-form-urlencoded' -H 'Referer: https://www.campingsaintamand.com/elaia-metadatas/' -d domain=www.campingsaintamand.com -w '\\\\n---HTTP:%{http_code} TIME:%{time_total}s SIZE:%{size_download}\\\\n')",
+      "Bash(curl -s 'https://www.campingsaintamand.com/wp-json/wp/v2/pages/10095')",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('template:', d.get\\('template'\\)\\); print\\('parent:', d.get\\('parent'\\)\\); print\\('status:', d.get\\('status'\\)\\); print\\('type:', d.get\\('type'\\)\\)\")",
+      "Bash(awk '/<body/,/<\\\\/body>/' /tmp/elaia_meta2.html)",
+      "Bash(grep -vE \"^$|gdpr|moove\")",
+      "Bash(curl -s -L \"https://www.campingsaintamand.com/camping-flower-ardeche/\")",
+      "Bash(awk '/id=\"header-banner\"/,/id=\"content-footer\"/' /tmp/other.html)",
+      "Bash(awk '/id=\"header-banner\"/,/id=\"content-footer\"/' /tmp/elaia_meta2.html)",
+      "Bash(curl -s -L \"https://www.eldapi-vacances.fr/elaia-metadatas/\")"
+    ],
+    "additionalDirectories": [
+      "/tmp"
+    ]
+  }
+}

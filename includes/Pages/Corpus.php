@@ -93,6 +93,7 @@ if (!function_exists('elaia_prepare_corpus_payload')) {
         $default_picture = $settings['default_picture'] ?? null;
         $hook_text = $settings['hook'] ?? '';
         $primary_color = $settings['primary_color'] ?? '#16a34a';
+        $has_planning = !empty($settings['has_planning']);
         $chat_host = 'https://chatbot.ela-ia.com';
         $app_host = 'https://app.ela-ia.com';
 
