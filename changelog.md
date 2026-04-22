@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.2] - 2026-04-20
+### Corrigé
+- **rewrite.php** : ajout d'un `template_redirect` (priorité 5) pour les pages Metadata et FAQ — les thèmes qui n'appellent pas `the_content()` (ex: Falconheavy / Flower Campings) ne rendaient jamais le shortcode. Le hook inclut les templates du plugin (`templates/elaia-metadata.php`, `templates/elaia-faq.php`) qui appellent `get_header()` / `get_footer()` → le header et footer du thème sont préservés
+- Extraction automatique de l'attribut `domain` du shortcode pour le mode groupe
+- Crawlers internes (Yoast, WP-Cron, AJAX) exclus du hook pour ne pas casser le sitemap
+
 ## [1.3.1] - 2026-03-30
 ### Corrigé
 - **activation.php** : `elaia_get_myelaia_domains()` retourne désormais toujours un tableau associatif `['domains' => [], 'has_subscription' => false]` — corrige le parsing qui renvoyait systématiquement `null` pour les domaines et l'abonnement

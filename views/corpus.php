@@ -407,6 +407,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
          'primaryColor'   => $primary_color,
          'corpus'         => $corpus,
          'suggests'       => $suggests,
+         'hasPlanning'    => $has_planning,
      ])); ?>'>
 </div>
 
@@ -446,6 +447,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     var agentPicture   = config.agentPicture    || null;
     var defaultPicture = config.defaultPicture  || null;
     var hookText       = config.hookText        || '';
+    var hasPlanning    = !!config.hasPlanning;
 
     // Appliquer la couleur primaire au thème
     if (config.primaryColor) {
@@ -457,7 +459,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     // ÉTAT DE L'APPLICATION
     // ═══════════════════════════════════════
 
-    var activeTab           = 'home';         // Onglet actif : home | map | chatbot | contact
+    var activeTab           = 'home';         // Onglet actif : home | map | planning | chatbot | contact
     var currentView         = 'categories';   // Vue dans l'onglet home : categories | subcategories | cards
     var selectedCategory    = null;           // Catégorie sélectionnée (objet)
     var selectedSubCategory = null;           // Sous-catégorie sélectionnée (objet)
@@ -493,15 +495,15 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     // ═══════════════════════════════════════
 
     var UI_TRANSLATIONS = {
-        fr:  { welcome:'Bienvenue !',online:'En ligne',frequent_questions:'💡 Questions fréquentes',home:'Accueil',map:'Carte',conversations:'Conversations',contact:'Contact',start_chat:'Commencer la discussion',see_cards:'Voir les fiches',see_on_map:'Voir sur la carte',see_more:'👁 En voir +',detailed_info:'Informations détaillées',directions:'🧭 Itinéraires',close:'Fermer',loading:'Chargement...',no_section:'Aucune rubrique.',no_card:'Aucune fiche.',card:'fiche',cards:'fiches',chatbot_unavailable:'Chatbot non disponible',chatbot_not_configured:'Le chatbot n\'est pas configuré pour ce site.',contact_unavailable:'Contact non disponible',contact_not_configured:'Les informations de contact ne sont pas configurées.',load_error:'Impossible de charger les données.' },
-        en:  { welcome:'Welcome!',online:'Online',frequent_questions:'💡 Frequently asked questions',home:'Home',map:'Map',conversations:'Conversations',contact:'Contact',start_chat:'Start a conversation',see_cards:'View cards',see_on_map:'View on map',see_more:'👁 See more',detailed_info:'Detailed information',directions:'🧭 Directions',close:'Close',loading:'Loading...',no_section:'No section.',no_card:'No card.',card:'card',cards:'cards',chatbot_unavailable:'Chatbot unavailable',chatbot_not_configured:'The chatbot is not configured for this site.',contact_unavailable:'Contact unavailable',contact_not_configured:'Contact information is not configured.',load_error:'Unable to load data.' },
-        es:  { welcome:'¡Bienvenido!',online:'En línea',frequent_questions:'💡 Preguntas frecuentes',home:'Inicio',map:'Mapa',conversations:'Conversaciones',contact:'Contacto',start_chat:'Iniciar conversación',see_cards:'Ver fichas',see_on_map:'Ver en el mapa',see_more:'👁 Ver más',detailed_info:'Información detallada',directions:'🧭 Cómo llegar',close:'Cerrar',loading:'Cargando...',no_section:'Sin sección.',no_card:'Sin ficha.',card:'ficha',cards:'fichas',chatbot_unavailable:'Chatbot no disponible',chatbot_not_configured:'El chatbot no está configurado para este sitio.',contact_unavailable:'Contacto no disponible',contact_not_configured:'La información de contacto no está configurada.',load_error:'No se pueden cargar los datos.' },
-        de:  { welcome:'Willkommen!',online:'Online',frequent_questions:'💡 Häufige Fragen',home:'Startseite',map:'Karte',conversations:'Gespräche',contact:'Kontakt',start_chat:'Gespräch starten',see_cards:'Karten anzeigen',see_on_map:'Auf der Karte',see_more:'👁 Mehr sehen',detailed_info:'Detaillierte Informationen',directions:'🧭 Wegbeschreibung',close:'Schließen',loading:'Laden...',no_section:'Kein Bereich.',no_card:'Keine Karte.',card:'Karte',cards:'Karten',chatbot_unavailable:'Chatbot nicht verfügbar',chatbot_not_configured:'Der Chatbot ist für diese Seite nicht konfiguriert.',contact_unavailable:'Kontakt nicht verfügbar',contact_not_configured:'Kontaktinformationen sind nicht konfiguriert.',load_error:'Daten konnten nicht geladen werden.' },
-        nl:  { welcome:'Welkom!',online:'Online',frequent_questions:'💡 Veelgestelde vragen',home:'Home',map:'Kaart',conversations:'Gesprekken',contact:'Contact',start_chat:'Start een gesprek',see_cards:'Bekijk kaarten',see_on_map:'Op de kaart',see_more:'👁 Meer zien',detailed_info:'Gedetailleerde informatie',directions:'🧭 Routebeschrijving',close:'Sluiten',loading:'Laden...',no_section:'Geen sectie.',no_card:'Geen kaart.',card:'kaart',cards:'kaarten',chatbot_unavailable:'Chatbot niet beschikbaar',chatbot_not_configured:'De chatbot is niet geconfigureerd voor deze site.',contact_unavailable:'Contact niet beschikbaar',contact_not_configured:'Contactinformatie is niet geconfigureerd.',load_error:'Kan gegevens niet laden.' },
-        it:  { welcome:'Benvenuto!',online:'Online',frequent_questions:'💡 Domande frequenti',home:'Home',map:'Mappa',conversations:'Conversazioni',contact:'Contatto',start_chat:'Inizia una conversazione',see_cards:'Vedi schede',see_on_map:'Vedi sulla mappa',see_more:'👁 Vedi di più',detailed_info:'Informazioni dettagliate',directions:'🧭 Indicazioni',close:'Chiudi',loading:'Caricamento...',no_section:'Nessuna sezione.',no_card:'Nessuna scheda.',card:'scheda',cards:'schede',chatbot_unavailable:'Chatbot non disponibile',chatbot_not_configured:'Il chatbot non è configurato per questo sito.',contact_unavailable:'Contatto non disponibile',contact_not_configured:'Le informazioni di contatto non sono configurate.',load_error:'Impossibile caricare i dati.' },
-        pt:  { welcome:'Bem-vindo!',online:'Online',frequent_questions:'💡 Perguntas frequentes',home:'Início',map:'Mapa',conversations:'Conversas',contact:'Contacto',start_chat:'Iniciar conversa',see_cards:'Ver fichas',see_on_map:'Ver no mapa',see_more:'👁 Ver mais',detailed_info:'Informações detalhadas',directions:'🧭 Direções',close:'Fechar',loading:'A carregar...',no_section:'Sem secção.',no_card:'Sem ficha.',card:'ficha',cards:'fichas',chatbot_unavailable:'Chatbot indisponível',chatbot_not_configured:'O chatbot não está configurado para este site.',contact_unavailable:'Contacto indisponível',contact_not_configured:'As informações de contacto não estão configuradas.',load_error:'Não foi possível carregar os dados.' },
-        eus: { welcome:'Ongi etorri!',online:'Linean',frequent_questions:'💡 Maiz egiten diren galderak',home:'Hasiera',map:'Mapa',conversations:'Elkarrizketak',contact:'Kontaktua',start_chat:'Elkarrizketa hasi',see_cards:'Fitxak ikusi',see_on_map:'Mapan ikusi',see_more:'👁 Gehiago ikusi',detailed_info:'Informazio xehatua',directions:'🧭 Nola iritsi',close:'Itxi',loading:'Kargatzen...',no_section:'Atalik ez.',no_card:'Fitxarik ez.',card:'fitxa',cards:'fitxa',chatbot_unavailable:'Chatbot-a ez dago eskuragarri',chatbot_not_configured:'Chatbot-a ez dago gune honetarako konfiguratuta.',contact_unavailable:'Kontaktua ez dago eskuragarri',contact_not_configured:'Kontaktu informazioa ez dago konfiguratuta.',load_error:'Ezin izan dira datuak kargatu.' },
-        cat: { welcome:'Benvingut!',online:'En línia',frequent_questions:'💡 Preguntes freqüents',home:'Inici',map:'Mapa',conversations:'Converses',contact:'Contacte',start_chat:'Iniciar conversa',see_cards:'Veure fitxes',see_on_map:'Veure al mapa',see_more:'👁 Veure més',detailed_info:'Informació detallada',directions:'🧭 Com arribar-hi',close:'Tancar',loading:'Carregant...',no_section:'Cap secció.',no_card:'Cap fitxa.',card:'fitxa',cards:'fitxes',chatbot_unavailable:'Chatbot no disponible',chatbot_not_configured:'El chatbot no està configurat per a aquest lloc.',contact_unavailable:'Contacte no disponible',contact_not_configured:'La informació de contacte no està configurada.',load_error:'No s\'han pogut carregar les dades.' },
+        fr:  { welcome:'Bienvenue !',online:'En ligne',frequent_questions:'💡 Questions fréquentes',home:'Accueil',map:'Carte',planning:'Planning',conversations:'Conversations',contact:'Contact',start_chat:'Commencer la discussion',see_cards:'Voir les fiches',see_on_map:'Voir sur la carte',see_more:'👁 En voir +',detailed_info:'Informations détaillées',directions:'🧭 Itinéraires',close:'Fermer',loading:'Chargement...',no_section:'Aucune rubrique.',no_card:'Aucune fiche.',card:'fiche',cards:'fiches',chatbot_unavailable:'Chatbot non disponible',chatbot_not_configured:'Le chatbot n\'est pas configuré pour ce site.',planning_unavailable:'Planning non disponible',planning_not_configured:'Le planning n\'est pas configuré pour ce site.',contact_unavailable:'Contact non disponible',contact_not_configured:'Les informations de contact ne sont pas configurées.',load_error:'Impossible de charger les données.' },
+        en:  { welcome:'Welcome!',online:'Online',frequent_questions:'💡 Frequently asked questions',home:'Home',map:'Map',planning:'Planning',conversations:'Conversations',contact:'Contact',start_chat:'Start a conversation',see_cards:'View cards',see_on_map:'View on map',see_more:'👁 See more',detailed_info:'Detailed information',directions:'🧭 Directions',close:'Close',loading:'Loading...',no_section:'No section.',no_card:'No card.',card:'card',cards:'cards',chatbot_unavailable:'Chatbot unavailable',chatbot_not_configured:'The chatbot is not configured for this site.',planning_unavailable:'Planning unavailable',planning_not_configured:'The planning is not configured for this site.',contact_unavailable:'Contact unavailable',contact_not_configured:'Contact information is not configured.',load_error:'Unable to load data.' },
+        es:  { welcome:'¡Bienvenido!',online:'En línea',frequent_questions:'💡 Preguntas frecuentes',home:'Inicio',map:'Mapa',planning:'Planning',conversations:'Conversaciones',contact:'Contacto',start_chat:'Iniciar conversación',see_cards:'Ver fichas',see_on_map:'Ver en el mapa',see_more:'👁 Ver más',detailed_info:'Información detallada',directions:'🧭 Cómo llegar',close:'Cerrar',loading:'Cargando...',no_section:'Sin sección.',no_card:'Sin ficha.',card:'ficha',cards:'fichas',chatbot_unavailable:'Chatbot no disponible',chatbot_not_configured:'El chatbot no está configurado para este sitio.',planning_unavailable:'Planning no disponible',planning_not_configured:'El planning no está configurado para este sitio.',contact_unavailable:'Contacto no disponible',contact_not_configured:'La información de contacto no está configurada.',load_error:'No se pueden cargar los datos.' },
+        de:  { welcome:'Willkommen!',online:'Online',frequent_questions:'💡 Häufige Fragen',home:'Startseite',map:'Karte',planning:'Programm',conversations:'Gespräche',contact:'Kontakt',start_chat:'Gespräch starten',see_cards:'Karten anzeigen',see_on_map:'Auf der Karte',see_more:'👁 Mehr sehen',detailed_info:'Detaillierte Informationen',directions:'🧭 Wegbeschreibung',close:'Schließen',loading:'Laden...',no_section:'Kein Bereich.',no_card:'Keine Karte.',card:'Karte',cards:'Karten',chatbot_unavailable:'Chatbot nicht verfügbar',chatbot_not_configured:'Der Chatbot ist für diese Seite nicht konfiguriert.',planning_unavailable:'Programm nicht verfügbar',planning_not_configured:'Das Programm ist für diese Seite nicht konfiguriert.',contact_unavailable:'Kontakt nicht verfügbar',contact_not_configured:'Kontaktinformationen sind nicht konfiguriert.',load_error:'Daten konnten nicht geladen werden.' },
+        nl:  { welcome:'Welkom!',online:'Online',frequent_questions:'💡 Veelgestelde vragen',home:'Home',map:'Kaart',planning:'Planning',conversations:'Gesprekken',contact:'Contact',start_chat:'Start een gesprek',see_cards:'Bekijk kaarten',see_on_map:'Op de kaart',see_more:'👁 Meer zien',detailed_info:'Gedetailleerde informatie',directions:'🧭 Routebeschrijving',close:'Sluiten',loading:'Laden...',no_section:'Geen sectie.',no_card:'Geen kaart.',card:'kaart',cards:'kaarten',chatbot_unavailable:'Chatbot niet beschikbaar',chatbot_not_configured:'De chatbot is niet geconfigureerd voor deze site.',planning_unavailable:'Planning niet beschikbaar',planning_not_configured:'De planning is niet geconfigureerd voor deze site.',contact_unavailable:'Contact niet beschikbaar',contact_not_configured:'Contactinformatie is niet geconfigureerd.',load_error:'Kan gegevens niet laden.' },
+        it:  { welcome:'Benvenuto!',online:'Online',frequent_questions:'💡 Domande frequenti',home:'Home',map:'Mappa',planning:'Programma',conversations:'Conversazioni',contact:'Contatto',start_chat:'Inizia una conversazione',see_cards:'Vedi schede',see_on_map:'Vedi sulla mappa',see_more:'👁 Vedi di più',detailed_info:'Informazioni dettagliate',directions:'🧭 Indicazioni',close:'Chiudi',loading:'Caricamento...',no_section:'Nessuna sezione.',no_card:'Nessuna scheda.',card:'scheda',cards:'schede',chatbot_unavailable:'Chatbot non disponibile',chatbot_not_configured:'Il chatbot non è configurato per questo sito.',planning_unavailable:'Programma non disponibile',planning_not_configured:'Il programma non è configurato per questo sito.',contact_unavailable:'Contatto non disponibile',contact_not_configured:'Le informazioni di contatto non sono configurate.',load_error:'Impossibile caricare i dati.' },
+        pt:  { welcome:'Bem-vindo!',online:'Online',frequent_questions:'💡 Perguntas frequentes',home:'Início',map:'Mapa',planning:'Programa',conversations:'Conversas',contact:'Contacto',start_chat:'Iniciar conversa',see_cards:'Ver fichas',see_on_map:'Ver no mapa',see_more:'👁 Ver mais',detailed_info:'Informações detalhadas',directions:'🧭 Direções',close:'Fechar',loading:'A carregar...',no_section:'Sem secção.',no_card:'Sem ficha.',card:'ficha',cards:'fichas',chatbot_unavailable:'Chatbot indisponível',chatbot_not_configured:'O chatbot não está configurado para este site.',planning_unavailable:'Programa indisponível',planning_not_configured:'O programa não está configurado para este site.',contact_unavailable:'Contacto indisponível',contact_not_configured:'As informações de contacto não estão configuradas.',load_error:'Não foi possível carregar os dados.' },
+        eus: { welcome:'Ongi etorri!',online:'Linean',frequent_questions:'💡 Maiz egiten diren galderak',home:'Hasiera',map:'Mapa',planning:'Programa',conversations:'Elkarrizketak',contact:'Kontaktua',start_chat:'Elkarrizketa hasi',see_cards:'Fitxak ikusi',see_on_map:'Mapan ikusi',see_more:'👁 Gehiago ikusi',detailed_info:'Informazio xehatua',directions:'🧭 Nola iritsi',close:'Itxi',loading:'Kargatzen...',no_section:'Atalik ez.',no_card:'Fitxarik ez.',card:'fitxa',cards:'fitxa',chatbot_unavailable:'Chatbot-a ez dago eskuragarri',chatbot_not_configured:'Chatbot-a ez dago gune honetarako konfiguratuta.',planning_unavailable:'Programa ez dago eskuragarri',planning_not_configured:'Programa ez dago gune honetarako konfiguratuta.',contact_unavailable:'Kontaktua ez dago eskuragarri',contact_not_configured:'Kontaktu informazioa ez dago konfiguratuta.',load_error:'Ezin izan dira datuak kargatu.' },
+        cat: { welcome:'Benvingut!',online:'En línia',frequent_questions:'💡 Preguntes freqüents',home:'Inici',map:'Mapa',planning:'Programa',conversations:'Converses',contact:'Contacte',start_chat:'Iniciar conversa',see_cards:'Veure fitxes',see_on_map:'Veure al mapa',see_more:'👁 Veure més',detailed_info:'Informació detallada',directions:'🧭 Com arribar-hi',close:'Tancar',loading:'Carregant...',no_section:'Cap secció.',no_card:'Cap fitxa.',card:'fitxa',cards:'fitxes',chatbot_unavailable:'Chatbot no disponible',chatbot_not_configured:'El chatbot no està configurat per a aquest lloc.',planning_unavailable:'Programa no disponible',planning_not_configured:'El programa no està configurat per a aquest lloc.',contact_unavailable:'Contacte no disponible',contact_not_configured:'La informació de contacte no està configurada.',load_error:'No s\'han pogut carregar les dades.' },
     };
 
     /** Retourne la traduction d'une clé UI dans la langue courante (fallback: français) */
@@ -596,10 +598,11 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
 
         var html = '';
         switch (activeTab) {
-            case 'home':    html += '<div class="ec-scroll">' + renderHomePage() + '</div>'; break;
-            case 'map':     html += '<div class="ec-map-page"><div id="ec-map-full" class="ec-map-full"></div></div>'; break;
-            case 'chatbot': html += renderChatbotPage(); break;
-            case 'contact': html += renderContactPage(); break;
+            case 'home':     html += '<div class="ec-scroll">' + renderHomePage() + '</div>'; break;
+            case 'map':      html += '<div class="ec-map-page"><div id="ec-map-full" class="ec-map-full"></div></div>'; break;
+            case 'planning': html += renderPlanningPage(); break;
+            case 'chatbot':  html += renderChatbotPage(); break;
+            case 'contact':  html += renderContactPage(); break;
         }
         html += renderBottomNavbar();
 
@@ -616,11 +619,15 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     /** Rend la barre de navigation avec les 4 onglets */
     function renderBottomNavbar() {
         var tabs = [
-            { id: 'home',    icon: '🏠', label: t('home') },
-            { id: 'map',     icon: '🗺️', label: t('map') },
-            { id: 'chatbot', icon: '💬', label: t('conversations') },
-            { id: 'contact', icon: '📞', label: t('contact') },
-        ];
+            { id: 'home',     icon: '🏠', label: t('home') },
+            { id: 'map',      icon: '🗺️', label: t('map') },
+            { id: 'planning', icon: '📅', label: t('planning') },
+            { id: 'chatbot',  icon: '💬', label: t('conversations') },
+            { id: 'contact',  icon: '📞', label: t('contact') },
+        ].filter(function(tab) {
+            if (tab.id === 'planning' && !hasPlanning) return false;
+            return true;
+        });
         return '<nav class="ec-navbar">' + tabs.map(function(tab) {
             return '<button class="ec-nav-item ' + (activeTab === tab.id ? 'active' : '') + '" data-tab="' + tab.id + '">'
                 + '<span class="ec-nav-icon">' + tab.icon + '</span>'
@@ -815,6 +822,16 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     // ═══════════════════════════════════════
     // RENDU — Chatbot & Contact (iframes)
     // ═══════════════════════════════════════
+
+    /** Rend l'onglet Planning (iframe vers la page planning Elaia, ou placeholder si non configuré) */
+    function renderPlanningPage() {
+        if (!chatbotKey) {
+            return '<div class="ec-placeholder-page"><div class="ec-placeholder-icon">📅</div>'
+                + '<h2 class="ec-placeholder-title">' + t('planning_unavailable') + '</h2>'
+                + '<p class="ec-placeholder-desc">' + t('planning_not_configured') + '</p></div>';
+        }
+        return '<div class="ec-iframe-page"><iframe class="ec-iframe" src="' + CHAT_HOST + '/planning-plugin?k=' + encodeURIComponent(chatbotKey) + '&lang=' + currentLang + '" allow="microphone"></iframe></div>';
+    }
 
     /** Rend l'onglet Chatbot (iframe vers le chat Elaia, ou placeholder si non configuré) */
     function renderChatbotPage() {

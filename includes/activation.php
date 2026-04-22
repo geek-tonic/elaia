@@ -4,24 +4,77 @@ if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR'))
     exit;
 
 /**
- * Fonction appelée lors de l'activation du plugin
+ * Handler d'activation compatible multisite.
+ * Détecte si l'activation est réseau-wide et itère sur chaque site.
+ */
+function elaia_activate_plugin_handler($network_wide)
+{
+    if (is_multisite() && $network_wide) {
+        elaia_run_on_all_sites('elaia_activate_plugin');
+    } else {
+        elaia_activate_plugin();
+    }
+}
+
+/**
+ * Handler de désactivation compatible multisite.
+ */
+function elaia_deactivate_plugin_handler($network_wide)
+{
+    if (is_multisite() && $network_wide) {
+        elaia_run_on_all_sites('elaia_deactivate_plugin');
+    } else {
+        elaia_deactivate_plugin();
+    }
+}
+
+/**
+ * Exécute un callback sur chaque site du réseau multisite.
+ */
+function elaia_run_on_all_sites($callback)
+{
+    $site_ids = get_sites(['fields' => 'ids', 'number' => 0]);
+    foreach ($site_ids as $site_id) {
+        switch_to_blog($site_id);
+        call_user_func($callback);
+        restore_current_blog();
+    }
+}
+
+/**
+ * Quand un nouveau sous-site est créé, initialiser les pages Elaia
+ * si le plugin est activé sur le réseau.
+ */
+function elaia_on_new_site($new_site)
+{
+    if (!is_plugin_active_for_network(ELAIA_PLUGIN_BASENAME)) {
+        return;
+    }
+
+    switch_to_blog($new_site->blog_id);
+    elaia_activate_plugin();
+    restore_current_blog();
+}
+
+/**
+ * Fonction appelée lors de l'activation du plugin (par site)
  */
 function elaia_activate_plugin()
 {
     try {
         elaia_create_or_update_pages();
     } catch (\Throwable $e) {
-        error_log('Elaia activation error: ' . $e->getMessage());
+        error_log('Elaia activation error (site ' . get_current_blog_id() . '): ' . $e->getMessage());
     }
     set_transient('elaia_needs_flush', true);
 }
 
 /**
- * Fonction appelée lors de la désactivation du plugin
+ * Fonction appelée lors de la désactivation du plugin (par site)
  */
 function elaia_deactivate_plugin()
 {
-    
+
 }
 
 /**

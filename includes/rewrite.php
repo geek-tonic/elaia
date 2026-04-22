@@ -38,6 +38,43 @@ add_action('template_redirect', function () {
     }
 }, 5);
 
+// ── Metadata / FAQ : rendu AVEC header/footer du thème (template_redirect + exit) ──
+// Indispensable pour les thèmes qui n'appellent pas the_content() (ex: Falconheavy)
+add_action('template_redirect', function () {
+    global $post;
+    if (!$post) return;
+
+    if (wp_doing_ajax() || wp_doing_cron() || defined('XMLRPC_REQUEST')) return;
+    if (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'WordPress') !== false) return;
+
+    $shortcode = null;
+    $template  = null;
+    $globalVar = null;
+
+    if (has_shortcode($post->post_content, 'elaia_metadatas')) {
+        $shortcode = 'elaia_metadatas';
+        $template  = ELAIA_PLUGIN_DIR . 'templates/elaia-metadata.php';
+        $globalVar = 'elaia_metadatas_domain';
+    } elseif (has_shortcode($post->post_content, 'elaia_faq')) {
+        $shortcode = 'elaia_faq';
+        $template  = ELAIA_PLUGIN_DIR . 'templates/elaia-faq.php';
+        $globalVar = 'elaia_faq_domain';
+    } else {
+        return;
+    }
+
+    if (!file_exists($template)) return;
+
+    // Extraire l'attribut "domain" du shortcode pour le mode groupe
+    if (preg_match('/\[' . preg_quote($shortcode, '/') . '\b([^\]]*)\]/', $post->post_content, $m)) {
+        $atts = shortcode_parse_atts($m[1]);
+        $GLOBALS[$globalVar] = !empty($atts['domain']) ? $atts['domain'] : null;
+    }
+
+    include $template;
+    exit;
+}, 5);
+
 add_action('init', function () {
     if (get_transient('elaia_needs_flush')) {
         delete_transient('elaia_needs_flush');
