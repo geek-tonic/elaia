@@ -161,12 +161,16 @@ function elaia_has_chatbot()
     return $has;
 }
 
-function elaia_get_myelaia_domains()
+function elaia_get_myelaia_domains($domain = null)
 {
-    $cached = get_transient('elaia_myelaia_domains');
+    if ($domain === null) {
+        $domain = parse_url(home_url(), PHP_URL_HOST);
+    }
+
+    $cache_key = 'elaia_myelaia_domains_' . md5(strtolower(trim((string)$domain)));
+    $cached = get_transient($cache_key);
     if ($cached !== false) return $cached;
 
-    $domain = parse_url(home_url(), PHP_URL_HOST);
     $api_host = defined('ELAIA_API_HOST') ? ELAIA_API_HOST : 'https://app.ela-ia.com';
     $url = $api_host . '/api/v1/has-my-elaia?domain=' . urlencode($domain);
 
@@ -189,7 +193,7 @@ function elaia_get_myelaia_domains()
         'has_subscription'  => $body['data']['has_subscription'] ?? $body['has_subscription'] ?? false,
     ];
 
-    set_transient('elaia_myelaia_domains', $result, HOUR_IN_SECONDS);
+    set_transient($cache_key, $result, HOUR_IN_SECONDS);
 
     return $result;
 }
