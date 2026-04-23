@@ -43,17 +43,24 @@ sudo wp option update permalink_structure '/%postname%/' --path=/var/www/html --
 sudo wp rewrite flush --path=/var/www/html --allow-root
 echo "Permaliens configurés !"
 
-# Page Metadatas (idempotent : créée uniquement si absente)
-if ! sudo wp post list --post_type=page --name=elaia-metadatas --field=ID --path=/var/www/html --allow-root | grep -q .; then
-  sudo wp post create \
-    --post_type=page \
-    --post_title="Metadatas" \
-    --post_name="elaia-metadatas" \
-    --post_status=publish \
-    --post_content='[elaia_metadatas]' \
-    --path=/var/www/html --allow-root
-  echo "Page /elaia-metadatas/ créée !"
-fi
+# Pages (idempotent : créées uniquement si absentes)
+create_page_if_missing() {
+  local slug="$1" title="$2" shortcode="$3"
+  if ! sudo wp post list --post_type=page --name="$slug" --field=ID --path=/var/www/html --allow-root | grep -q .; then
+    sudo wp post create \
+      --post_type=page \
+      --post_title="$title" \
+      --post_name="$slug" \
+      --post_status=publish \
+      --post_content="$shortcode" \
+      --path=/var/www/html --allow-root
+    echo "Page /$slug/ créée !"
+  fi
+}
+
+create_page_if_missing "elaia-metadatas" "Metadatas" '[elaia_metadatas]'
+create_page_if_missing "elaia-glossary"  "FAQ"       '[elaia_faq]'
+create_page_if_missing "my-elaia-plugin" "Corpus"    '[elaia_corpus]'
 
 cat > /home/vscode/.welcome <<'EOF'
 
