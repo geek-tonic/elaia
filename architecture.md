@@ -48,6 +48,14 @@ elaia/
 ├── ARCHITECTURE.md                        # Logique du plugin
 ├── .gitignore
 │
+├── .devcontainer/                         # Environnement de dev VSCode (voir section 13)
+│   ├── Dockerfile                         # Image WordPress + wp-cli + outils dev
+│   ├── docker-compose.yml                 # Stack WordPress + MariaDB (avec env_file)
+│   ├── devcontainer.json                  # Config VSCode Dev Containers
+│   ├── setup.sh                           # Bootstrap : install WP, active plugin, crée les pages
+│   ├── .env                               # Variables locales (gitignored — copie de .env.example)
+│   └── .env.example                       # Template des variables dev (ELAIA_DEV_DOMAIN)
+│
 ├── assets/
 │   ├── cat.svg                            # Drapeau catalan (sélecteur de langue corpus)
 │   ├── eus.svg                            # Drapeau basque (sélecteur de langue corpus)
@@ -248,7 +256,7 @@ if ($domain_host !== $referer_host) { /* 403 */ }
 
 | Clé                           | TTL     | Contenu                          | Invalidation              |
 |-------------------------------|---------|----------------------------------|---------------------------|
-| `elaia_myelaia_domains`       | 1h      | `{has_subscription, domains[]}` | Réactivation plugin       |
+| `elaia_myelaia_domains_{md5(domain)}` | 1h | `{has_subscription, domains[]}` | Réactivation plugin |
 | `elaia_needs_flush`           | —       | `true` (flag one-shot)           | Consommé au prochain `init` |
 | `elaia_faq_{md5(domain)}_data`| 30 min  | Payload API FAQ                  | `?elaia_nocache=1` ou `?elaia_clear_cache=1` (admin) |
 | `elaia_metadatas_{md5(domain)}_data` | 30 min | Payload API métadonnées | Idem |
@@ -313,6 +321,8 @@ Les anciennes URLs basées sur les query params (`?elaia_faq=1`, `?elaia_metadat
 ### 9.2. Template redirect pour le corpus
 
 Le corpus (`my-elaia-plugin`) doit s'afficher SANS header/footer du thème. Le hook `template_redirect` (priorité 5) intercepte avant le rendu du thème et fait un rendu HTML complet + `exit`.
+
+**Gate `has_subscription`** : avant d'inclure le template, le hook appelle `elaia_get_myelaia_domains($domain)` (avec le domaine résolu : dev override > shortcode attr > auto-detect). Si `has_subscription=false` ou API injoignable → `status_header(404)` + rendu du template 404 du thème + `exit`. C'est une sécurité runtime qui complète la gestion à l'activation.
 
 **Exception** : Les crawlers internes (Yoast, etc.) sont laissés passer pour que le sitemap fonctionne.
 
@@ -416,3 +426,79 @@ tests/
 - [ ] Migrer la liste des IDs clients My Elaia vers un champ en base (`has_myelaia_subscription` sur le modèle `Client` ou via l'offre)
 - [ ] Ajouter un WP-Cron ou un hook `admin_init` pour la synchro périodique des pages (sans réactivation manuelle)
 - [ ] Standardiser le format de réponse API `has-my-elaia` avec le wrapper `data` (aligner sur les autres endpoints)
+
+---
+
+## 13. Environnement de développement local
+
+### 13.1. Stack devcontainer
+
+Tout le dev local passe par un devcontainer VSCode (dossier [.devcontainer/](.devcontainer/)) :
+
+- **WordPress** : image officielle `wordpress` (Apache + PHP 8.3) + wp-cli installé dans le Dockerfile
+- **MariaDB 10.11** : base de données
+- **Volumes nommés** : `db_data` (DB) et `wordpress_plugins` (autres plugins éventuels)
+- **Bind mount** : le code du plugin est monté directement sur `/var/www/html/wp-content/plugins/elaia-plugin` → modifications instantanées sans rebuild
+- **Setup auto** (`setup.sh`) lancé par la config VSCode : installe WP, active le plugin, configure les permaliens (`/%postname%/`), flush les rewrite rules, crée les 3 pages virtuelles (`elaia-metadatas`, `elaia-glossary`, `my-elaia-plugin`) de façon idempotente
+
+### 13.2. Fichier `.env` et variable `ELAIA_DEV_DOMAIN`
+
+Docker Compose charge `.devcontainer/.env` via `env_file` (avec `required: false` — le conteneur démarre même sans `.env`). Les variables deviennent accessibles dans PHP via `getenv()`.
+
+```
+# .devcontainer/.env.example (committé)
+ELAIA_DEV_DOMAIN=mondomaine-de-test.fr
+```
+
+**Usage** : `cp .devcontainer/.env.example .devcontainer/.env`, ajuster la valeur, puis **recréer le conteneur** (les variables `env_file` sont lues uniquement à la création, pas au restart) :
+```bash
+docker compose up -d --force-recreate wordpress
+# ou : Dev Containers: Rebuild Container (VSCode)
+```
+
+### 13.3. Override du domaine en dev
+
+Les 3 fonctions de page (`elaia_prepare_faq_payload()`, `elaia_prepare_metadata_payload()`, `elaia_prepare_corpus_payload()`) suivent le même pattern pour gérer le dev :
+
+```php
+$dev_domain = (defined('WP_DEBUG') && WP_DEBUG) ? getenv('ELAIA_DEV_DOMAIN') : '';
+$domain  = $dev_domain ?: ($elaia_xxx_domain ?: ElaiaPagesMethods::detect_domain());
+$referer = $dev_domain ? 'https://' . $dev_domain . '/' : ElaiaPagesMethods::detect_referer();
+```
+
+**Priorité** : env var (WP_DEBUG only) > shortcode/rewrite global > auto-detect.
+
+**Pourquoi override aussi le Referer** : l'API Elaia valide le header Referer (`403 "Referer not safe"` sinon). En dev, le vrai Referer est `http://localhost:8080/...` → rejeté. On le reconstruit à partir du domaine dev pour que l'API accepte.
+
+**Gating par `WP_DEBUG`** : ce code n'a aucun effet en prod (WP_DEBUG=false). Aucun risque de fuite.
+
+### 13.4. Cache par domaine pour `elaia_get_myelaia_domains()`
+
+La fonction accepte un paramètre `$domain` optionnel (fallback sur `home_url()`). La clé de cache transient inclut un `md5($domain)` pour permettre au dev d'interroger un domaine différent de celui du site WP local sans réutiliser le cache du domaine local.
+
+### 13.5. Purge du cache en dev
+
+Trois transients à purger quand on change de domaine dev :
+- `elaia_myelaia_domains_<md5>` (gate has_subscription)
+- `elaia_corpus_<md5>_data` / `elaia_metadatas_<md5>_data` / `elaia_faq_<md5>_data` (payloads API)
+
+Moyens :
+- **URL** : `?elaia_nocache=1` (bypass ponctuel, ne purge pas) ou `?elaia_clear_cache=1` (admin uniquement, purge les transients de la page courante)
+- **SQL** : `DELETE FROM wp_options WHERE option_name LIKE '%elaia_%';`
+
+### 13.6. Exclusions WP Rocket / optimiseurs JS
+
+Les scripts/CSS Leaflet chargés depuis `unpkg.com` dans [views/metadata.php](views/metadata.php) portent les attributs :
+```html
+<link rel="stylesheet" href="…leaflet.css" data-no-optimize="1">
+<script src="…leaflet.js" data-no-optimize="1" data-no-minify="1" data-cfasync="false"></script>
+```
+- `data-no-optimize` / `data-no-minify` → ignorés par WP Rocket et Autoptimize (empêche le *delay JS* qui casse l'initialisation de la carte)
+- `data-cfasync="false"` → ignoré par Cloudflare Rocket Loader
+
+### 13.7. Identifiants dev par défaut
+
+Générés par `setup.sh` au premier démarrage :
+- URL : `http://localhost:8080`
+- Admin : `http://localhost:8080/wp-admin`
+- Login / password : `admin` / `admin`
