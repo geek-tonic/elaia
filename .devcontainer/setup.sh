@@ -38,6 +38,23 @@ fi
 sudo wp plugin activate elaia-plugin --path=/var/www/html --allow-root
 echo "Plugin elaia-plugin activé !"
 
+# Permaliens : indispensable pour que /elaia-metadatas/ route vers la bonne page
+sudo wp option update permalink_structure '/%postname%/' --path=/var/www/html --allow-root
+sudo wp rewrite flush --path=/var/www/html --allow-root
+echo "Permaliens configurés !"
+
+# Page Metadatas (idempotent : créée uniquement si absente)
+if ! sudo wp post list --post_type=page --name=elaia-metadatas --field=ID --path=/var/www/html --allow-root | grep -q .; then
+  sudo wp post create \
+    --post_type=page \
+    --post_title="Metadatas" \
+    --post_name="elaia-metadatas" \
+    --post_status=publish \
+    --post_content='[elaia_metadatas]' \
+    --path=/var/www/html --allow-root
+  echo "Page /elaia-metadatas/ créée !"
+fi
+
 cat > /home/vscode/.welcome <<'EOF'
 
 ==========================================
