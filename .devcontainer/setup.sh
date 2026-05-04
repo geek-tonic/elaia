@@ -62,7 +62,7 @@ create_page_if_missing "elaia-metadatas" "Metadatas" '[elaia_metadatas]'
 create_page_if_missing "elaia-glossary"  "FAQ"       '[elaia_faq]'
 create_page_if_missing "my-elaia-plugin" "Corpus"    '[elaia_corpus]'
 
-cat > /home/vscode/.welcome <<'EOF'
+cat > /home/vscode/.welcome <<EOF
 
 ==========================================
   WordPress prêt !
@@ -70,6 +70,13 @@ cat > /home/vscode/.welcome <<'EOF'
   Admin     : http://localhost:8080/wp-admin
   Login     : admin
   Password  : admin
+
+  Domaine émulé : ${ELAIA_DEV_DOMAIN:-non défini}
+
+  Pages Elaia (nocache) :
+  Metadatas : http://localhost:8080/elaia-metadatas/?elaia_nocache=1
+  FAQ       : http://localhost:8080/elaia-glossary/?elaia_nocache=1
+  Corpus    : http://localhost:8080/my-elaia-plugin/?elaia_nocache=1
 ==========================================
 
 EOF
