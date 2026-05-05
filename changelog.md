@@ -1,10 +1,15 @@
 # Changelog
 
-## [1.3.2] - 2026-04-20
+## [1.3.2] - 2026-05-05
 ### Corrigé
 - **rewrite.php** : ajout d'un `template_redirect` (priorité 5) pour les pages Metadata et FAQ — les thèmes qui n'appellent pas `the_content()` (ex: Falconheavy / Flower Campings) ne rendaient jamais le shortcode. Le hook inclut les templates du plugin (`templates/elaia-metadata.php`, `templates/elaia-faq.php`) qui appellent `get_header()` / `get_footer()` → le header et footer du thème sont préservés
 - Extraction automatique de l'attribut `domain` du shortcode pour le mode groupe
 - Crawlers internes (Yoast, WP-Cron, AJAX) exclus du hook pour ne pas casser le sitemap
+- **views/metadata.php** : attributs `data-no-optimize`, `data-no-minify`, `data-cfasync="false"` ajoutés sur les balises Leaflet (CSS + JS) — empêche WP Rocket / CloudFlare Auto-Minify de casser l'affichage de la carte des metadatas
+
+### Ajouté
+- **Multisite** : cache `elaia_myelaia_domains` partitionné par domaine (clé `elaia_myelaia_domains_<md5(domain)>`) — chaque sous-site multisite a désormais son propre cache d'abonnement, plus de pollution croisée entre sous-sites du même réseau
+- **Gate de souscription sur la page corpus** (`rewrite.php`) : si le domaine résolu n'a pas `has_subscription:true`, la page renvoie un 404 propre (`status_header(404)` + `nocache_headers()` + `get_404_template()`) avant de rendre le template. Fail-safe : si l'API est down ou ne répond pas, accès refusé par défaut (pas d'affichage accidentel pour un client non abonné)
 
 ## [1.3.1] - 2026-03-30
 ### Corrigé

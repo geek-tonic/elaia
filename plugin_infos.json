@@ -12,7 +12,7 @@
   "sections": {
     "description": "Elaia WP Plugin",
     "installation": "Install and activate our plugin",
-    "changelog": "<h2>%RELEASE_VERSION%</h2><ul><li>Correction du format de retour de elaia_get_myelaia_domains()</li><li>Correction du parsing de la réponse API (support avec/sans wrapper data)</li><li>Suppression de flush_rewrite_rules() — évite la réécriture du .htaccess</li><li>Correction des rewrite rules (racine uniquement, plus de conflit avec les pages enfants)</li><li>Ajout du parse_request pour résoudre le conflit rewrite rule / vraie page WP</li><li>Corpus rendu via template_redirect + exit (compatible thèmes FSE)</li></ul>"
+    "changelog": "<h2>%RELEASE_VERSION%</h2><ul><li>Compatibilité étendue : rendu correct des pages Metadata et FAQ sur les thèmes sans the_content() (Falconheavy, Flower Campings)</li><li>Extraction automatique du domaine du shortcode (mode groupe)</li><li>Crawlers internes (Yoast, WP-Cron, AJAX) exclus du nouveau hook pour préserver le sitemap</li><li>Carte Leaflet exclue des optimiseurs WP Rocket / CloudFlare Auto-Minify</li><li>Multisite : cache d'abonnement partitionné par sous-site (plus de pollution croisée)</li><li>Gate 404 sur la page corpus si le client n'a pas d'abonnement my-elaia</li></ul>"
   },
   "banners": {
     "low": "https://ela-ia.com/wp-content/uploads/elaia/banniere-elaia-772x250.jpg",
