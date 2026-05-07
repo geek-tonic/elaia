@@ -479,13 +479,13 @@ $tagFieldKeys = array_keys($tagFields);
           <label class="em-filter-check"><input type="checkbox" value="pool" class="em-filter-feat"><span>Proche piscine</span></label>
         </div>
         <?php endif; ?>
+        
+        <!-- ─── Recherche (sous les filtres) ─── -->
+        <div class="em-search-wrap">
+          <svg class="em-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          <input type="text" class="em-search" id="em-search" placeholder="Rechercher une fiche...">
+        </div>
         <button class="em-filter-reset" id="em-reset-filters">Réinitialiser</button>
-      </div>
-
-      <!-- ─── Recherche (sous les filtres) ─── -->
-      <div class="em-search-wrap">
-        <svg class="em-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-        <input type="text" class="em-search" id="em-search" placeholder="Rechercher une fiche...">
       </div>
     </aside>
 
