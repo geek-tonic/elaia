@@ -678,19 +678,50 @@ $tagFieldKeys = array_keys($tagFields);
     }
   }
 
+  /**
+   * Synchronise les checkboxes Type avec l'onglet actif
+   * "all" → toutes cochées | type X → seule la checkbox X cochée
+   */
+  function syncTypeCheckboxesFromTab() {
+    document.querySelectorAll('.em-filter-type').forEach(function(cb) {
+      cb.checked = (activeCategoryFilter === 'all') || (cb.value === activeCategoryFilter);
+    });
+  }
+
+  /**
+   * Synchronise l'onglet actif avec l'état des checkboxes Type
+   * Toutes cochées → "all" | exactement une → onglet de ce type | sous-ensemble → aucun onglet (cas personnalisé)
+   */
+  function syncTabsFromTypeCheckboxes() {
+    var typeCbs = Array.from(document.querySelectorAll('.em-filter-type'));
+    var checked = typeCbs.filter(function(cb) { return cb.checked; });
+    var matchingTab = null;
+    if (checked.length === typeCbs.length) matchingTab = 'all';
+    else if (checked.length === 1) matchingTab = checked[0].value;
+    // sous-ensemble : matchingTab reste null → aucun onglet n'est actif, le filtre logique tombe sur 'all'
+    activeCategoryFilter = matchingTab || 'all';
+    document.querySelectorAll('.em-tab').forEach(function(t) {
+      t.classList.toggle('active', t.getAttribute('data-filter') === matchingTab);
+    });
+  }
+
   // ─── Onglets de catégories ───
   document.querySelectorAll('.em-tab').forEach(function(tab) {
     tab.addEventListener('click', function() {
       document.querySelectorAll('.em-tab').forEach(function(t) { t.classList.remove('active'); });
       tab.classList.add('active');
       activeCategoryFilter = tab.getAttribute('data-filter');
+      syncTypeCheckboxesFromTab();
       applyFilters();
     });
   });
 
   // ─── Checkboxes filtres ───
   document.querySelectorAll('.em-filter-type, .em-filter-feat').forEach(function(checkbox) {
-    checkbox.addEventListener('change', applyFilters);
+    checkbox.addEventListener('change', function() {
+      if (checkbox.classList.contains('em-filter-type')) syncTabsFromTypeCheckboxes();
+      applyFilters();
+    });
   });
 
   // ─── Barre de recherche ───
