@@ -20,7 +20,26 @@
             ],
             "settings": {
                 "php.suggest.basic": false,
-                "intelephense.stubs": ["wordpress", "apache", "mysql"]
+                "intelephense.stubs": [
+                    "Core",
+                    "standard",
+                    "date",
+                    "json",
+                    "pcre",
+                    "spl",
+                    "filter",
+                    "hash",
+                    "mbstring",
+                    "session",
+                    "tokenizer",
+                    "ctype",
+                    "curl",
+                    "mysqli",
+                    "PDO",
+                    "xml",
+                    "wordpress",
+                    "apache"
+                ]
             }
         }
     },
