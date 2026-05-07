@@ -36,8 +36,7 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
   .em-search::placeholder { color: #94a3b8; }
 
   /* ─── Onglets — Filtrage par catégorie ─── */
-  .em-tabs { display: flex !important; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 24px; scrollbar-width: none; }
-  .em-tabs::-webkit-scrollbar { display: none; }
+  .em-tabs { display: flex !important; flex-wrap: wrap; gap: 8px; padding-bottom: 4px; margin-bottom: 24px; }
   .em-tab { flex-shrink: 0; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: 1px solid #e2e8f0; background: #fff; color: #64748b; transition: all 0.15s; font-family: inherit; white-space: nowrap; }
   .em-tab:hover { border-color: #cbd5e1; }
   .em-tab.active { background: <?php echo $primaryColor; ?> !important; color: #fff !important; border-color: <?php echo $primaryColor; ?> !important; }
