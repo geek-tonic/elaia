@@ -226,7 +226,8 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
 
     /* Cards mobile */
     .em-cards { grid-template-columns: 1fr !important; gap: 14px !important; }
-    .em-card-img { height: 140px !important; }
+    .em-card-img,
+    .em-card-placeholder { height: 140px !important; }
     .em-card-body { padding: 12px; }
     .em-card-title { font-size: 14px !important; }
     .em-card-tags { gap: 4px; }
@@ -248,7 +249,8 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
 
   @media (max-width: 380px) {
     .em-map { height: 220px; }
-    .em-card-img { height: 120px !important; }
+    .em-card-img,
+    .em-card-placeholder { height: 120px !important; }
     .em-card-fields { display: none; }
   }
 </style>
@@ -550,7 +552,7 @@ $tagFieldKeys = array_keys($tagFields);
             <!-- Image + badge catégorie -->
             <div class="em-card-img-wrap">
               <?php if ($itemImage && filter_var($itemImage, FILTER_VALIDATE_URL)): ?>
-                <img class="em-card-img" src="<?php echo esc_url($itemImage); ?>" alt="<?php echo esc_attr($itemName); ?>" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <img class="em-card-img" src="<?php echo esc_url($itemImage); ?>" alt="<?php echo esc_attr($itemName); ?>" loading="lazy" onerror="this.style.setProperty('display','none','important');this.nextElementSibling.style.display='flex';">
                 <div class="em-card-placeholder" style="display:none;">📷 Image indisponible</div>
               <?php else: ?>
                 <div class="em-card-placeholder">📷 Pas d'image</div>
