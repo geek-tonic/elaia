@@ -63,12 +63,16 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
   .em-map-legend { display: flex; gap: 16px; padding: 10px 16px; background: #fff; border-top: 1px solid #e2e8f0; flex-wrap: wrap; }
   .em-map-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; transition: opacity 0.15s; }
   .em-map-legend-item:hover { opacity: 0.7; }
+  .em-map-legend-item--off { opacity: 0.3; }
+  .em-map-legend-item--off .em-map-legend-dot { background: #cbd5e1 !important; box-shadow: none !important; }
   .em-map-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 2px rgba(0,0,0,0.08); }
 
   /* Bouton toggle carte */
   .em-map-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; margin-bottom: 16px; }
   .em-map-toggle:hover { border-color: <?php echo $primaryColor; ?>; color: <?php echo $primaryColor; ?>; }
   .em-map-toggle.active { background: <?php echo $primaryColor; ?>; color: #fff; border-color: <?php echo $primaryColor; ?>; }
+  /* Quand le bouton Carte est placé dans la barre des onglets, alignement avec .em-tab */
+  .em-tabs .em-map-toggle { font-size: 14px; padding: 8px 16px; margin-bottom: 0; flex-shrink: 0; }
 
   /* Marqueurs personnalisés SVG */
   .em-marker { transition: transform 0.15s ease; }
@@ -200,6 +204,7 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     .em-search-wrap { width: 100%; }
     .em-tabs { gap: 6px; margin-bottom: 16px; }
     .em-tab { padding: 6px 12px; font-size: 13px; }
+    .em-tabs .em-map-toggle { padding: 6px 12px; font-size: 13px; }
 
     /* Carte mobile */
     .em-map { height: 280px; }
@@ -449,30 +454,7 @@ $tagFieldKeys = array_keys($tagFields);
     </div>
   </div>
 
-  <!-- ─── Onglets de catégories (affichés si > 1 catégorie) ─── -->
-  <?php if (count($categories) > 1): ?>
-  <div class="em-tabs" id="em-tabs">
-    <button class="em-tab active" data-filter="all">Tout<span class="em-tab-count"><?php echo $totalItems; ?></span></button>
-    <?php foreach ($categories as $categorySlug => $categoryInfo): ?>
-      <button class="em-tab" data-filter="<?php echo esc_attr($categorySlug); ?>"><?php echo esc_html($categoryInfo['label']); ?><span class="em-tab-count"><?php echo $categoryInfo['count']; ?></span></button>
-    <?php endforeach; ?>
-  </div>
-  <?php endif; ?>
 
-  <!-- ─── Carte interactive (affichée si des points GPS existent) ─── -->
-  <?php if (!empty($mapPoints)): ?>
-  <div class="em-map-section">
-    <button class="em-map-toggle active" id="em-map-toggle">📍 Carte</button>
-    <div class="em-map-wrap" id="em-map-wrap">
-      <div id="em-map" class="em-map"></div>
-      <div class="em-map-legend">
-        <?php foreach ($categories as $categoryInfo): ?>
-          <div class="em-map-legend-item"><span class="em-map-legend-dot" style="background:<?php echo $categoryInfo['color']; ?>;"></span> <?php echo esc_html($categoryInfo['label']); ?></div>
-        <?php endforeach; ?>
-      </div>
-    </div>
-  </div>
-  <?php endif; ?>
 
   <!-- ─── Layout principal : sidebar filtres + grille de cards ─── -->
   <div class="em-layout">
@@ -481,6 +463,11 @@ $tagFieldKeys = array_keys($tagFields);
     <aside class="em-sidebar">
       <div class="em-filters">
         <h3 class="em-filters-title">Filtres</h3>
+              <div class="em-stats">
+                
+        <div class="em-stat">Total : <strong id="em-stat-total"><?php echo $totalItems; ?></strong></div>
+        <div class="em-stat">Affichés : <strong id="em-stat-visible"><?php echo $totalItems; ?></strong></div>
+      </div>
         <div class="em-filter-group">
           <label class="em-filter-label">Type</label>
           <?php foreach ($categories as $categorySlug => $categoryInfo): ?>
@@ -502,10 +489,32 @@ $tagFieldKeys = array_keys($tagFields);
 
     <!-- Contenu principal — Compteurs + grille de cards -->
     <main class="em-main">
-      <div class="em-stats">
-        <div class="em-stat">Total : <strong id="em-stat-total"><?php echo $totalItems; ?></strong></div>
-        <div class="em-stat">Affichés : <strong id="em-stat-visible"><?php echo $totalItems; ?></strong></div>
+
+      <!-- ─── Onglets de catégories (affichés si > 1 catégorie) ─── -->
+      <?php if (count($categories) > 1): ?>
+      <div class="em-tabs" id="em-tabs">
+        <button class="em-map-toggle active" id="em-map-toggle">📍 Carte</button>
+        <button class="em-tab active" data-filter="all">Tout<span class="em-tab-count"><?php echo $totalItems; ?></span></button>
+        <?php foreach ($categories as $categorySlug => $categoryInfo): ?>
+          <button class="em-tab" data-filter="<?php echo esc_attr($categorySlug); ?>"><?php echo esc_html($categoryInfo['label']); ?><span class="em-tab-count"><?php echo $categoryInfo['count']; ?></span></button>
+        <?php endforeach; ?>
       </div>
+      <?php endif; ?>
+
+        <!-- ─── Carte interactive (affichée si des points GPS existent) ─── -->
+      <?php if (!empty($mapPoints)): ?>
+      <div class="em-map-section">
+        
+        <div class="em-map-wrap" id="em-map-wrap">
+          <div id="em-map" class="em-map"></div>
+          <div class="em-map-legend">
+            <?php foreach ($categories as $categorySlug => $categoryInfo): ?>
+              <div class="em-map-legend-item" data-type="<?php echo esc_attr($categorySlug); ?>"><span class="em-map-legend-dot" style="background:<?php echo $categoryInfo['color']; ?>;"></span> <?php echo esc_html($categoryInfo['label']); ?></div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      </div>
+      <?php endif; ?>
 
       <div class="em-cards" id="em-cards">
         <?php foreach ($allItems as $item):
@@ -676,6 +685,14 @@ $tagFieldKeys = array_keys($tagFields);
     if (typeof updateMapMarkers === 'function') {
       updateMapMarkers(activeCategoryFilter === 'all' ? selectedTypes : [activeCategoryFilter]);
     }
+
+    // Sync visuel de la légende carte avec les filtres actifs
+    document.querySelectorAll('.em-map-legend-item').forEach(function(item) {
+      var type = item.getAttribute('data-type');
+      var matchesCategory = (activeCategoryFilter === 'all' || activeCategoryFilter === type);
+      var matchesType     = selectedTypes.indexOf(type) !== -1;
+      item.classList.toggle('em-map-legend-item--off', !(matchesCategory && matchesType));
+    });
   }
 
   /**
@@ -721,6 +738,19 @@ $tagFieldKeys = array_keys($tagFields);
     checkbox.addEventListener('change', function() {
       if (checkbox.classList.contains('em-filter-type')) syncTabsFromTypeCheckboxes();
       applyFilters();
+    });
+  });
+
+  // ─── Légende carte cliquable : toggle de la checkbox Type correspondante ───
+  // Réutilise la pipeline checkbox (sync onglets + applyFilters via dispatchEvent)
+  document.querySelectorAll('.em-map-legend-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      var type = item.getAttribute('data-type');
+      var typeCb = Array.from(document.querySelectorAll('.em-filter-type')).find(function(cb) { return cb.value === type; });
+      if (typeCb) {
+        typeCb.checked = !typeCb.checked;
+        typeCb.dispatchEvent(new Event('change'));
+      }
     });
   });
 
