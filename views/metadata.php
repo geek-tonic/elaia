@@ -36,8 +36,13 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
   .em-search::placeholder { color: #94a3b8; }
 
   /* ─── Onglets — Filtrage par catégorie ─── */
-  .em-tabs { display: flex !important; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; position: sticky; top: 24px; z-index: 5; background: #fff; }
-  /* Pseudos qui prolongent le fond blanc au-dessus (cache le gap top:0→top:24px du sticky) et en-dessous (conserve l'écart visuel avec le contenu pendant le scroll) */
+  /* --em-header-offset est calculé au runtime par le JS (hauteur d'un header sticky/fixé du thème, sinon 0) */
+  .em-tabs { display: flex !important; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; position: sticky; top: calc(var(--em-header-offset, 0px) + 24px); z-index: 5; background: #fff; }
+
+  /* Overlay opaque sous le header du thème, affiché uniquement pendant le scroll — masque les cards qui défilent à travers un header semi-transparent */
+  #em-header-overlay { position: fixed; top: 0; left: 0; right: 0; height: var(--em-header-offset, 0px); background: #fff; z-index: 4; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+  html.em-scrolled #em-header-overlay { opacity: 1; }
+  /* Pseudos qui prolongent le fond blanc au-dessus (cache le gap top:0→top sticky) et en-dessous (conserve l'écart visuel avec le contenu pendant le scroll) */
   .em-tabs::before { content: ''; position: absolute; left: 0; right: 0; bottom: 100%; height: 24px; background: #fff; }
   .em-tabs::after  { content: ''; position: absolute; left: 0; right: 0; top: 100%;    height: 24px; background: #fff; }
   .em-tab { flex-shrink: 0; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: 1px solid #e2e8f0; background: #fff; color: #64748b; transition: all 0.15s; font-family: inherit; white-space: nowrap; }
@@ -86,7 +91,7 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
      LAYOUT — Sidebar filtres + grille cards
      ═══════════════════════════════════════ */
   .em-layout { display: flex; gap: 24px; }
-  .em-sidebar { flex: 0 0 260px; position: sticky; top: 24px; height: fit-content; }
+  .em-sidebar { flex: 0 0 260px; position: sticky; top: calc(var(--em-header-offset, 0px) + 24px); height: fit-content; }
   .em-main { flex: 1; min-width: 0; }
 
   /* ─── Filtres latéraux ─── */
@@ -1061,6 +1066,47 @@ $tagFieldKeys = array_keys($tagFields);
   }
 
   initMobileFilters();
+
+  // ═══════════════════════════════════════
+  // OFFSET HEADER THÈME — Détecte un header sticky/fixé + injecte un overlay opaque sous celui-ci pour les thèmes au header semi-transparent
+  // ═══════════════════════════════════════
+  var HEADER_SELECTORS = 'header, .site-header, #masthead, #header, .header, .navbar, .nav-bar, body > nav, body > .top-bar';
+
+  // Inject l'overlay opaque dans le body (au niveau racine, évite les pièges de stacking context si le thème a un transform sur un ancêtre)
+  if (!document.getElementById('em-header-overlay')) {
+    var overlay = document.createElement('div');
+    overlay.id = 'em-header-overlay';
+    document.body.appendChild(overlay);
+  }
+
+  function updateThemeHeaderOffset() {
+    var bottom = 0;
+    document.querySelectorAll(HEADER_SELECTORS).forEach(function(el) {
+      var style = window.getComputedStyle(el);
+      if (style.position !== 'fixed' && style.position !== 'sticky') return;
+      var rect = el.getBoundingClientRect();
+      // On retient le bord bas de l'élément le plus bas qui touche encore le haut du viewport
+      if (rect.top <= 50 && rect.bottom > bottom) bottom = rect.bottom;
+    });
+    document.documentElement.style.setProperty('--em-header-offset', Math.max(0, bottom) + 'px');
+  }
+  function updateScrolledClass() {
+    document.documentElement.classList.toggle('em-scrolled', window.scrollY > 0);
+  }
+  updateThemeHeaderOffset();
+  updateScrolledClass();
+  window.addEventListener('resize', updateThemeHeaderOffset);
+  // rAF-throttlé sur le scroll : update offset (header qui shrink) + état scrolled (toggle overlay)
+  var headerTicking = false;
+  window.addEventListener('scroll', function() {
+    if (headerTicking) return;
+    headerTicking = true;
+    requestAnimationFrame(function() {
+      updateThemeHeaderOffset();
+      updateScrolledClass();
+      headerTicking = false;
+    });
+  }, { passive: true });
 })();
 </script>
 
