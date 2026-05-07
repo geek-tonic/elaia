@@ -36,7 +36,7 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
   .em-search::placeholder { color: #94a3b8; }
 
   /* ─── Onglets — Filtrage par catégorie ─── */
-  .em-tabs { display: flex !important; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; position: sticky; top: 24px; z-index: 9999; background: #fff; }
+  .em-tabs { display: flex !important; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; position: sticky; top: 24px; z-index: 5; background: #fff; }
   /* Pseudos qui prolongent le fond blanc au-dessus (cache le gap top:0→top:24px du sticky) et en-dessous (conserve l'écart visuel avec le contenu pendant le scroll) */
   .em-tabs::before { content: ''; position: absolute; left: 0; right: 0; bottom: 100%; height: 24px; background: #fff; }
   .em-tabs::after  { content: ''; position: absolute; left: 0; right: 0; top: 100%;    height: 24px; background: #fff; }
@@ -48,7 +48,7 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
   /* ═══════════════════════════════════════
      CARTE — Leaflet + légende + marqueurs
      ═══════════════════════════════════════ */
-  .em-map-section { margin-bottom: 24px; }
+  .em-map-section { margin-bottom: 24px; isolation: isolate; }
   .em-map-wrap { border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
   .em-map { height: 420px; width: 100%; }
 
