@@ -104,6 +104,7 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
      ═══════════════════════════════════════ */
   .em-cards { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important; gap: 20px !important; }
   .em-card { background: #fff !important; border: 1px solid #e2e8f0 !important; border-radius: 12px !important; overflow: hidden !important; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.04); display: block !important; }
+  .em-card.em-hidden { display: none !important; }
   .em-card:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07) !important; transform: translateY(-2px); border-color: <?php echo $primaryColor; ?> !important; }
   .em-card--highlight { box-shadow: 0 0 0 3px <?php echo $primaryColor; ?> !important; }
 
@@ -663,7 +664,7 @@ $tagFieldKeys = array_keys($tagFields);
         isVisible = selectedFeatures.every(function(feat) { return cardFeatures.indexOf(feat) !== -1; });
       }
 
-      card.style.display = isVisible ? '' : 'none';
+      card.classList.toggle('em-hidden', !isVisible);
       if (isVisible) visibleCount++;
     });
 
@@ -887,7 +888,7 @@ $tagFieldKeys = array_keys($tagFields);
           popupBtn.addEventListener('click', function() {
             var allCards = document.querySelectorAll('.em-card');
             var targetCard = allCards[point.idx];
-            if (targetCard && targetCard.style.display !== 'none') {
+            if (targetCard && !targetCard.classList.contains('em-hidden')) {
               targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
               targetCard.classList.add('em-card--highlight');
               setTimeout(function() { targetCard.classList.remove('em-card--highlight'); }, 2000);
