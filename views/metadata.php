@@ -28,7 +28,8 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
   .em-header-sub { font-size: 14px; color: #64748b; margin: 4px 0 0; }
 
   /* ─── Recherche — Champ avec icône loupe ─── */
-  .em-search-wrap { position: relative; width: 280px; }
+  .em-search-wrap { position: relative; }
+  .em-sidebar .em-search-wrap { margin-top: 16px; }
   .em-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: #94a3b8; pointer-events: none; }
   .em-search { width: 100% !important; padding: 10px 16px 10px 36px !important; font-size: 14px !important; font-family: inherit; border: 1px solid #e2e8f0 !important; border-radius: 12px !important; background: #fff !important; color: #0f172a; outline: none; }
   .em-search:focus { border-color: <?php echo $primaryColor; ?> !important; box-shadow: 0 0 0 3px <?php echo $primaryColorLight; ?> !important; }
@@ -442,15 +443,11 @@ $tagFieldKeys = array_keys($tagFields);
 
 <div class="em-wrap">
 
-  <!-- ─── Header : titre + recherche ─── -->
+  <!-- ─── Header : titre ─── -->
   <div class="em-header">
     <div>
       <h1 class="em-header-title">Découvrez autour de vous</h1>
       <p class="em-header-sub"><?php echo $totalItems; ?> fiche(s) dans <?php echo count($categories); ?> catégorie(s)</p>
-    </div>
-    <div class="em-search-wrap">
-      <svg class="em-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-      <input type="text" class="em-search" id="em-search" placeholder="Rechercher une fiche...">
     </div>
   </div>
 
@@ -484,6 +481,12 @@ $tagFieldKeys = array_keys($tagFields);
         </div>
         <?php endif; ?>
         <button class="em-filter-reset" id="em-reset-filters">Réinitialiser</button>
+      </div>
+
+      <!-- ─── Recherche (sous les filtres) ─── -->
+      <div class="em-search-wrap">
+        <svg class="em-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <input type="text" class="em-search" id="em-search" placeholder="Rechercher une fiche...">
       </div>
     </aside>
 
@@ -639,6 +642,14 @@ $tagFieldKeys = array_keys($tagFields);
     return div.innerHTML;
   }
 
+  /**
+   * Normalise une chaîne pour une recherche insensible aux accents et à la casse
+   * "Café" → "cafe" | "Hôtel" → "hotel" | "BIÈRE" → "biere"
+   */
+  function stripAccents(str) {
+    return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
   // ═══════════════════════════════════════
   // FILTRES — Onglets, checkboxes, recherche
   // ═══════════════════════════════════════
@@ -655,6 +666,7 @@ $tagFieldKeys = array_keys($tagFields);
     var selectedFeatures = Array.from(document.querySelectorAll('.em-filter-feat:checked')).map(function(cb) { return cb.value; });
     var cards = document.querySelectorAll('.em-card');
     var visibleCount = 0;
+    var normalizedQuery = stripAccents(searchQuery);
 
     cards.forEach(function(card) {
       var cardType     = card.getAttribute('data-type');
@@ -664,7 +676,7 @@ $tagFieldKeys = array_keys($tagFields);
       // Vérifier chaque critère de filtre
       var matchesCategory = (activeCategoryFilter === 'all' || activeCategoryFilter === cardType);
       var matchesType     = selectedTypes.indexOf(cardType) !== -1;
-      var matchesSearch   = (searchQuery === '' || cardName.indexOf(searchQuery.toLowerCase()) !== -1);
+      var matchesSearch   = (normalizedQuery === '' || stripAccents(cardName).indexOf(normalizedQuery) !== -1);
 
       var isVisible = matchesCategory && matchesType && matchesSearch;
 
