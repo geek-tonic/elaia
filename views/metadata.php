@@ -36,7 +36,10 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
   .em-search::placeholder { color: #94a3b8; }
 
   /* ─── Onglets — Filtrage par catégorie ─── */
-  .em-tabs { display: flex !important; flex-wrap: wrap; gap: 8px; padding-bottom: 4px; margin-bottom: 24px; }
+  .em-tabs { display: flex !important; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; position: sticky; top: 24px; z-index: 9999; background: #fff; }
+  /* Pseudos qui prolongent le fond blanc au-dessus (cache le gap top:0→top:24px du sticky) et en-dessous (conserve l'écart visuel avec le contenu pendant le scroll) */
+  .em-tabs::before { content: ''; position: absolute; left: 0; right: 0; bottom: 100%; height: 24px; background: #fff; }
+  .em-tabs::after  { content: ''; position: absolute; left: 0; right: 0; top: 100%;    height: 24px; background: #fff; }
   .em-tab { flex-shrink: 0; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: 1px solid #e2e8f0; background: #fff; color: #64748b; transition: all 0.15s; font-family: inherit; white-space: nowrap; }
   .em-tab:hover { border-color: #cbd5e1; }
   .em-tab.active { background: <?php echo $primaryColor; ?> !important; color: #fff !important; border-color: <?php echo $primaryColor; ?> !important; }
@@ -450,6 +453,7 @@ $tagFieldKeys = array_keys($tagFields);
       <h1 class="em-header-title">Découvrez autour de vous</h1>
       <p class="em-header-sub"><?php echo $totalItems; ?> fiche(s) dans <?php echo count($categories); ?> catégorie(s)</p>
     </div>
+    <button class="em-map-toggle active" id="em-map-toggle">📍 Carte</button>
   </div>
 
 
@@ -497,7 +501,7 @@ $tagFieldKeys = array_keys($tagFields);
       <!-- ─── Onglets de catégories (affichés si > 1 catégorie) ─── -->
       <?php if (count($categories) > 1): ?>
       <div class="em-tabs" id="em-tabs">
-        <button class="em-map-toggle active" id="em-map-toggle">📍 Carte</button>
+        
         <button class="em-tab active" data-filter="all">Tout<span class="em-tab-count"><?php echo $totalItems; ?></span></button>
         <?php foreach ($categories as $categorySlug => $categoryInfo): ?>
           <button class="em-tab" data-filter="<?php echo esc_attr($categorySlug); ?>"><?php echo esc_html($categoryInfo['label']); ?><span class="em-tab-count"><?php echo $categoryInfo['count']; ?></span></button>
