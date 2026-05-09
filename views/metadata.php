@@ -1425,14 +1425,22 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
 
         <div class="em-main-body">
           <!-- ─── Carte interactive (affichée si des points GPS existent) ─── -->
-          <?php if (!empty($mapPoints)): ?>
+          <?php if (!empty($mapPoints)):
+            $categoriesWithPoints = [];
+            foreach ($mapPoints as $point) {
+              $categoriesWithPoints[$point['type']] = true;
+            }
+          ?>
             <div class="em-map-section">
-
               <div class="em-map-wrap" id="em-map-wrap">
                 <div id="em-map" class="em-map"></div>
                 <div class="em-map-legend">
                   <?php foreach ($categories as $categorySlug => $categoryInfo): ?>
-                    <div class="em-map-legend-item" data-type="<?php echo esc_attr($categorySlug); ?>"><span class="em-map-legend-dot" style="background:<?php echo $categoryInfo['color']; ?>;"></span> <?php echo esc_html($categoryInfo['label']); ?></div>
+                    <?php if (!isset($categoriesWithPoints[$categorySlug])) continue; ?>
+                    <div class="em-map-legend-item" data-type="<?php echo esc_attr($categorySlug); ?>">
+                      <span class="em-map-legend-dot" style="background:<?php echo $categoryInfo['color']; ?>;"></span>
+                      <?php echo esc_html($categoryInfo['label']); ?>
+                    </div>
                   <?php endforeach; ?>
                 </div>
               </div>
