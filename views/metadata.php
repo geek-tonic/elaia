@@ -26,6 +26,10 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     /* Doit être supérieur aux autres éléments du site */
     isolation: isolate;
     /* Empêche les styles extérieurs de se mélanger aux z-index internes */
+    /* height: 100vh; */
+    display: flex;
+    flex-direction: column;
+    /* overflow: hidden; */
   }
 
   .em-wrap {
@@ -49,6 +53,8 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
+    flex-shrink: 0;
+    /* le header ne se compresse pas */
   }
 
   .em-header-title {
@@ -105,18 +111,32 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     color: #94a3b8;
   }
 
+  .em-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    /* min-height: 0; */
+    /* ou hauteur fixe */
+    overflow: hidden;
+    /* empêche le débordement */
+  }
+
   /* ─── Onglets — Filtrage par catégorie ─── */
   /* --em-header-offset est calculé au runtime par le JS (hauteur d'un header sticky/fixé du thème, sinon 0) */
   .em-tabs {
     display: flex !important;
     flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 24px;
-    position: sticky;
+    /* margin-bottom: 24px; */
+    /* retire position: sticky, c'est inutile ici */
+    position: static;
+    flex-shrink: 0;
     top: calc(var(--em-header-offset, 0px) + 24px);
     z-index: 5;
     /* padding: 20px;
     background: #fff; */
+    flex-shrink: 0;
   }
 
   /* Pseudos qui prolongent le fond blanc au-dessus (cache le gap top:0→top sticky) et en-dessous (conserve l'écart visuel avec le contenu pendant le scroll) */
@@ -189,12 +209,28 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     opacity: 0.7;
   }
 
+  .em-main-body {
+    display: flex;
+    flex-direction: column;
+    /* flex: 1; */
+    overflow-y: auto;
+    /* le scroll est ici, pas sur le body global */
+    /* min-height: 0; */
+    /* crucial en flexbox */
+    gap: 24px;
+  }
+
+
   /* ═══════════════════════════════════════
      CARTE — Leaflet + légende + marqueurs
      ═══════════════════════════════════════ */
   .em-map-section {
-    margin-bottom: 24px;
+    /* margin-bottom: 24px; */
     isolation: isolate;
+  }
+
+  .em-map-section--hidden {
+    display: none;
   }
 
   .em-map-wrap {
@@ -364,19 +400,23 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
   .em-layout {
     display: flex;
     gap: 24px;
+    /* flex: 1; */
+    /* min-height: 0; */
+    /* crucial */
+    /* overflow: hidden; */
+    height: calc(100vh - var(--em-header-offset, 0px) - 24px);
+    position: sticky;
+    top: calc(var(--em-header-offset, 0px) + 24px);
+    overflow: hidden;
   }
 
   .em-sidebar {
     flex: 0 0 260px;
-    position: sticky;
-    top: calc(var(--em-header-offset, 0px) + 24px);
+    /* position: sticky; */
+    /* top: calc(var(--em-header-offset, 0px) + 24px); */
     height: fit-content;
   }
 
-  .em-main {
-    flex: 1;
-    min-width: 0;
-  }
 
   /* ─── Filtres latéraux ─── */
   .em-filters {
@@ -1383,108 +1423,110 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
           </div>
         <?php endif; ?>
 
-        <!-- ─── Carte interactive (affichée si des points GPS existent) ─── -->
-        <?php if (!empty($mapPoints)): ?>
-          <div class="em-map-section">
+        <div class="em-main-body">
+          <!-- ─── Carte interactive (affichée si des points GPS existent) ─── -->
+          <?php if (!empty($mapPoints)): ?>
+            <div class="em-map-section">
 
-            <div class="em-map-wrap" id="em-map-wrap">
-              <div id="em-map" class="em-map"></div>
-              <div class="em-map-legend">
-                <?php foreach ($categories as $categorySlug => $categoryInfo): ?>
-                  <div class="em-map-legend-item" data-type="<?php echo esc_attr($categorySlug); ?>"><span class="em-map-legend-dot" style="background:<?php echo $categoryInfo['color']; ?>;"></span> <?php echo esc_html($categoryInfo['label']); ?></div>
-                <?php endforeach; ?>
-              </div>
-            </div>
-          </div>
-        <?php endif; ?>
-
-        <div class="em-cards" id="em-cards">
-          <?php foreach ($allItems as $item):
-            $itemData     = $item['data'];
-            $itemType     = $item['type'];
-            $itemName     = $item['name'];
-            $itemFeatures = implode(',', $item['features']);
-            $categoryInfo = $categories[$itemType];
-
-            // Extraire l'image (peut être string multi-lignes ou tableau)
-            $itemImage = $itemData['image'] ?? $itemData['images'] ?? '';
-            if (is_string($itemImage) && strpos($itemImage, "\n") !== false) $itemImage = explode("\n", $itemImage)[0];
-            if (is_array($itemImage)) $itemImage = $itemImage[0] ?? '';
-            $itemImage = trim($itemImage);
-
-            // Lien externe
-            $itemLink = $itemData['link'] ?? $itemData['site_officiel'] ?? '';
-          ?>
-            <article class="em-card"
-              data-type="<?php echo esc_attr($itemType); ?>"
-              data-features="<?php echo esc_attr($itemFeatures); ?>"
-              data-name="<?php echo esc_attr(strtolower($itemName)); ?>"
-              data-json="<?php echo esc_attr(wp_json_encode([
-                            'name'     => $itemName,
-                            'image'    => $itemImage,
-                            'link'     => $itemLink,
-                            'data'     => $itemData,
-                            'category' => $categoryInfo['label'],
-                          ])); ?>">
-
-              <!-- Image + badge catégorie -->
-              <div class="em-card-img-wrap">
-                <?php if ($itemImage && filter_var($itemImage, FILTER_VALIDATE_URL)): ?>
-                  <img class="em-card-img" src="<?php echo esc_url($itemImage); ?>" alt="<?php echo esc_attr($itemName); ?>" loading="lazy" onerror="this.style.setProperty('display','none','important');this.nextElementSibling.style.display='flex';">
-                  <div class="em-card-placeholder" style="display:none;">📷 Image indisponible</div>
-                <?php else: ?>
-                  <div class="em-card-placeholder">📷 Pas d'image</div>
-                <?php endif; ?>
-                <span class="em-card-badge <?php echo esc_attr($categoryInfo['badge']); ?>"><?php echo esc_html($categoryInfo['label']); ?></span>
-              </div>
-
-              <!-- Contenu de la card -->
-              <div class="em-card-body">
-                <h3 class="em-card-title"><?php echo esc_html($itemName); ?></h3>
-
-                <!-- Tags résumés (max 4) -->
-                <div class="em-card-tags">
-                  <?php $tagCount = 0;
-                  foreach ($tagFields as $tagKey => $tagConfig):
-                    if ($tagCount >= 4) break;
-                    if (!empty($itemData[$tagKey]) && !is_array($itemData[$tagKey])): $tagCount++; ?>
-                      <span class="em-tag <?php echo $tagConfig['class']; ?>"><?php echo esc_html($itemData[$tagKey] . $tagConfig['suffix']); ?></span>
-                  <?php endif;
-                  endforeach; ?>
-                  <?php if (!empty($itemData['wifi'])): ?><span class="em-tag em-tag-purple">WiFi</span><?php endif; ?>
-                </div>
-
-                <!-- Champs supplémentaires (max 3) -->
-                <div class="em-card-fields">
-                  <?php $fieldCount = 0;
-                  foreach ($itemData as $fieldKey => $fieldValue):
-                    if (in_array($fieldKey, $excludedKeys) || in_array($fieldKey, $tagFieldKeys) || $fieldKey === 'wifi') continue;
-                    if (is_array($fieldValue) || is_object($fieldValue) || empty($fieldValue)) continue;
-                    if ($fieldCount >= 3) break;
-                    $fieldCount++;
-                  ?>
-                    <div class="em-card-field">
-                      <span class="em-card-field-label"><?php echo esc_html(em_field_label($fieldKey, $fieldLabels)); ?> :</span>
-                      <span class="em-card-field-value"><?php echo esc_html(is_bool($fieldValue) ? ($fieldValue ? 'Oui' : 'Non') : mb_substr((string)$fieldValue, 0, 60)); ?></span>
-                    </div>
+              <div class="em-map-wrap" id="em-map-wrap">
+                <div id="em-map" class="em-map"></div>
+                <div class="em-map-legend">
+                  <?php foreach ($categories as $categorySlug => $categoryInfo): ?>
+                    <div class="em-map-legend-item" data-type="<?php echo esc_attr($categorySlug); ?>"><span class="em-map-legend-dot" style="background:<?php echo $categoryInfo['color']; ?>;"></span> <?php echo esc_html($categoryInfo['label']); ?></div>
                   <?php endforeach; ?>
                 </div>
-
-                <!-- Lien vers le détail -->
-                <div class="em-card-footer">
-                  <span>Voir le détail</span>
-                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
-                  </svg>
-                </div>
               </div>
-            </article>
-          <?php endforeach; ?>
-        </div>
+            </div>
+          <?php endif; ?>
 
-        <!-- État vide (aucun résultat après filtrage) -->
-        <div class="em-empty" id="em-empty" style="display:none;">
-          <p><strong>Aucun résultat</strong><br>Modifiez vos filtres pour voir plus de résultats</p>
+          <div class="em-cards" id="em-cards">
+            <?php foreach ($allItems as $item):
+              $itemData     = $item['data'];
+              $itemType     = $item['type'];
+              $itemName     = $item['name'];
+              $itemFeatures = implode(',', $item['features']);
+              $categoryInfo = $categories[$itemType];
+
+              // Extraire l'image (peut être string multi-lignes ou tableau)
+              $itemImage = $itemData['image'] ?? $itemData['images'] ?? '';
+              if (is_string($itemImage) && strpos($itemImage, "\n") !== false) $itemImage = explode("\n", $itemImage)[0];
+              if (is_array($itemImage)) $itemImage = $itemImage[0] ?? '';
+              $itemImage = trim($itemImage);
+
+              // Lien externe
+              $itemLink = $itemData['link'] ?? $itemData['site_officiel'] ?? '';
+            ?>
+              <article class="em-card"
+                data-type="<?php echo esc_attr($itemType); ?>"
+                data-features="<?php echo esc_attr($itemFeatures); ?>"
+                data-name="<?php echo esc_attr(strtolower($itemName)); ?>"
+                data-json="<?php echo esc_attr(wp_json_encode([
+                              'name'     => $itemName,
+                              'image'    => $itemImage,
+                              'link'     => $itemLink,
+                              'data'     => $itemData,
+                              'category' => $categoryInfo['label'],
+                            ])); ?>">
+
+                <!-- Image + badge catégorie -->
+                <div class="em-card-img-wrap">
+                  <?php if ($itemImage && filter_var($itemImage, FILTER_VALIDATE_URL)): ?>
+                    <img class="em-card-img" src="<?php echo esc_url($itemImage); ?>" alt="<?php echo esc_attr($itemName); ?>" loading="lazy" onerror="this.style.setProperty('display','none','important');this.nextElementSibling.style.display='flex';">
+                    <div class="em-card-placeholder" style="display:none;">📷 Image indisponible</div>
+                  <?php else: ?>
+                    <div class="em-card-placeholder">📷 Pas d'image</div>
+                  <?php endif; ?>
+                  <span class="em-card-badge <?php echo esc_attr($categoryInfo['badge']); ?>"><?php echo esc_html($categoryInfo['label']); ?></span>
+                </div>
+
+                <!-- Contenu de la card -->
+                <div class="em-card-body">
+                  <h3 class="em-card-title"><?php echo esc_html($itemName); ?></h3>
+
+                  <!-- Tags résumés (max 4) -->
+                  <div class="em-card-tags">
+                    <?php $tagCount = 0;
+                    foreach ($tagFields as $tagKey => $tagConfig):
+                      if ($tagCount >= 4) break;
+                      if (!empty($itemData[$tagKey]) && !is_array($itemData[$tagKey])): $tagCount++; ?>
+                        <span class="em-tag <?php echo $tagConfig['class']; ?>"><?php echo esc_html($itemData[$tagKey] . $tagConfig['suffix']); ?></span>
+                    <?php endif;
+                    endforeach; ?>
+                    <?php if (!empty($itemData['wifi'])): ?><span class="em-tag em-tag-purple">WiFi</span><?php endif; ?>
+                  </div>
+
+                  <!-- Champs supplémentaires (max 3) -->
+                  <div class="em-card-fields">
+                    <?php $fieldCount = 0;
+                    foreach ($itemData as $fieldKey => $fieldValue):
+                      if (in_array($fieldKey, $excludedKeys) || in_array($fieldKey, $tagFieldKeys) || $fieldKey === 'wifi') continue;
+                      if (is_array($fieldValue) || is_object($fieldValue) || empty($fieldValue)) continue;
+                      if ($fieldCount >= 3) break;
+                      $fieldCount++;
+                    ?>
+                      <div class="em-card-field">
+                        <span class="em-card-field-label"><?php echo esc_html(em_field_label($fieldKey, $fieldLabels)); ?> :</span>
+                        <span class="em-card-field-value"><?php echo esc_html(is_bool($fieldValue) ? ($fieldValue ? 'Oui' : 'Non') : mb_substr((string)$fieldValue, 0, 60)); ?></span>
+                      </div>
+                    <?php endforeach; ?>
+                  </div>
+
+                  <!-- Lien vers le détail -->
+                  <div class="em-card-footer">
+                    <span>Voir le détail</span>
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+                    </svg>
+                  </div>
+                </div>
+              </article>
+            <?php endforeach; ?>
+          </div>
+
+          <!-- État vide (aucun résultat après filtrage) -->
+          <div class="em-empty" id="em-empty" style="display:none;">
+            <p><strong>Aucun résultat</strong><br>Modifiez vos filtres pour voir plus de résultats</p>
+          </div>
         </div>
       </main>
     </div>
@@ -1809,6 +1851,14 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
           zoomControl: false,
           attributionControl: false
         }).setView([46.6, 1.9], 6);
+
+        // Tuiles en premier
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          maxZoom: 19,
+          subdomains: 'abcd'
+        }).addTo(map);
+
+        // Contrôles UI ensuite
         L.control.zoom({
           position: 'topright'
         }).addTo(map);
@@ -1819,10 +1869,29 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
           .addAttribution('&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>')
           .addTo(map);
 
-        // Tuiles CartoDB Voyager
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-          maxZoom: 19,
-          subdomains: 'abcd'
+        // Bouton de recentrage
+        L.Control.Recenter = L.Control.extend({
+          onAdd: function() {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+            const btn = L.DomUtil.create('a', '', container);
+            btn.innerHTML = '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
+            btn.href = '#';
+            btn.title = 'Recentrer la carte';
+            btn.style.display = 'flex';
+            btn.style.alignItems = 'center';
+            btn.style.justifyContent = 'center';
+            L.DomEvent.on(btn, 'click', function(e) {
+              L.DomEvent.preventDefault(e);
+              if (allBounds.length > 1) map.fitBounds(allBounds, {
+                padding: [40, 40]
+              });
+              else if (allBounds.length === 1) map.setView(allBounds[0], 13);
+            });
+            return container;
+          }
+        });
+        new L.Control.Recenter({
+          position: 'topright'
         }).addTo(map);
 
         // Données injectées depuis PHP
@@ -1971,6 +2040,7 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
             var isVisible = mapWrapper.style.display !== 'none';
             mapWrapper.style.display = isVisible ? 'none' : '';
             mapToggle.classList.toggle('active', !isVisible);
+            document.querySelector('.em-map-section').classList.toggle('em-map-section--hidden', isVisible);
             if (!isVisible) setTimeout(function() {
               map.invalidateSize();
             }, 100);
