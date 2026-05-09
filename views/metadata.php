@@ -2020,22 +2020,16 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
             activeMarker = marker;
           });
 
-          // Bouton "Voir la fiche" dans la popup → scroll vers la card
+          // Bouton "Voir la fiche" dans la popup
           marker.on('popupopen', function() {
             var popupBtn = document.querySelector('.em-map-popup-btn[data-card-idx="' + point.idx + '"]');
             if (popupBtn) {
               popupBtn.addEventListener('click', function() {
                 var allCards = document.querySelectorAll('.em-card');
                 var targetCard = allCards[point.idx];
-                if (targetCard && !targetCard.classList.contains('em-hidden')) {
-                  targetCard.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                  });
-                  targetCard.classList.add('em-card--highlight');
-                  setTimeout(function() {
-                    targetCard.classList.remove('em-card--highlight');
-                  }, 2000);
+                if (targetCard) {
+                  var cardData = JSON.parse(targetCard.getAttribute('data-json'));
+                  openDetailModal(cardData);
                 }
                 map.closePopup();
               });
