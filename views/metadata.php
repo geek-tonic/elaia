@@ -2086,6 +2086,19 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
               if (map.hasLayer(m.marker)) map.removeLayer(m.marker);
             }
           });
+
+          var hasPoints = visibleBounds.length > 0;
+          var mapSection = document.querySelector('.em-map-section');
+          var mapToggleBtn = document.getElementById('em-map-toggle');
+
+          if (mapSection) mapSection.style.display = hasPoints ? '' : 'none';
+          if (mapToggleBtn) {
+            mapToggleBtn.disabled = !hasPoints;
+            mapToggleBtn.style.opacity = hasPoints ? '' : '0.4';
+            mapToggleBtn.style.cursor = hasPoints ? '' : 'not-allowed';
+            // Ne touche pas à .active — c'est le listener toggle qui le gère
+          }
+
           if (visibleBounds.length > 1) map.fitBounds(visibleBounds, {
             padding: [40, 40],
             maxZoom: 14
@@ -2098,15 +2111,16 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
         var mapWrapper = document.getElementById('em-map-wrap');
         if (mapToggle && mapWrapper) {
           mapToggle.addEventListener('click', function() {
+            if (mapToggle.disabled) return;
             var isVisible = mapWrapper.style.display !== 'none';
             mapWrapper.style.display = isVisible ? 'none' : '';
             mapToggle.classList.toggle('active', !isVisible);
-            document.querySelector('.em-map-section').classList.toggle('em-map-section--hidden', isVisible);
             if (!isVisible) setTimeout(function() {
               map.invalidateSize();
             }, 100);
           });
         }
+
       }
 
       // ═══════════════════════════════════════
