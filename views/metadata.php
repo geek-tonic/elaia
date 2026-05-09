@@ -1694,6 +1694,14 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
           tab.classList.add('active');
           activeCategoryFilter = tab.getAttribute('data-filter');
           syncTypeCheckboxesFromTab();
+
+          // Reset équipements si on revient sur "Tout" ou un onglet non-accommodation
+          if (activeCategoryFilter !== 'accommodation' && activeCategoryFilter !== 'accomodation') {
+            document.querySelectorAll('.em-filter-feat').forEach(function(cb) {
+              cb.checked = false;
+            });
+          }
+
           applyFilters();
 
           // Remonte en haut du body scrollable
@@ -1708,7 +1716,39 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
       // ─── Checkboxes filtres ───
       document.querySelectorAll('.em-filter-type, .em-filter-feat').forEach(function(checkbox) {
         checkbox.addEventListener('change', function() {
-          if (checkbox.classList.contains('em-filter-type')) syncTabsFromTypeCheckboxes();
+          if (checkbox.classList.contains('em-filter-type')) {
+            syncTabsFromTypeCheckboxes();
+
+            // Reset équipements si accommodation n'est plus le seul type sélectionné
+            var selectedTypes = Array.from(document.querySelectorAll('.em-filter-type:checked')).map(function(cb) {
+              return cb.value;
+            });
+            var onlyAccom = selectedTypes.every(function(t) {
+              return t === 'accommodation' || t === 'accomodation';
+            });
+            if (!onlyAccom) {
+              document.querySelectorAll('.em-filter-feat').forEach(function(cb) {
+                cb.checked = false;
+              });
+            }
+          }
+
+          // Si équipement coché → active l'onglet accommodation
+          if (checkbox.classList.contains('em-filter-feat') && checkbox.checked) {
+            activeCategoryFilter = 'accommodation';
+
+            // Coche uniquement accommodation dans les types
+            document.querySelectorAll('.em-filter-type').forEach(function(cb) {
+              cb.checked = cb.value === 'accommodation' || cb.value === 'accomodation';
+            });
+
+            // Active l'onglet visuellement
+            document.querySelectorAll('.em-tab').forEach(function(t) {
+              var filter = t.getAttribute('data-filter');
+              t.classList.toggle('active', filter === 'accommodation' || filter === 'accomodation');
+            });
+          }
+
           applyFilters();
         });
       });
