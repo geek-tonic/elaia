@@ -1640,6 +1640,20 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
           var matchesType = selectedTypes.indexOf(type) !== -1;
           item.classList.toggle('em-map-legend-item--off', !(matchesCategory && matchesType));
         });
+
+        // Masque le groupe équipements si accommodation n'est pas dans les filtres actifs
+        var featGroup = document.querySelector('.em-filter-group .em-filter-label');
+        var equipGroup = Array.from(document.querySelectorAll('.em-filter-group')).find(function(g) {
+          return g.querySelector('.em-filter-feat');
+        });
+
+        if (equipGroup) {
+          var accomActive = (activeCategoryFilter === 'all' || activeCategoryFilter === 'accommodation' || activeCategoryFilter === 'accomodation') &&
+            selectedTypes.some(function(t) {
+              return t === 'accommodation' || t === 'accomodation';
+            });
+          equipGroup.style.display = accomActive ? '' : 'none';
+        }
       }
 
       /**
@@ -1681,6 +1695,13 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
           activeCategoryFilter = tab.getAttribute('data-filter');
           syncTypeCheckboxesFromTab();
           applyFilters();
+
+          // Remonte en haut du body scrollable
+          var mainBody = document.querySelector('.em-main-body');
+          if (mainBody) mainBody.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
         });
       });
 
