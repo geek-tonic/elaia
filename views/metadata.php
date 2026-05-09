@@ -20,25 +20,16 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
      BASE — Layout principal et typographie
      ═══════════════════════════════════════ */
   .em-wrap {
-    /* On force le plugin à créer son propre contexte d'empilement indépendant */
     position: relative !important;
     z-index: 10 !important;
-    /* Doit être supérieur aux autres éléments du site */
     isolation: isolate;
-    /* Empêche les styles extérieurs de se mélanger aux z-index internes */
-    /* height: 100vh; */
-    display: flex;
-    flex-direction: column;
-    /* overflow: hidden; */
-  }
-
-  .em-wrap {
     font-family: 'Inter', -apple-system, sans-serif !important;
     color: #0f172a;
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 24px;
     -webkit-font-smoothing: antialiased;
+    height: calc(100vh - var(--em-header-offset, 0px));
   }
 
   .em-wrap * {
@@ -116,7 +107,7 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     display: flex;
     flex-direction: column;
     gap: 24px;
-    /* min-height: 0; */
+    min-height: 0;
     /* ou hauteur fixe */
     overflow: hidden;
     /* empêche le débordement */
@@ -210,12 +201,12 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
   }
 
   .em-main-body {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    /* flex: 1; */
     overflow-y: auto;
     /* le scroll est ici, pas sur le body global */
-    /* min-height: 0; */
+    min-height: 0;
     /* crucial en flexbox */
     gap: 24px;
   }
@@ -400,21 +391,19 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
   .em-layout {
     display: flex;
     gap: 24px;
-    /* flex: 1; */
-    /* min-height: 0; */
-    /* crucial */
-    /* overflow: hidden; */
-    height: calc(100vh - var(--em-header-offset, 0px) - 24px);
+    overflow: hidden;
     position: sticky;
     top: calc(var(--em-header-offset, 0px) + 24px);
-    overflow: hidden;
+    height: calc(100vh - var(--em-header-offset, 0px) - 24px);
   }
 
   .em-sidebar {
     flex: 0 0 260px;
     /* position: sticky; */
     /* top: calc(var(--em-header-offset, 0px) + 24px); */
-    height: fit-content;
+    /* height: fit-content; */
+    overflow-y: auto;
+    height: 100%;
   }
 
 
@@ -955,8 +944,43 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     }
 
     .em-sidebar {
-      position: static;
       flex-basis: auto;
+      height: auto;
+    }
+
+    /* Sidebar collapsible sur mobile */
+    .em-sidebar {
+      order: -1;
+    }
+
+    .em-filters {
+      padding: 14px;
+    }
+
+    .em-filters-title {
+      font-size: 14px !important;
+      margin-bottom: 0 !important;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .em-filters-title::after {
+      content: '▾';
+      font-size: 12px;
+      color: #94a3b8;
+      transition: transform 0.2s;
+    }
+
+    .em-filters.collapsed .em-filters-title::after {
+      transform: rotate(-90deg);
+    }
+
+    .em-filters.collapsed .em-filter-group,
+    .em-filters.collapsed .em-filter-reset,
+    .em-filters.collapsed .em-search-wrap {
+      display: none;
     }
   }
 
@@ -1013,39 +1037,7 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
       font-size: 11px;
     }
 
-    /* Sidebar collapsible sur mobile */
-    .em-sidebar {
-      order: -1;
-    }
 
-    .em-filters {
-      padding: 14px;
-    }
-
-    .em-filters-title {
-      font-size: 14px !important;
-      margin-bottom: 0 !important;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .em-filters-title::after {
-      content: '▾';
-      font-size: 12px;
-      color: #94a3b8;
-      transition: transform 0.2s;
-    }
-
-    .em-filters.collapsed .em-filters-title::after {
-      transform: rotate(-90deg);
-    }
-
-    .em-filters.collapsed .em-filter-group,
-    .em-filters.collapsed .em-filter-reset {
-      display: none;
-    }
 
     /* Cards mobile */
     .em-cards {
@@ -2126,11 +2118,11 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
       }
 
       // ═══════════════════════════════════════
-      // MOBILE — Sidebar filtres collapsible
+      // MOBILE / TABLETTE — Sidebar filtres collapsible
       // ═══════════════════════════════════════
 
       /**
-       * Sur mobile (≤720px), la sidebar filtres est repliée par défaut
+       * Sur mobile et tablette (≤1024px), la sidebar filtres est repliée par défaut
        * Un clic sur le titre la déplie/replie
        */
       function initMobileFilters() {
@@ -2138,12 +2130,12 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
         var filtersTitle = document.querySelector('.em-filters-title');
         if (!filtersContainer || !filtersTitle) return;
 
-        if (window.innerWidth <= 720) {
+        if (window.innerWidth <= 1024) {
           filtersContainer.classList.add('collapsed');
         }
 
         filtersTitle.addEventListener('click', function() {
-          if (window.innerWidth <= 720) {
+          if (window.innerWidth <= 1024) {
             filtersContainer.classList.toggle('collapsed');
           }
         });
