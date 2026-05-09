@@ -30,6 +30,7 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     padding: 0 24px;
     -webkit-font-smoothing: antialiased;
     height: calc(100vh - var(--em-header-offset, 0px));
+    /* height: calc(100vh - var(--em-header-offset, 0px) - var(--em-footer-height, 0px)); */
   }
 
   .em-wrap * {
@@ -394,7 +395,8 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     overflow: hidden;
     position: sticky;
     top: calc(var(--em-header-offset, 0px) + 24px);
-    height: calc(100vh - var(--em-header-offset, 0px) - 24px);
+    /* height: calc(100vh - var(--em-header-offset, 0px) - 24px); */
+    height: calc(100vh - var(--em-header-offset, 0px) - 24px - var(--em-footer-height, 0px));
   }
 
   .em-sidebar {
@@ -935,6 +937,15 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     color: #0f172a;
   }
 
+  footer,
+  .site-footer,
+  #footer,
+  #colophon,
+  .footer {
+    position: relative;
+    z-index: 11;
+  }
+
   /* ═══════════════════════════════════════
      RESPONSIVE
      ═══════════════════════════════════════ */
@@ -990,8 +1001,8 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     }
 
     .em-header {
-      flex-direction: column;
-      align-items: stretch;
+      /* flex-direction: column;
+      align-items: stretch; */
       padding: 24px 0 16px;
       gap: 12px;
     }
@@ -2161,7 +2172,6 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
           var style = window.getComputedStyle(el);
           if (style.position !== 'fixed' && style.position !== 'sticky') return;
           var rect = el.getBoundingClientRect();
-          // On retient le bord bas de l'élément le plus bas qui touche encore le haut du viewport
           if (rect.top <= 50 && rect.bottom > bottom) bottom = rect.bottom;
         });
         document.documentElement.style.setProperty('--em-header-offset', Math.max(0, bottom) + 'px');
@@ -2170,10 +2180,53 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
       function updateScrolledClass() {
         document.documentElement.classList.toggle('em-scrolled', window.scrollY > 0);
       }
+
+      function updateWrapHeight() {
+        var FOOTER_SELECTORS = 'footer, .site-footer, #footer, #colophon, .footer';
+        var footerVisible = 0;
+
+        var atBottom = (window.scrollY + window.innerHeight) >= document.body.scrollHeight - 5;
+
+        if (atBottom) {
+          document.querySelectorAll(FOOTER_SELECTORS).forEach(function(el) {
+            var rect = el.getBoundingClientRect();
+            if (rect.top < window.innerHeight && rect.height > 0) {
+              footerVisible = Math.max(footerVisible, Math.ceil(window.innerHeight - rect.top)) + 16;
+            }
+          });
+        }
+
+        document.documentElement.style.setProperty('--em-footer-height', footerVisible + 'px');
+      }
+
+      function updateScrollBehavior() {
+        var layout = document.querySelector('.em-layout');
+        var mainBody = document.querySelector('.em-main-body');
+        if (!layout || !mainBody) return;
+
+        var rect = layout.getBoundingClientRect();
+        var headerOffset = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--em-header-offset')) || 0;
+        var stickyTop = headerOffset + 25;
+
+        // isStuck = le layout a atteint sa position sticky
+        var isStuck = rect.top <= stickyTop + 5;
+
+        mainBody.style.overflowY = isStuck ? 'auto' : 'hidden';
+      }
+
       updateThemeHeaderOffset();
       updateScrolledClass();
+      updateScrollBehavior();
+
+      if (document.readyState === 'complete') {
+        updateWrapHeight();
+      } else {
+        window.addEventListener('load', updateWrapHeight);
+      }
+
       window.addEventListener('resize', updateThemeHeaderOffset);
-      // rAF-throttlé sur le scroll : update offset (header qui shrink) + état scrolled (toggle overlay)
+      window.addEventListener('resize', updateWrapHeight);
+
       var headerTicking = false;
       window.addEventListener('scroll', function() {
         if (headerTicking) return;
@@ -2181,11 +2234,14 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
         requestAnimationFrame(function() {
           updateThemeHeaderOffset();
           updateScrolledClass();
+          updateWrapHeight();
+          updateScrollBehavior();
           headerTicking = false;
         });
       }, {
         passive: true
       });
+
     })();
   </script>
 
