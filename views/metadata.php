@@ -1830,7 +1830,6 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
        * Affiche l'image (si disponible), les champs et le lien externe
        */
       function openDetailModal(item) {
-        // Filtrer les champs à afficher (exclure les clés internes)
         var entries = Object.entries(item.data || {}).filter(function(entry) {
           return EXCLUDED_KEYS.indexOf(entry[0]) === -1 &&
             entry[1] && entry[1] !== '' &&
@@ -1848,7 +1847,6 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
         var hasImage = item.image && item.image.indexOf('http') === 0;
         var html = '<div class="em-modal">';
 
-        // ─── Header de la modal (avec ou sans image) ───
         if (hasImage) {
           html += '<div class="em-modal-img-wrap">' +
             '<img class="em-modal-img" src="' + escapeHtml(item.image) + '" alt="' + escapeHtml(item.name) + '" onerror="this.style.display=\'none\'">' +
@@ -1865,7 +1863,6 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
             '</div><button class="em-modal-close-noimg" data-close>&times;</button></div>';
         }
 
-        // ─── Corps de la modal : champs clé/valeur ───
         html += '<div class="em-modal-body">';
         entries.forEach(function(entry) {
           html += '<div class="em-modal-entry">' +
@@ -1875,7 +1872,6 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
         });
         html += '</div>';
 
-        // ─── Footer de la modal : lien externe + bouton fermer ───
         html += '<div class="em-modal-footer">';
         if (item.link && item.link.indexOf('http') === 0) {
           html += '<a href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener" class="em-modal-link">Ouvrir le lien &rarr;</a>';
@@ -1884,24 +1880,28 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
         }
         html += '<button class="em-modal-close-btn" data-close>Fermer</button></div></div>';
 
-        // ─── Injection dans le DOM ───
         var overlay = document.createElement('div');
         overlay.className = 'em-modal-overlay';
         overlay.innerHTML = html;
         document.body.appendChild(overlay);
 
-        // Fermeture : boutons, clic overlay, touche Escape
+        // Bloque le scroll arrière-plan
+        document.body.style.overflow = 'hidden';
+
+        function closeModal() {
+          document.body.style.overflow = '';
+          overlay.remove();
+        }
+
         overlay.querySelectorAll('[data-close]').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-            overlay.remove();
-          });
+          btn.addEventListener('click', closeModal);
         });
         overlay.addEventListener('click', function(e) {
-          if (e.target === overlay) overlay.remove();
+          if (e.target === overlay) closeModal();
         });
         document.addEventListener('keydown', function escapeHandler(e) {
           if (e.key === 'Escape') {
-            overlay.remove();
+            closeModal();
             document.removeEventListener('keydown', escapeHandler);
           }
         });
