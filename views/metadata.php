@@ -2164,60 +2164,78 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
 
 
       // Gestion du scroll (priorité au .em-main-body vers la bas et à la page vers le haut)
-const wrap = document.querySelector('.em-wrap');
-const mainBody = document.querySelector('.em-main-body');
+      const wrap = document.querySelector('.em-wrap');
+      const mainBody = document.querySelector('.em-main-body');
 
-if (wrap && mainBody) {
-  let mode = 'main';
+      if (wrap && mainBody) {
+        let mode = 'main';
+        let touchStartY = 0;
 
-  const clampDelta = (deltaY) =>
-    Math.max(-100, Math.min(100, deltaY));
+        const clampDelta = (deltaY) => Math.max(-100, Math.min(100, deltaY));
 
-  const getState = () => ({
-    mainAtTop: mainBody.scrollTop <= 0,
-    mainAtBottom:
-      mainBody.scrollTop + mainBody.clientHeight >=
-      mainBody.scrollHeight - 2,
-    pageAtTop: window.scrollY <= 0,
-  });
+        const getState = () => ({
+          mainAtTop: mainBody.scrollTop <= 0,
+          mainAtBottom: mainBody.scrollTop + mainBody.clientHeight >= mainBody.scrollHeight - 2,
+          pageAtTop: window.scrollY <= 0,
+        });
 
-  document.addEventListener(
-    'wheel',
-    (e) => {
-      if (!wrap.contains(e.target)) return;
+        // =========================
+        // WHEEL (desktop)
+        // =========================
+        document.addEventListener('wheel', (e) => {
+          if (!wrap.contains(e.target)) return;
 
-      const delta = clampDelta(e.deltaY);
-      const state = getState();
+          const delta = clampDelta(e.deltaY);
+          const state = getState();
+          e.preventDefault();
 
-      e.preventDefault();
+          if (mode === 'main') {
+            mainBody.scrollTop += delta;
+            if (delta > 0 && state.mainAtBottom) mode = 'page';
+            return;
+          }
 
-      // =========================
-      // MODE MAIN
-      // =========================
-      if (mode === 'main') {
-        mainBody.scrollTop += delta;
+          if (mode === 'page') {
+            window.scrollBy(0, delta);
+            if (delta < 0 && state.pageAtTop) mode = 'main';
+          }
+        }, {
+          passive: false
+        });
 
-        if (delta > 0 && state.mainAtBottom) {
-          mode = 'page';
-        }
+        // =========================
+        // TOUCH (mobile/tablette)
+        // =========================
+        document.addEventListener('touchstart', (e) => {
+          if (!wrap.contains(e.target)) return;
+          touchStartY = e.touches[0].clientY;
+        }, {
+          passive: true
+        });
 
-        return;
+        document.addEventListener('touchmove', (e) => {
+          if (!wrap.contains(e.target)) return;
+
+          const delta = clampDelta(touchStartY - e.touches[0].clientY);
+          touchStartY = e.touches[0].clientY;
+          const state = getState();
+
+          e.preventDefault();
+
+          if (mode === 'main') {
+            mainBody.scrollTop += delta;
+            if (delta > 0 && state.mainAtBottom) mode = 'page';
+            return;
+          }
+
+          if (mode === 'page') {
+            window.scrollBy(0, delta);
+            if (delta < 0 && state.pageAtTop) mode = 'main';
+          }
+        }, {
+          passive: false
+        });
       }
-
-      // =========================
-      // MODE PAGE
-      // =========================
-      if (mode === 'page') {
-        window.scrollBy(0, delta);
-
-        if (delta < 0 && state.pageAtTop) {
-          mode = 'main';
-        }
-      }
-    },
-    { passive: false }
-  );
-}
 
     })();
   </script>
