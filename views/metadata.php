@@ -940,15 +940,6 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     color: #0f172a;
   }
 
-  footer,
-  .site-footer,
-  #footer,
-  #colophon,
-  .footer {
-    position: relative;
-    z-index: 11;
-  }
-
   /* ═══════════════════════════════════════
      RESPONSIVE
      ═══════════════════════════════════════ */
@@ -2184,24 +2175,6 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
         document.documentElement.classList.toggle('em-scrolled', window.scrollY > 0);
       }
 
-      function updateWrapHeight() {
-        var FOOTER_SELECTORS = 'footer, .site-footer, #footer, #colophon, .footer';
-        var footerVisible = 0;
-
-        var atBottom = (window.scrollY + window.innerHeight) >= document.body.scrollHeight - 5;
-
-        if (atBottom) {
-          document.querySelectorAll(FOOTER_SELECTORS).forEach(function(el) {
-            var rect = el.getBoundingClientRect();
-            if (rect.top < window.innerHeight && rect.height > 0) {
-              footerVisible = Math.max(footerVisible, Math.ceil(window.innerHeight - rect.top)) + 16;
-            }
-          });
-        }
-
-        document.documentElement.style.setProperty('--em-footer-height', footerVisible + 'px');
-      }
-
       function updateScrollBehavior() {
         var layout = document.querySelector('.em-layout');
         var mainBody = document.querySelector('.em-main-body');
@@ -2221,14 +2194,7 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
       updateScrolledClass();
       updateScrollBehavior();
 
-      if (document.readyState === 'complete') {
-        updateWrapHeight();
-      } else {
-        window.addEventListener('load', updateWrapHeight);
-      }
-
       window.addEventListener('resize', updateThemeHeaderOffset);
-      window.addEventListener('resize', updateWrapHeight);
 
       var headerTicking = false;
       window.addEventListener('scroll', function() {
@@ -2237,7 +2203,6 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
         requestAnimationFrame(function() {
           updateThemeHeaderOffset();
           updateScrolledClass();
-          updateWrapHeight();
           updateScrollBehavior();
           headerTicking = false;
         });
