@@ -123,39 +123,8 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     display: flex !important;
     flex-wrap: wrap;
     gap: 8px;
-    /* margin-bottom: 24px; */
-    /* retire position: sticky, c'est inutile ici */
-    position: static;
-    flex-shrink: 0;
-    top: calc(var(--em-header-offset, 0px) + 24px);
-    z-index: 5;
-    /* padding: 20px;
-    background: #fff; */
     flex-shrink: 0;
   }
-
-  /* Pseudos qui prolongent le fond blanc au-dessus (cache le gap top:0→top sticky) et en-dessous (conserve l'écart visuel avec le contenu pendant le scroll) */
-  /* .em-tabs::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 100%;
-    height: 24px;
-    z-index: 5;
-    background: inherit;
-  }
-
-  .em-tabs::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 100%;
-    height: 24px;
-    z-index: 5;
-    background: inherit;
-  } */
 
   /* Overlay opaque sous le header du thème, affiché uniquement pendant le scroll — masque les cards qui défilent à travers un header semi-transparent */
   #em-header-overlay {
