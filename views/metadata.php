@@ -2175,24 +2175,8 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
         document.documentElement.classList.toggle('em-scrolled', window.scrollY > 0);
       }
 
-      function updateScrollBehavior() {
-        var layout = document.querySelector('.em-layout');
-        var mainBody = document.querySelector('.em-main-body');
-        if (!layout || !mainBody) return;
-
-        var rect = layout.getBoundingClientRect();
-        var headerOffset = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--em-header-offset')) || 0;
-        var stickyTop = headerOffset + 25;
-
-        // isStuck = le layout a atteint sa position sticky
-        var isStuck = rect.top <= stickyTop + 5;
-
-        mainBody.style.overflowY = isStuck ? 'auto' : 'hidden';
-      }
-
       updateThemeHeaderOffset();
       updateScrolledClass();
-      updateScrollBehavior();
 
       window.addEventListener('resize', updateThemeHeaderOffset);
 
@@ -2203,12 +2187,102 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
         requestAnimationFrame(function() {
           updateThemeHeaderOffset();
           updateScrolledClass();
-          updateScrollBehavior();
           headerTicking = false;
         });
       }, {
         passive: true
       });
+
+
+      // Gestion du scroll (priorité au .em-main-body vers la bas et à la page vers le haut)
+      const wrap = document.querySelector('.em-wrap');
+      const mainBody = document.querySelector('.em-main-body');
+
+      if (wrap && mainBody) {
+        let mode = 'main';
+
+        // Empêche le scroll natif du body
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+
+        document.addEventListener(
+          'wheel',
+          function(e) {
+            const isInsideWrap =
+              wrap.contains(e.target) || e.target === wrap;
+
+            if (!isInsideWrap) return;
+
+            const delta = e.deltaY;
+
+            const mainAtTop = mainBody.scrollTop <= 0;
+
+            const mainAtBottom =
+              mainBody.scrollTop + mainBody.clientHeight >=
+              mainBody.scrollHeight - 2;
+
+            const pageAtTop = window.scrollY <= 0;
+
+            const pageAtBottom =
+              window.innerHeight + window.scrollY >=
+              document.body.scrollHeight - 2;
+
+            // Toujours gérer le scroll nous-mêmes
+            e.preventDefault();
+
+            // =========================
+            // MODE MAIN
+            // =========================
+            if (mode === 'main') {
+              // scroll exclusif du mainBody
+              mainBody.scrollTop += delta;
+
+              // Passage au mode PAGE
+              if (delta > 0 && mainAtBottom) {
+                mode = 'page';
+
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
+
+                return;
+              }
+
+              // bloque totalement la page
+              window.scrollTo({
+                top: 0,
+                behavior: 'instant',
+              });
+
+              return;
+            }
+
+            // =========================
+            // MODE PAGE
+            // =========================
+            if (mode === 'page') {
+              // scroll exclusif de la page
+              window.scrollBy({
+                top: delta,
+                behavior: 'instant',
+              });
+
+              // IMPORTANT :
+              // on fige totalement .em-main-body
+              mainBody.scrollTop = mainBody.scrollTop;
+
+              // Retour mode MAIN
+              if (delta < 0 && pageAtTop) {
+                mode = 'main';
+
+                document.documentElement.style.overflow = 'hidden';
+                document.body.style.overflow = 'hidden';
+              }
+            }
+          }, {
+            passive: false,
+          }
+        );
+      }
 
     })();
   </script>
