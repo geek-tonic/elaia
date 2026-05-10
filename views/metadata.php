@@ -2164,94 +2164,60 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
 
 
       // Gestion du scroll (priorité au .em-main-body vers la bas et à la page vers le haut)
-      const wrap = document.querySelector('.em-wrap');
-      const mainBody = document.querySelector('.em-main-body');
+const wrap = document.querySelector('.em-wrap');
+const mainBody = document.querySelector('.em-main-body');
 
-      if (wrap && mainBody) {
-        let mode = 'main';
+if (wrap && mainBody) {
+  let mode = 'main';
 
-        // Empêche le scroll natif du body
-        document.documentElement.style.overflow = 'hidden';
-        document.body.style.overflow = 'hidden';
+  const clampDelta = (deltaY) =>
+    Math.max(-100, Math.min(100, deltaY));
 
-        document.addEventListener(
-          'wheel',
-          function(e) {
-            const isInsideWrap =
-              wrap.contains(e.target) || e.target === wrap;
+  const getState = () => ({
+    mainAtTop: mainBody.scrollTop <= 0,
+    mainAtBottom:
+      mainBody.scrollTop + mainBody.clientHeight >=
+      mainBody.scrollHeight - 2,
+    pageAtTop: window.scrollY <= 0,
+  });
 
-            if (!isInsideWrap) return;
+  document.addEventListener(
+    'wheel',
+    (e) => {
+      if (!wrap.contains(e.target)) return;
 
-            const delta = e.deltaY;
+      const delta = clampDelta(e.deltaY);
+      const state = getState();
 
-            const mainAtTop = mainBody.scrollTop <= 0;
+      e.preventDefault();
 
-            const mainAtBottom =
-              mainBody.scrollTop + mainBody.clientHeight >=
-              mainBody.scrollHeight - 2;
+      // =========================
+      // MODE MAIN
+      // =========================
+      if (mode === 'main') {
+        mainBody.scrollTop += delta;
 
-            const pageAtTop = window.scrollY <= 0;
+        if (delta > 0 && state.mainAtBottom) {
+          mode = 'page';
+        }
 
-            const pageAtBottom =
-              window.innerHeight + window.scrollY >=
-              document.body.scrollHeight - 2;
-
-            // Toujours gérer le scroll nous-mêmes
-            e.preventDefault();
-
-            // =========================
-            // MODE MAIN
-            // =========================
-            if (mode === 'main') {
-              // scroll exclusif du mainBody
-              mainBody.scrollTop += delta;
-
-              // Passage au mode PAGE
-              if (delta > 0 && mainAtBottom) {
-                mode = 'page';
-
-                document.documentElement.style.overflow = '';
-                document.body.style.overflow = '';
-
-                return;
-              }
-
-              // bloque totalement la page
-              window.scrollTo({
-                top: 0,
-                behavior: 'instant',
-              });
-
-              return;
-            }
-
-            // =========================
-            // MODE PAGE
-            // =========================
-            if (mode === 'page') {
-              // scroll exclusif de la page
-              window.scrollBy({
-                top: delta,
-                behavior: 'instant',
-              });
-
-              // IMPORTANT :
-              // on fige totalement .em-main-body
-              mainBody.scrollTop = mainBody.scrollTop;
-
-              // Retour mode MAIN
-              if (delta < 0 && pageAtTop) {
-                mode = 'main';
-
-                document.documentElement.style.overflow = 'hidden';
-                document.body.style.overflow = 'hidden';
-              }
-            }
-          }, {
-            passive: false,
-          }
-        );
+        return;
       }
+
+      // =========================
+      // MODE PAGE
+      // =========================
+      if (mode === 'page') {
+        window.scrollBy(0, delta);
+
+        if (delta < 0 && state.pageAtTop) {
+          mode = 'main';
+        }
+      }
+    },
+    { passive: false }
+  );
+}
 
     })();
   </script>
