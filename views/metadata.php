@@ -23,14 +23,17 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     position: relative !important;
     z-index: 10 !important;
     isolation: isolate;
+
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--em-header-offset, 0px));
+
     font-family: 'Inter', -apple-system, sans-serif !important;
     color: #0f172a;
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 24px;
     -webkit-font-smoothing: antialiased;
-    height: calc(100vh - var(--em-header-offset, 0px));
-    /* height: calc(100vh - var(--em-header-offset, 0px) - var(--em-footer-height, 0px)); */
   }
 
   .em-wrap * {
