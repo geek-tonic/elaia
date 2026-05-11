@@ -1878,9 +1878,15 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
       // CARTE LEAFLET — Marqueurs + interactions
       // ═══════════════════════════════════════
 
-      var mapElement = document.getElementById('em-map');
-
-      if (mapElement && typeof L !== 'undefined') {
+      var initLeafletTries = 0;
+      function initLeafletMap() {
+        var mapElement = document.getElementById('em-map');
+        // Si le div n'est pas encore parsé (script déplacé par un optimiseur) ou si Leaflet
+        // est encore en train de se charger (defer/async), on retente. Cap à 100 essais (~10s).
+        if (!mapElement || typeof L === 'undefined') {
+          if (++initLeafletTries > 100) return;
+          return setTimeout(initLeafletMap, 100);
+        }
 
         // Initialisation de la carte
         var map = L.map(mapElement, {
@@ -2092,6 +2098,7 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
         }
 
       }
+      initLeafletMap();
 
       // ═══════════════════════════════════════
       // MOBILE / TABLETTE — Sidebar filtres collapsible
