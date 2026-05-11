@@ -372,7 +372,7 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
   }
 
   .em-sidebar {
-    flex: 0 0 260px;
+    flex: 0 0 275px;
     /* position: sticky; */
     /* top: calc(var(--em-header-offset, 0px) + 24px); */
     /* height: fit-content; */
@@ -457,9 +457,10 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
   /* ─── Compteurs ─── */
   .em-stats {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 20px;
     flex-wrap: wrap;
+    justify-content: center;
   }
 
   .em-stat {
