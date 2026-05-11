@@ -67,6 +67,10 @@ add_action('template_redirect', function () {
     if (wp_doing_ajax() || wp_doing_cron() || defined('XMLRPC_REQUEST')) return;
     if (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'WordPress') !== false) return;
 
+    // ── Thèmes FSE : ne pas intercepter, laisser le moteur de templates en blocs rendre header/footer
+    //    Le shortcode [elaia_metadatas]/[elaia_faq] sera traité via the_content() dans le bloc post-content
+    if (function_exists('wp_is_block_theme') && wp_is_block_theme()) return;
+
     $shortcode = null;
     $template  = null;
     $globalVar = null;
