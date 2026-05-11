@@ -2264,6 +2264,11 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
                 const headerOffset = getHeaderOffset();
                 const wrapTop = wrap.getBoundingClientRect().top;
                 if (wrapTop >= headerOffset - 1) {
+                  // Snap symétrique au mode 'page' (correction d'overshoot) :
+                  // si le scroll a fait dépasser le wrap au-dessus de headerOffset, on le ramène pile dessus.
+                  if (wrapTop > headerOffset) {
+                    window.scrollBy(0, wrapTop - headerOffset);
+                  }
                   mode = 'main';
                   // Replace le main body tout en bas pour reprendre depuis le bas
                   mainBody.scrollTop = mainBody.scrollHeight;
