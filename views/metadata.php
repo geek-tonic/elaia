@@ -372,7 +372,7 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
   }
 
   .em-sidebar {
-    flex: 0 0 275px;
+    flex: 0 0 285px;
     /* position: sticky; */
     /* top: calc(var(--em-header-offset, 0px) + 24px); */
     /* height: fit-content; */
