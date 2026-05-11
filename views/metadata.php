@@ -2169,37 +2169,111 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
       const mainBody = document.querySelector('.em-main-body');
 
       if (wrap && mainBody) {
-        let mode = 'main';
+        let mode = 'page';
         let touchStartY = 0;
 
         const clampDelta = (deltaY) => Math.max(-100, Math.min(100, deltaY));
 
-        const getState = () => ({
-          mainAtTop: mainBody.scrollTop <= 0,
-          mainAtBottom: mainBody.scrollTop + mainBody.clientHeight >= mainBody.scrollHeight - 2,
-          pageAtTop: window.scrollY <= 0,
-        });
+        function getHeaderOffset() {
+          return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--em-header-offset')) || 0;
+        }
+
+        const getState = () => {
+          const headerOffset = getHeaderOffset();
+          const wrapTop = wrap.getBoundingClientRect().top;
+          return {
+            wrapReached: wrapTop <= headerOffset + 1,
+            wrapVisible: wrapTop >= headerOffset - 1,
+            mainAtTop: mainBody.scrollTop <= 0,
+            mainAtBottom: mainBody.scrollTop + mainBody.clientHeight >= mainBody.scrollHeight - 2,
+            pageAtTop: window.scrollY <= 0,
+          };
+        };
+
+        function scrollPageTowardWrap(delta) {
+          const headerOffset = getHeaderOffset();
+          const wrapTop = wrap.getBoundingClientRect().top;
+
+          if (delta > 0 && wrapTop <= headerOffset + 1) {
+            mode = 'main';
+            return;
+          }
+
+          window.scrollBy(0, delta);
+
+          requestAnimationFrame(() => {
+            const newWrapTop = wrap.getBoundingClientRect().top;
+            if (newWrapTop <= headerOffset + 1) {
+              window.scrollBy(0, newWrapTop - headerOffset);
+              mode = 'main';
+            }
+          });
+        }
+
+        function handleDelta(delta) {
+          const state = getState();
+
+          // =========================
+          // MODE PAGE (montée/descente initiale)
+          // =========================
+          if (mode === 'page') {
+            if (delta < 0) {
+              // Remonte librement jusqu'en haut
+              window.scrollBy(0, delta);
+              return;
+            }
+            scrollPageTowardWrap(delta);
+            return;
+          }
+
+          // =========================
+          // MODE MAIN (scroll des fiches)
+          // =========================
+          if (mode === 'main') {
+            if (delta < 0 && state.mainAtTop) {
+              // Remonte la page jusqu'à ce que le wrap soit visible
+              mode = 'page';
+              return;
+            }
+
+            if (delta > 0 && state.mainAtBottom) {
+              mode = 'page-bottom';
+              return;
+            }
+
+            mainBody.scrollTop += delta;
+            return;
+          }
+
+          // =========================
+          // MODE PAGE-BOTTOM (fin de page)
+          // =========================
+          if (mode === 'page-bottom') {
+            if (delta < 0) {
+              // Remonte la page jusqu'à ce que le wrap soit visible
+              window.scrollBy(0, delta);
+              requestAnimationFrame(() => {
+                const headerOffset = getHeaderOffset();
+                const wrapTop = wrap.getBoundingClientRect().top;
+                if (wrapTop >= headerOffset - 1) {
+                  mode = 'main';
+                  // Replace le main body tout en bas pour reprendre depuis le bas
+                  mainBody.scrollTop = mainBody.scrollHeight;
+                }
+              });
+              return;
+            }
+            window.scrollBy(0, delta);
+          }
+        }
 
         // =========================
         // WHEEL (desktop)
         // =========================
         document.addEventListener('wheel', (e) => {
           if (!wrap.contains(e.target)) return;
-
-          const delta = clampDelta(e.deltaY);
-          const state = getState();
           e.preventDefault();
-
-          if (mode === 'main') {
-            mainBody.scrollTop += delta;
-            if (delta > 0 && state.mainAtBottom) mode = 'page';
-            return;
-          }
-
-          if (mode === 'page') {
-            window.scrollBy(0, delta);
-            if (delta < 0 && state.pageAtTop) mode = 'main';
-          }
+          handleDelta(clampDelta(e.deltaY));
         }, {
           passive: false
         });
@@ -2216,23 +2290,10 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
 
         document.addEventListener('touchmove', (e) => {
           if (!wrap.contains(e.target)) return;
-
+          e.preventDefault();
           const delta = clampDelta(touchStartY - e.touches[0].clientY);
           touchStartY = e.touches[0].clientY;
-          const state = getState();
-
-          e.preventDefault();
-
-          if (mode === 'main') {
-            mainBody.scrollTop += delta;
-            if (delta > 0 && state.mainAtBottom) mode = 'page';
-            return;
-          }
-
-          if (mode === 'page') {
-            window.scrollBy(0, delta);
-            if (delta < 0 && state.pageAtTop) mode = 'main';
-          }
+          handleDelta(delta);
         }, {
           passive: false
         });
