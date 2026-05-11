@@ -1885,7 +1885,8 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
         // Initialisation de la carte
         var map = L.map(mapElement, {
           zoomControl: false,
-          attributionControl: false
+          attributionControl: false,
+          scrollWheelZoom: false,
         }).setView([46.6, 1.9], 6);
 
         // Tuiles en premier
