@@ -2207,7 +2207,14 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
             return;
           }
 
-          window.scrollBy(0, delta);
+          // Clamp delta pour ne jamais dépasser headerOffset en un seul event.
+          // Sans ça, un scroll rapide (events qui s'accumulent avant la prochaine frame)
+          // peut faire passer wrap.top largement au-dessus de headerOffset ; le snap de
+          // correction n'intervient qu'à la frame suivante, après que main a déjà repris
+          // la main — d'où un overshoot visible.
+          const maxDown = wrapTop - headerOffset; // distance positive jusqu'à headerOffset
+          const clamped = delta > 0 ? Math.min(delta, maxDown) : delta;
+          window.scrollBy(0, clamped);
 
           requestAnimationFrame(() => {
             const newWrapTop = wrap.getBoundingClientRect().top;
@@ -2258,16 +2265,20 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
           // =========================
           if (mode === 'page-bottom') {
             if (delta < 0) {
-              // Remonte la page jusqu'à ce que le wrap soit visible
-              window.scrollBy(0, delta);
+              // Clamp delta pour ne jamais dépasser headerOffset en un seul event
+              // (symétrique au clamp de scrollPageTowardWrap, évite l'overshoot en scroll rapide).
+              const headerOffset = getHeaderOffset();
+              const wrapTop = wrap.getBoundingClientRect().top;
+              const maxUp = wrapTop - headerOffset; // négatif tant que wrap est sous headerOffset
+              const clamped = Math.max(delta, maxUp);
+              window.scrollBy(0, clamped);
               requestAnimationFrame(() => {
-                const headerOffset = getHeaderOffset();
-                const wrapTop = wrap.getBoundingClientRect().top;
-                if (wrapTop >= headerOffset - 1) {
-                  // Snap symétrique au mode 'page' (correction d'overshoot) :
-                  // si le scroll a fait dépasser le wrap au-dessus de headerOffset, on le ramène pile dessus.
-                  if (wrapTop > headerOffset) {
-                    window.scrollBy(0, wrapTop - headerOffset);
+                const newOffset = getHeaderOffset();
+                const newWrapTop = wrap.getBoundingClientRect().top;
+                if (newWrapTop >= newOffset - 1) {
+                  // Snap symétrique (correction d'overshoot résiduel)
+                  if (newWrapTop > newOffset) {
+                    window.scrollBy(0, newWrapTop - newOffset);
                   }
                   mode = 'main';
                   // Replace le main body tout en bas pour reprendre depuis le bas
