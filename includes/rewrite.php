@@ -31,6 +31,26 @@ add_action('template_redirect', function () {
     if (wp_doing_ajax() || wp_doing_cron() || defined('XMLRPC_REQUEST')) return;
     if (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'WordPress') !== false) return;
 
+    // Résoudre le domaine (dev override > shortcode attr > auto-detect)
+    $dev_domain = (defined('WP_DEBUG') && WP_DEBUG) ? getenv('ELAIA_DEV_DOMAIN') : '';
+    $domain = $dev_domain;
+    if (!$domain && preg_match('/\[elaia_corpus\b([^\]]*)\]/', $post->post_content, $m)) {
+        $atts = shortcode_parse_atts($m[1]);
+        $domain = $atts['domain'] ?? '';
+    }
+    if (!$domain) $domain = \Elaia\Utils\ElaiaPagesMethods::detect_domain();
+
+    // Gate : refuser l'accès si pas de subscription my-elaia (API down → 404 fail-safe)
+    $subscription = elaia_get_myelaia_domains($domain);
+    if (empty($subscription['has_subscription'])) {
+        global $wp_query;
+        $wp_query->set_404();
+        status_header(404);
+        nocache_headers();
+        include get_404_template();
+        exit;
+    }
+
     $custom = ELAIA_PLUGIN_DIR . 'templates/elaia-corpus.php';
     if (file_exists($custom)) {
         include $custom;
@@ -46,6 +66,10 @@ add_action('template_redirect', function () {
 
     if (wp_doing_ajax() || wp_doing_cron() || defined('XMLRPC_REQUEST')) return;
     if (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'WordPress') !== false) return;
+
+    // ── Thèmes FSE : ne pas intercepter, laisser le moteur de templates en blocs rendre header/footer
+    //    Le shortcode [elaia_metadatas]/[elaia_faq] sera traité via the_content() dans le bloc post-content
+    if (function_exists('wp_is_block_theme') && wp_is_block_theme()) return;
 
     $shortcode = null;
     $template  = null;

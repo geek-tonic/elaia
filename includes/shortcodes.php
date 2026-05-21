@@ -44,3 +44,27 @@ add_action(
   },
   20
 );
+
+// wptexturize encode les `&` du JS inline (`&&` → `&#038;&#038;`) car les `<` et `>` de
+// comparaison du JS piègent son tag parser → il sort à tort du contexte <script> et texturise
+// la suite comme du texte. Les thèmes FSE l'appellent en plus DIRECTEMENT (wp-includes/
+// block-template.php) sur tout le contenu rendu, pas via le filtre the_content.
+// Le filtre `run_wptexturize` ne marche que si on l'enregistre AVANT le premier appel à
+// wptexturize() — ce qui n'est pas garanti si un autre plugin (SEO, sécurité…) la déclenche
+// très tôt. On passe donc par un ob_start au template_redirect : on capture la sortie
+// complète et on défait l'encodage HTML à l'intérieur des <script> uniquement.
+add_action('template_redirect', function () {
+    if (!is_singular()) return;
+    $post = get_post();
+    if (!$post) return;
+    if (!has_shortcode($post->post_content, 'elaia_metadatas')
+     && !has_shortcode($post->post_content, 'elaia_faq')) return;
+
+    ob_start(function ($html) {
+        if (strpos($html, '<script') === false) return $html;
+        if (strpos($html, '&#038;') === false && strpos($html, '&amp;') === false) return $html;
+        return preg_replace_callback('/<script\b[^>]*>(.*?)<\/script>/s', function ($m) {
+            return str_replace(['&#038;', '&amp;'], '&', $m[0]);
+        }, $html);
+    });
+}, 1);

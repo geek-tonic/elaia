@@ -9,8 +9,9 @@ if (!function_exists('elaia_prepare_corpus_payload')) {
     {
         // Récupérer le domain depuis le shortcode ou détecter automatiquement
         global $elaia_corpus_domain;
-        $domain  = $elaia_corpus_domain ?: ElaiaPagesMethods::detect_domain();
-        $referer = ElaiaPagesMethods::detect_referer();
+        $dev_domain = (defined('WP_DEBUG') && WP_DEBUG) ? getenv('ELAIA_DEV_DOMAIN') : '';
+        $domain  = $dev_domain ?: ($elaia_corpus_domain ?: ElaiaPagesMethods::detect_domain());
+        $referer = $dev_domain ? 'https://' . $dev_domain . '/' : ElaiaPagesMethods::detect_referer();
 
         $API_HOST = 'https://app.ela-ia.com/api';
 

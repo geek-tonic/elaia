@@ -1,10 +1,33 @@
 # Changelog
 
-## [1.3.2] - 2026-04-20
+## [1.3.2] - 2026-05-11
 ### Corrigé
-- **rewrite.php** : ajout d'un `template_redirect` (priorité 5) pour les pages Metadata et FAQ — les thèmes qui n'appellent pas `the_content()` (ex: Falconheavy / Flower Campings) ne rendaient jamais le shortcode. Le hook inclut les templates du plugin (`templates/elaia-metadata.php`, `templates/elaia-faq.php`) qui appellent `get_header()` / `get_footer()` → le header et footer du thème sont préservés
-- Extraction automatique de l'attribut `domain` du shortcode pour le mode groupe
-- Crawlers internes (Yoast, WP-Cron, AJAX) exclus du hook pour ne pas casser le sitemap
+- **Compatibilité thèmes FSE (block themes)** :
+  - `rewrite.php` : l'intercept `template_redirect` ajouté pour les thèmes sans `the_content()` (Falconheavy / Flower Campings) cassait les thèmes FSE en court-circuitant le moteur de templates en blocs → header et footer absents. Désormais skip de l'intercept via `wp_is_block_theme()` ; le shortcode est traité naturellement par le bloc `post-content`.
+  - `shortcodes.php` : `wp-includes/block-template.php` appelle `wptexturize()` directement sur le HTML rendu (pas via filtre `the_content`). Les `<` et `>` du JS inline piégeaient son tag parser et encodaient les `&&` en `&#038;&#038;` → `SyntaxError` qui cassait l'IIFE complète (boutons + carte). Fix par `ob_start` au `template_redirect` qui défait l'encoding HTML uniquement à l'intérieur des `<script>`, indépendamment du timing d'appel de wptexturize.
+  - `views/metadata.php` : init Leaflet rendu robuste (fonction `initLeafletMap` avec retry toutes les 100ms, cap à 10s) — si le `<script src>` Leaflet est différé par un optimiseur JS (WP Rocket Delay JS, Cloudflare Rocket Loader, etc.) ou si `#em-map` n'est pas encore parsé au moment de l'IIFE, l'init attend.
+- **rewrite.php** : intercept `template_redirect` (priorité 5) pour les pages Metadata et FAQ sur thèmes classiques — les thèmes qui n'appellent pas `the_content()` (Falconheavy / Flower Campings) ne rendaient jamais le shortcode. L'intercept inclut les templates du plugin qui appellent `get_header()` / `get_footer()` → header et footer du thème préservés.
+- Extraction automatique de l'attribut `domain` du shortcode pour le mode groupe.
+- Crawlers internes (Yoast, WP-Cron, AJAX) exclus du hook pour ne pas casser le sitemap.
+- **views/metadata.php** : attributs `data-no-optimize`, `data-no-minify`, `data-cfasync="false"` sur les balises Leaflet (CSS + JS) — empêche WP Rocket / CloudFlare Auto-Minify de casser l'affichage de la carte.
+
+### Ajouté
+- **Refonte complète de la page Metadata** (`views/metadata.php`) :
+  - Filtres latéraux dynamiques (type, équipements WiFi/parking/animaux/piscine), reset, recherche insensible aux accents et à la casse.
+  - Filtres équipements visibles uniquement si la catégorie `accommodation` est active, reset auto sur changement d'onglet.
+  - Onglets de catégories avec compteurs, synchronisation bidirectionnelle filtres ↔ onglets ↔ légende carte.
+  - Cartes Leaflet améliorées : marqueurs par catégorie, popup avec bouton "voir la fiche", légende cliquable, recentrage automatique, bouton de recentrage manuel, désactivation du zoom à la molette, fitBounds initial sur les points visibles.
+  - La carte ne s'affiche que si la catégorie active contient des points GPS.
+  - Modale détail fiche avec champs structurés, labels API, gestion image absente.
+  - Layout sidebar collapsible sur tablette/mobile (< 1024px).
+  - Sticky tabs et sidebar sous le header sticky/fixé du thème (variable CSS `--em-header-offset` calculée au runtime).
+  - Overlay opaque sous le header thème pendant le scroll (pour les thèmes au header semi-transparent).
+  - Gestion personnalisée du scroll en 3 phases (page → main → page-bottom) avec snap symétrique et clamp anti-overshoot dans les deux directions.
+  - Stacking context isolé sur `.em-wrap` (`position: relative; z-index: 10; isolation: isolate`).
+- **Multisite** : cache `elaia_myelaia_domains` partitionné par domaine (clé `elaia_myelaia_domains_<md5(domain)>`) — chaque sous-site multisite a désormais son propre cache d'abonnement, plus de pollution croisée entre sous-sites du même réseau.
+- **Gate de souscription sur la page corpus** (`rewrite.php`) : si le domaine résolu n'a pas `has_subscription:true`, la page renvoie un 404 propre (`status_header(404)` + `nocache_headers()` + `get_404_template()`) avant de rendre le template. Fail-safe : API down → accès refusé par défaut.
+- **Mode dev** : override du domaine via variable d'environnement `ELAIA_DEV_DOMAIN` (utilisée par `Metadata.php`, `Faq.php`, `Corpus.php` quand `WP_DEBUG` est actif) pour tester les pages en local avec un domaine de prod.
+- **Environnement de dev VS Code** : ajout du dossier `.devcontainer/` (Docker Compose : WordPress + MySQL + WP-CLI), instructions Intelliphense, setup automatique.
 
 ## [1.3.1] - 2026-03-30
 ### Corrigé

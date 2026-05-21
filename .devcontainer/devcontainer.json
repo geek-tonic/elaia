@@ -1,0 +1,63 @@
+{
+    "name": "WordPress Plugin Dev",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "wordpress",
+    "workspaceFolder": "/var/www/html/wp-content/plugins/elaia-plugin",
+    "mounts": [
+        "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/.claude.json,target=/home/vscode/.claude.json,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,readonly",
+        "source=${localEnv:HOME}/.opencode,target=/home/vscode/.opencode,type=bind,consistency=cached"
+    ],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "bmewburn.vscode-intelephense-client",
+                "xdebug.php-debug",
+                "wordpresstoolbox.wordpress-toolbox",
+                "khaled-attya.wordpress-snippets",
+                "Anthropic.claude-code",
+                "sst-dev.opencode",
+                "esbenp.prettier-vscode"
+            ],
+            "settings": {
+                "php.suggest.basic": false,
+                "intelephense.stubs": [
+                    "Core",
+                    "standard",
+                    "date",
+                    "json",
+                    "pcre",
+                    "spl",
+                    "filter",
+                    "hash",
+                    "mbstring",
+                    "session",
+                    "tokenizer",
+                    "ctype",
+                    "curl",
+                    "mysqli",
+                    "PDO",
+                    "xml",
+                    "wordpress",
+                    "apache"
+                ]
+            }
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {}
+    },
+    // "forwardPorts": [80],
+    "portsAttributes": {
+        "8080": {
+            "label": "WordPress",
+            "onAutoForward": "notify"
+        }
+    },
+    "otherPortsAttributes": {
+        "onAutoForward": "ignore"
+    },
+    "remoteUser": "vscode",
+    "postCreateCommand": "bash .devcontainer/setup.sh"
+}
