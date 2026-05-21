@@ -51,7 +51,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
    Toutes les couleurs dynamiques utilisent des CSS custom properties
    settées par le JS au runtime via applyThemeColors().
    ═══════════════════════════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* ─── Container principal ─── */
 #elaia-corpus-app {
@@ -67,8 +67,11 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     --ec-shadow: 0 2px 8px rgba(0,0,0,0.08);
     --ec-shadow-lg: 0 4px 20px rgba(0,0,0,0.12);
     --ec-radius: 16px;
-    font-family: 'Nunito', -apple-system, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: var(--ec-text-color);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.005em;
     max-width: 480px;
     margin: 0 auto;
     background: #f5f5f5;
@@ -232,22 +235,35 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
 .ec-cat-chevron { color: #bdbdbd; font-size: 22px; flex-shrink: 0; }
 
 /* ─── Liste des sous-catégories (niveau 2) ─── */
-.ec-subcat-list { display: flex; flex-direction: column; gap: 10px; }
+.ec-subcat-list { display: flex; flex-direction: column; gap: 12px; }
 .ec-subcat-row {
-    display: flex; align-items: center; gap: 16px; padding: 20px;
+    display: flex; align-items: stretch; gap: 0; padding: 0;
     background: white; border-radius: var(--ec-radius); box-shadow: var(--ec-shadow);
-    cursor: pointer; transition: all 0.2s;
+    cursor: pointer; transition: all 0.2s; overflow: hidden;
+    min-height: 120px;
 }
-.ec-subcat-row:hover { box-shadow: var(--ec-shadow-lg); }
+.ec-subcat-row:hover { box-shadow: var(--ec-shadow-lg); transform: translateY(-1px); }
 .ec-subcat-icon {
-    width: 56px; height: 56px; border-radius: 50%; background: var(--ec-accent-light);
+    width: 36%; min-width: 130px; max-width: 180px; flex-shrink: 0;
+    background: var(--ec-accent-light);
     display: flex; align-items: center; justify-content: center;
-    font-size: 24px; flex-shrink: 0; color: var(--ec-accent-color);
+    font-size: 42px; color: var(--ec-accent-color);
 }
-.ec-subcat-info { flex: 1; min-width: 0; }
+.ec-subcat-img {
+    width: 36%; min-width: 130px; max-width: 180px; flex-shrink: 0;
+    height: auto; object-fit: cover; display: block;
+    background: var(--ec-accent-light); align-self: stretch;
+}
+.ec-subcat-info {
+    flex: 1; min-width: 0; padding: 16px 8px 16px 18px;
+    display: flex; flex-direction: column; justify-content: center;
+}
 .ec-subcat-name { font-size: 16px; font-weight: 700; color: var(--ec-text-color); margin: 0 0 4px; }
-.ec-subcat-desc { font-size: 13px; color: var(--ec-text-hint); margin: 0; }
-.ec-subcat-chevron { color: #bdbdbd; font-size: 24px; flex-shrink: 0; transition: transform 0.15s; }
+.ec-subcat-desc { font-size: 13px; color: var(--ec-text-hint); margin: 0; line-height: 1.5; }
+.ec-subcat-chevron {
+    color: #bdbdbd; font-size: 24px; flex-shrink: 0;
+    padding-right: 16px; align-self: center; transition: transform 0.15s;
+}
 .ec-subcat-row:hover .ec-subcat-chevron { color: var(--ec-accent-color); transform: translateX(3px); }
 
 /* ─── Cards (fiches individuelles du corpus) ─── */
@@ -257,71 +273,142 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     box-shadow: var(--ec-shadow); cursor: pointer; transition: all 0.2s;
 }
 .ec-card:hover { box-shadow: var(--ec-shadow-lg); transform: translateY(-1px); }
+.ec-card-media { position: relative; display: block; }
 .ec-card-img { width: 100%; height: 180px; object-fit: cover; display: block; background: #eee; }
+.ec-card-play-overlay {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.35) 100%);
+    cursor: pointer; transition: background 0.15s;
+}
+.ec-card-play-overlay:hover { background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%); }
+.ec-card-play-btn {
+    width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.92);
+    display: flex; align-items: center; justify-content: center; font-size: 24px; color: #212121;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3); transition: transform 0.15s;
+}
+.ec-card-play-overlay:hover .ec-card-play-btn { transform: scale(1.1); }
 .ec-card-img-empty {
     width: 100%; height: 180px; background: #eee;
     display: flex; align-items: center; justify-content: center; color: #bdbdbd; font-size: 40px;
 }
-.ec-card-body { padding: 16px; }
-.ec-card-title { font-size: 18px; font-weight: 700; color: var(--ec-text-color); margin: 0 0 6px; }
+.ec-card-body { padding: 16px 18px 18px; }
+.ec-card-title {
+    font-size: 17px; font-weight: 600; color: var(--ec-text-color);
+    margin: 0 0 6px; letter-spacing: -0.01em; line-height: 1.35;
+}
 .ec-card-desc {
-    font-size: 13px; color: var(--ec-text-secondary); margin: 0 0 12px; line-height: 1.5;
+    font-size: 14px; color: var(--ec-text-secondary); margin: 0; line-height: 1.55;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.ec-card-action {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 13px; font-weight: 600; color: var(--ec-accent-color);
-    background: none; border: none; cursor: pointer; font-family: inherit; padding: 0; float: right;
-}
-.ec-card-action:hover { text-decoration: underline; }
 
 /* ─── Bottom Sheet (détail d'une fiche, slide-up depuis le bas) ─── */
 .ec-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    position: fixed; inset: 0; background: rgba(0,0,0,0.35);
     z-index: 99999; display: flex; align-items: flex-end;
     justify-content: center; animation: ec-fadeIn 0.2s ease;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.005em;
 }
+.ec-overlay, .ec-overlay * { font-family: inherit; }
 @keyframes ec-fadeIn { from{opacity:0} to{opacity:1} }
 .ec-sheet {
-    background: white; border-radius: var(--ec-radius) var(--ec-radius) 0 0;
-    max-width: 600px; width: 100%; max-height: 80vh;
+    background: #ffffff; border-radius: 20px 20px 0 0;
+    max-width: 600px; width: 100%; max-height: 88vh;
     overflow-y: auto; animation: ec-slideUp 0.3s cubic-bezier(0.22,1,0.36,1);
 }
 @keyframes ec-slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-.ec-sheet-handle { width: 40px; height: 4px; border-radius: 2px; background: #e0e0e0; margin: 12px auto 8px; }
-.ec-sheet-img { width: 100%; height: 150px; object-fit: cover; border-radius: 12px; display: block; margin-bottom: 12px; }
-.ec-sheet-body { padding: 0 16px 16px; }
-.ec-sheet-title { font-size: 20px; font-weight: 800; color: var(--ec-text-color); margin: 0 0 8px; }
+.ec-sheet-handle { width: 36px; height: 4px; border-radius: 2px; background: #e5e5e5; margin: 10px auto 4px; }
+.ec-sheet-img { width: 100%; height: 180px; object-fit: cover; border-radius: 14px; display: block; margin-bottom: 16px; }
+.ec-sheet-body { padding: 8px 20px 20px; }
+.ec-sheet-title { font-size: 22px; font-weight: 700; color: var(--ec-text-color); margin: 0 0 8px; letter-spacing: -0.01em; }
 .ec-sheet-badge {
-    display: inline-block; padding: 4px 8px; background: #eee; border-radius: 8px;
-    font-size: 12px; font-weight: 500; color: var(--ec-text-secondary); margin-bottom: 12px;
+    display: inline-block; padding: 4px 10px; background: var(--ec-accent-light);
+    border-radius: 999px; font-size: 11px; font-weight: 600;
+    color: var(--ec-accent-color); margin-bottom: 14px;
+    text-transform: uppercase; letter-spacing: 0.04em;
 }
-.ec-sheet-desc { font-size: 14px; color: #616161; line-height: 1.6; margin: 0 0 20px; }
-.ec-sheet-section-title { font-size: 16px; font-weight: 700; color: var(--ec-text-color); margin: 0 0 12px; }
+.ec-sheet-desc { font-size: 15px; color: #525252; line-height: 1.65; margin: 0 0 20px; font-weight: 400; }
+.ec-sheet-section-title {
+    font-size: 11px; font-weight: 700; color: var(--ec-text-hint);
+    margin: 24px 0 12px; text-transform: uppercase; letter-spacing: 0.08em;
+}
 
 /* Lignes clé/valeur dans le détail */
-.ec-detail-row { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
-.ec-detail-icon { font-size: 18px; color: var(--ec-text-secondary); margin-top: 2px; flex-shrink: 0; }
+.ec-detail-row {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 10px 0; border-bottom: 1px solid #f0f0f0;
+}
+.ec-detail-row:last-child { border-bottom: none; }
+.ec-detail-icon { display: none; }
 .ec-detail-content { flex: 1; }
-.ec-detail-label { font-size: 12px; color: #9e9e9e; font-weight: 500; margin: 0 0 2px; }
-.ec-detail-value { font-size: 14px; color: var(--ec-text-color); margin: 0; word-break: break-word; }
+.ec-detail-label { font-size: 12px; color: var(--ec-text-hint); font-weight: 500; margin: 0 0 2px; }
+.ec-detail-value { font-size: 15px; color: var(--ec-text-color); margin: 0; word-break: break-word; font-weight: 500; }
 
 /* Boutons d'action dans le bottom sheet */
-.ec-sheet-actions { display: flex; gap: 12px; margin-top: 18px; }
+.ec-sheet-actions { display: flex; gap: 10px; margin-top: 24px; }
 .ec-btn {
     flex: 1; display: flex; align-items: center; justify-content: center;
-    gap: 8px; padding: 13px 16px; border-radius: 12px; font-size: 14px;
+    gap: 8px; padding: 12px 16px; border-radius: 12px; font-size: 14px;
     font-weight: 600; border: none; cursor: pointer; font-family: inherit;
     transition: all 0.15s; text-decoration: none;
 }
 .ec-btn-primary { background: var(--ec-text-color); color: white; }
 .ec-btn-primary:hover { opacity: 0.9; }
-.ec-btn-secondary { background: #e0e0e0; color: var(--ec-text-color); }
-.ec-btn-secondary:hover { background: #d5d5d5; }
-.ec-btn-full { width: 100%; background: var(--ec-text-color); color: white; }
+.ec-btn-secondary { background: #f5f5f5; color: var(--ec-text-secondary); }
+.ec-btn-secondary:hover { background: #ebebeb; color: var(--ec-text-color); }
+.ec-btn-full { width: 100%; background: #f5f5f5; color: var(--ec-text-secondary); }
+.ec-btn-full:hover { background: #ebebeb; color: var(--ec-text-color); }
 
 /* Mini-carte dans le bottom sheet (détail d'une fiche géolocalisée) */
 .ec-sheet-map { width: 100%; height: 180px; border-radius: 12px; overflow: hidden; margin-top: 16px; border: 1px solid var(--ec-border); }
+
+/* Modal vidéo (iframe embed plein écran) */
+.ec-video-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    z-index: 100000; display: flex; align-items: center; justify-content: center;
+    padding: 20px; animation: ec-fadeIn 0.2s ease;
+}
+.ec-video-wrap {
+    position: relative; width: 100%; max-width: 900px;
+    aspect-ratio: 16 / 9; background: #000; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+.ec-video-wrap iframe, .ec-video-wrap video {
+    width: 100%; height: 100%; border: 0; display: block;
+}
+.ec-video-close {
+    position: absolute; top: -44px; right: 0;
+    width: 36px; height: 36px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,0.15); color: white; font-size: 20px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px); transition: background 0.15s;
+}
+.ec-video-close:hover { background: rgba(255,255,255,0.3); }
+
+/* Bouton "Voir la vidéo" dans le bottom sheet */
+.ec-sheet-video-btn {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 12px 16px; margin: 12px 0 4px;
+    background: var(--ec-accent-light); color: var(--ec-accent-color);
+    border: 1px solid var(--ec-accent-medium); border-radius: 12px;
+    font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: background 0.15s;
+}
+.ec-sheet-video-btn:hover { background: var(--ec-accent-medium); }
+.ec-sheet-video-btn-icon { font-size: 20px; }
+
+/* FAQ dans le bottom sheet (toutes les réponses visibles) */
+.ec-faq-list { display: flex; flex-direction: column; gap: 18px; margin-bottom: 16px; }
+.ec-faq-item { display: flex; flex-direction: column; gap: 6px; }
+.ec-faq-question {
+    font-family: inherit; font-size: 15px; font-weight: 600;
+    color: var(--ec-text-color); margin: 0; line-height: 1.4;
+}
+.ec-faq-answer {
+    font-size: 14px; color: #525252; line-height: 1.65; margin: 0;
+}
 
 /* ─── Carte plein écran (onglet Carte) ─── */
 .ec-map-page { flex: 1; position: relative; }
@@ -495,15 +582,15 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     // ═══════════════════════════════════════
 
     var UI_TRANSLATIONS = {
-        fr:  { welcome:'Bienvenue !',online:'En ligne',frequent_questions:'💡 Questions fréquentes',home:'Accueil',map:'Carte',planning:'Planning',conversations:'Conversations',contact:'Contact',start_chat:'Commencer la discussion',see_cards:'Voir les fiches',see_on_map:'Voir sur la carte',see_more:'👁 En voir +',detailed_info:'Informations détaillées',directions:'🧭 Itinéraires',close:'Fermer',loading:'Chargement...',no_section:'Aucune rubrique.',no_card:'Aucune fiche.',card:'fiche',cards:'fiches',chatbot_unavailable:'Chatbot non disponible',chatbot_not_configured:'Le chatbot n\'est pas configuré pour ce site.',planning_unavailable:'Planning non disponible',planning_not_configured:'Le planning n\'est pas configuré pour ce site.',contact_unavailable:'Contact non disponible',contact_not_configured:'Les informations de contact ne sont pas configurées.',load_error:'Impossible de charger les données.' },
-        en:  { welcome:'Welcome!',online:'Online',frequent_questions:'💡 Frequently asked questions',home:'Home',map:'Map',planning:'Planning',conversations:'Conversations',contact:'Contact',start_chat:'Start a conversation',see_cards:'View cards',see_on_map:'View on map',see_more:'👁 See more',detailed_info:'Detailed information',directions:'🧭 Directions',close:'Close',loading:'Loading...',no_section:'No section.',no_card:'No card.',card:'card',cards:'cards',chatbot_unavailable:'Chatbot unavailable',chatbot_not_configured:'The chatbot is not configured for this site.',planning_unavailable:'Planning unavailable',planning_not_configured:'The planning is not configured for this site.',contact_unavailable:'Contact unavailable',contact_not_configured:'Contact information is not configured.',load_error:'Unable to load data.' },
-        es:  { welcome:'¡Bienvenido!',online:'En línea',frequent_questions:'💡 Preguntas frecuentes',home:'Inicio',map:'Mapa',planning:'Planning',conversations:'Conversaciones',contact:'Contacto',start_chat:'Iniciar conversación',see_cards:'Ver fichas',see_on_map:'Ver en el mapa',see_more:'👁 Ver más',detailed_info:'Información detallada',directions:'🧭 Cómo llegar',close:'Cerrar',loading:'Cargando...',no_section:'Sin sección.',no_card:'Sin ficha.',card:'ficha',cards:'fichas',chatbot_unavailable:'Chatbot no disponible',chatbot_not_configured:'El chatbot no está configurado para este sitio.',planning_unavailable:'Planning no disponible',planning_not_configured:'El planning no está configurado para este sitio.',contact_unavailable:'Contacto no disponible',contact_not_configured:'La información de contacto no está configurada.',load_error:'No se pueden cargar los datos.' },
-        de:  { welcome:'Willkommen!',online:'Online',frequent_questions:'💡 Häufige Fragen',home:'Startseite',map:'Karte',planning:'Programm',conversations:'Gespräche',contact:'Kontakt',start_chat:'Gespräch starten',see_cards:'Karten anzeigen',see_on_map:'Auf der Karte',see_more:'👁 Mehr sehen',detailed_info:'Detaillierte Informationen',directions:'🧭 Wegbeschreibung',close:'Schließen',loading:'Laden...',no_section:'Kein Bereich.',no_card:'Keine Karte.',card:'Karte',cards:'Karten',chatbot_unavailable:'Chatbot nicht verfügbar',chatbot_not_configured:'Der Chatbot ist für diese Seite nicht konfiguriert.',planning_unavailable:'Programm nicht verfügbar',planning_not_configured:'Das Programm ist für diese Seite nicht konfiguriert.',contact_unavailable:'Kontakt nicht verfügbar',contact_not_configured:'Kontaktinformationen sind nicht konfiguriert.',load_error:'Daten konnten nicht geladen werden.' },
-        nl:  { welcome:'Welkom!',online:'Online',frequent_questions:'💡 Veelgestelde vragen',home:'Home',map:'Kaart',planning:'Planning',conversations:'Gesprekken',contact:'Contact',start_chat:'Start een gesprek',see_cards:'Bekijk kaarten',see_on_map:'Op de kaart',see_more:'👁 Meer zien',detailed_info:'Gedetailleerde informatie',directions:'🧭 Routebeschrijving',close:'Sluiten',loading:'Laden...',no_section:'Geen sectie.',no_card:'Geen kaart.',card:'kaart',cards:'kaarten',chatbot_unavailable:'Chatbot niet beschikbaar',chatbot_not_configured:'De chatbot is niet geconfigureerd voor deze site.',planning_unavailable:'Planning niet beschikbaar',planning_not_configured:'De planning is niet geconfigureerd voor deze site.',contact_unavailable:'Contact niet beschikbaar',contact_not_configured:'Contactinformatie is niet geconfigureerd.',load_error:'Kan gegevens niet laden.' },
-        it:  { welcome:'Benvenuto!',online:'Online',frequent_questions:'💡 Domande frequenti',home:'Home',map:'Mappa',planning:'Programma',conversations:'Conversazioni',contact:'Contatto',start_chat:'Inizia una conversazione',see_cards:'Vedi schede',see_on_map:'Vedi sulla mappa',see_more:'👁 Vedi di più',detailed_info:'Informazioni dettagliate',directions:'🧭 Indicazioni',close:'Chiudi',loading:'Caricamento...',no_section:'Nessuna sezione.',no_card:'Nessuna scheda.',card:'scheda',cards:'schede',chatbot_unavailable:'Chatbot non disponibile',chatbot_not_configured:'Il chatbot non è configurato per questo sito.',planning_unavailable:'Programma non disponibile',planning_not_configured:'Il programma non è configurato per questo sito.',contact_unavailable:'Contatto non disponibile',contact_not_configured:'Le informazioni di contatto non sono configurate.',load_error:'Impossibile caricare i dati.' },
-        pt:  { welcome:'Bem-vindo!',online:'Online',frequent_questions:'💡 Perguntas frequentes',home:'Início',map:'Mapa',planning:'Programa',conversations:'Conversas',contact:'Contacto',start_chat:'Iniciar conversa',see_cards:'Ver fichas',see_on_map:'Ver no mapa',see_more:'👁 Ver mais',detailed_info:'Informações detalhadas',directions:'🧭 Direções',close:'Fechar',loading:'A carregar...',no_section:'Sem secção.',no_card:'Sem ficha.',card:'ficha',cards:'fichas',chatbot_unavailable:'Chatbot indisponível',chatbot_not_configured:'O chatbot não está configurado para este site.',planning_unavailable:'Programa indisponível',planning_not_configured:'O programa não está configurado para este site.',contact_unavailable:'Contacto indisponível',contact_not_configured:'As informações de contacto não estão configuradas.',load_error:'Não foi possível carregar os dados.' },
-        eus: { welcome:'Ongi etorri!',online:'Linean',frequent_questions:'💡 Maiz egiten diren galderak',home:'Hasiera',map:'Mapa',planning:'Programa',conversations:'Elkarrizketak',contact:'Kontaktua',start_chat:'Elkarrizketa hasi',see_cards:'Fitxak ikusi',see_on_map:'Mapan ikusi',see_more:'👁 Gehiago ikusi',detailed_info:'Informazio xehatua',directions:'🧭 Nola iritsi',close:'Itxi',loading:'Kargatzen...',no_section:'Atalik ez.',no_card:'Fitxarik ez.',card:'fitxa',cards:'fitxa',chatbot_unavailable:'Chatbot-a ez dago eskuragarri',chatbot_not_configured:'Chatbot-a ez dago gune honetarako konfiguratuta.',planning_unavailable:'Programa ez dago eskuragarri',planning_not_configured:'Programa ez dago gune honetarako konfiguratuta.',contact_unavailable:'Kontaktua ez dago eskuragarri',contact_not_configured:'Kontaktu informazioa ez dago konfiguratuta.',load_error:'Ezin izan dira datuak kargatu.' },
-        cat: { welcome:'Benvingut!',online:'En línia',frequent_questions:'💡 Preguntes freqüents',home:'Inici',map:'Mapa',planning:'Programa',conversations:'Converses',contact:'Contacte',start_chat:'Iniciar conversa',see_cards:'Veure fitxes',see_on_map:'Veure al mapa',see_more:'👁 Veure més',detailed_info:'Informació detallada',directions:'🧭 Com arribar-hi',close:'Tancar',loading:'Carregant...',no_section:'Cap secció.',no_card:'Cap fitxa.',card:'fitxa',cards:'fitxes',chatbot_unavailable:'Chatbot no disponible',chatbot_not_configured:'El chatbot no està configurat per a aquest lloc.',planning_unavailable:'Programa no disponible',planning_not_configured:'El programa no està configurat per a aquest lloc.',contact_unavailable:'Contacte no disponible',contact_not_configured:'La informació de contacte no està configurada.',load_error:'No s\'han pogut carregar les dades.' },
+        fr:  { welcome:'Bienvenue !',online:'En ligne',frequent_questions:'💡 Questions fréquentes',home:'Accueil',map:'Carte',planning:'Planning',conversations:'Conversations',contact:'Contact',start_chat:'Commencer la discussion',see_cards:'Voir les fiches',see_on_map:'Voir sur la carte',see_more:'👁 En voir +',detailed_info:'Informations détaillées',faq_title:'❓ Foire aux questions',watch_video:'Voir la vidéo',directions:'🧭 Itinéraires',close:'Fermer',loading:'Chargement...',no_section:'Aucune rubrique.',no_card:'Aucune fiche.',card:'fiche',cards:'fiches',chatbot_unavailable:'Chatbot non disponible',chatbot_not_configured:'Le chatbot n\'est pas configuré pour ce site.',planning_unavailable:'Planning non disponible',planning_not_configured:'Le planning n\'est pas configuré pour ce site.',contact_unavailable:'Contact non disponible',contact_not_configured:'Les informations de contact ne sont pas configurées.',load_error:'Impossible de charger les données.' },
+        en:  { welcome:'Welcome!',online:'Online',frequent_questions:'💡 Frequently asked questions',home:'Home',map:'Map',planning:'Planning',conversations:'Conversations',contact:'Contact',start_chat:'Start a conversation',see_cards:'View cards',see_on_map:'View on map',see_more:'👁 See more',detailed_info:'Detailed information',faq_title:'❓ FAQ',watch_video:'Watch video',directions:'🧭 Directions',close:'Close',loading:'Loading...',no_section:'No section.',no_card:'No card.',card:'card',cards:'cards',chatbot_unavailable:'Chatbot unavailable',chatbot_not_configured:'The chatbot is not configured for this site.',planning_unavailable:'Planning unavailable',planning_not_configured:'The planning is not configured for this site.',contact_unavailable:'Contact unavailable',contact_not_configured:'Contact information is not configured.',load_error:'Unable to load data.' },
+        es:  { welcome:'¡Bienvenido!',online:'En línea',frequent_questions:'💡 Preguntas frecuentes',home:'Inicio',map:'Mapa',planning:'Planning',conversations:'Conversaciones',contact:'Contacto',start_chat:'Iniciar conversación',see_cards:'Ver fichas',see_on_map:'Ver en el mapa',see_more:'👁 Ver más',detailed_info:'Información detallada',faq_title:'❓ Preguntas frecuentes',watch_video:'Ver vídeo',directions:'🧭 Cómo llegar',close:'Cerrar',loading:'Cargando...',no_section:'Sin sección.',no_card:'Sin ficha.',card:'ficha',cards:'fichas',chatbot_unavailable:'Chatbot no disponible',chatbot_not_configured:'El chatbot no está configurado para este sitio.',planning_unavailable:'Planning no disponible',planning_not_configured:'El planning no está configurado para este sitio.',contact_unavailable:'Contacto no disponible',contact_not_configured:'La información de contacto no está configurada.',load_error:'No se pueden cargar los datos.' },
+        de:  { welcome:'Willkommen!',online:'Online',frequent_questions:'💡 Häufige Fragen',home:'Startseite',map:'Karte',planning:'Programm',conversations:'Gespräche',contact:'Kontakt',start_chat:'Gespräch starten',see_cards:'Karten anzeigen',see_on_map:'Auf der Karte',see_more:'👁 Mehr sehen',detailed_info:'Detaillierte Informationen',faq_title:'❓ Häufige Fragen',watch_video:'Video ansehen',directions:'🧭 Wegbeschreibung',close:'Schließen',loading:'Laden...',no_section:'Kein Bereich.',no_card:'Keine Karte.',card:'Karte',cards:'Karten',chatbot_unavailable:'Chatbot nicht verfügbar',chatbot_not_configured:'Der Chatbot ist für diese Seite nicht konfiguriert.',planning_unavailable:'Programm nicht verfügbar',planning_not_configured:'Das Programm ist für diese Seite nicht konfiguriert.',contact_unavailable:'Kontakt nicht verfügbar',contact_not_configured:'Kontaktinformationen sind nicht konfiguriert.',load_error:'Daten konnten nicht geladen werden.' },
+        nl:  { welcome:'Welkom!',online:'Online',frequent_questions:'💡 Veelgestelde vragen',home:'Home',map:'Kaart',planning:'Planning',conversations:'Gesprekken',contact:'Contact',start_chat:'Start een gesprek',see_cards:'Bekijk kaarten',see_on_map:'Op de kaart',see_more:'👁 Meer zien',detailed_info:'Gedetailleerde informatie',faq_title:'❓ Veelgestelde vragen',watch_video:'Video bekijken',directions:'🧭 Routebeschrijving',close:'Sluiten',loading:'Laden...',no_section:'Geen sectie.',no_card:'Geen kaart.',card:'kaart',cards:'kaarten',chatbot_unavailable:'Chatbot niet beschikbaar',chatbot_not_configured:'De chatbot is niet geconfigureerd voor deze site.',planning_unavailable:'Planning niet beschikbaar',planning_not_configured:'De planning is niet geconfigureerd voor deze site.',contact_unavailable:'Contact niet beschikbaar',contact_not_configured:'Contactinformatie is niet geconfigureerd.',load_error:'Kan gegevens niet laden.' },
+        it:  { welcome:'Benvenuto!',online:'Online',frequent_questions:'💡 Domande frequenti',home:'Home',map:'Mappa',planning:'Programma',conversations:'Conversazioni',contact:'Contatto',start_chat:'Inizia una conversazione',see_cards:'Vedi schede',see_on_map:'Vedi sulla mappa',see_more:'👁 Vedi di più',detailed_info:'Informazioni dettagliate',faq_title:'❓ Domande frequenti',watch_video:'Guarda il video',directions:'🧭 Indicazioni',close:'Chiudi',loading:'Caricamento...',no_section:'Nessuna sezione.',no_card:'Nessuna scheda.',card:'scheda',cards:'schede',chatbot_unavailable:'Chatbot non disponibile',chatbot_not_configured:'Il chatbot non è configurato per questo sito.',planning_unavailable:'Programma non disponibile',planning_not_configured:'Il programma non è configurato per questo sito.',contact_unavailable:'Contatto non disponibile',contact_not_configured:'Le informazioni di contatto non sono configurate.',load_error:'Impossibile caricare i dati.' },
+        pt:  { welcome:'Bem-vindo!',online:'Online',frequent_questions:'💡 Perguntas frequentes',home:'Início',map:'Mapa',planning:'Programa',conversations:'Conversas',contact:'Contacto',start_chat:'Iniciar conversa',see_cards:'Ver fichas',see_on_map:'Ver no mapa',see_more:'👁 Ver mais',detailed_info:'Informações detalhadas',faq_title:'❓ Perguntas frequentes',watch_video:'Ver vídeo',directions:'🧭 Direções',close:'Fechar',loading:'A carregar...',no_section:'Sem secção.',no_card:'Sem ficha.',card:'ficha',cards:'fichas',chatbot_unavailable:'Chatbot indisponível',chatbot_not_configured:'O chatbot não está configurado para este site.',planning_unavailable:'Programa indisponível',planning_not_configured:'O programa não está configurado para este site.',contact_unavailable:'Contacto indisponível',contact_not_configured:'As informações de contacto não estão configuradas.',load_error:'Não foi possível carregar os dados.' },
+        eus: { welcome:'Ongi etorri!',online:'Linean',frequent_questions:'💡 Maiz egiten diren galderak',home:'Hasiera',map:'Mapa',planning:'Programa',conversations:'Elkarrizketak',contact:'Kontaktua',start_chat:'Elkarrizketa hasi',see_cards:'Fitxak ikusi',see_on_map:'Mapan ikusi',see_more:'👁 Gehiago ikusi',detailed_info:'Informazio xehatua',faq_title:'❓ Maiz egiten diren galderak',watch_video:'Bideoa ikusi',directions:'🧭 Nola iritsi',close:'Itxi',loading:'Kargatzen...',no_section:'Atalik ez.',no_card:'Fitxarik ez.',card:'fitxa',cards:'fitxa',chatbot_unavailable:'Chatbot-a ez dago eskuragarri',chatbot_not_configured:'Chatbot-a ez dago gune honetarako konfiguratuta.',planning_unavailable:'Programa ez dago eskuragarri',planning_not_configured:'Programa ez dago gune honetarako konfiguratuta.',contact_unavailable:'Kontaktua ez dago eskuragarri',contact_not_configured:'Kontaktu informazioa ez dago konfiguratuta.',load_error:'Ezin izan dira datuak kargatu.' },
+        cat: { welcome:'Benvingut!',online:'En línia',frequent_questions:'💡 Preguntes freqüents',home:'Inici',map:'Mapa',planning:'Programa',conversations:'Converses',contact:'Contacte',start_chat:'Iniciar conversa',see_cards:'Veure fitxes',see_on_map:'Veure al mapa',see_more:'👁 Veure més',detailed_info:'Informació detallada',faq_title:'❓ Preguntes freqüents',watch_video:'Veure el vídeo',directions:'🧭 Com arribar-hi',close:'Tancar',loading:'Carregant...',no_section:'Cap secció.',no_card:'Cap fitxa.',card:'fitxa',cards:'fitxes',chatbot_unavailable:'Chatbot no disponible',chatbot_not_configured:'El chatbot no està configurat per a aquest lloc.',planning_unavailable:'Programa no disponible',planning_not_configured:'El programa no està configurat per a aquest lloc.',contact_unavailable:'Contacte no disponible',contact_not_configured:'La informació de contacte no està configurada.',load_error:'No s\'han pogut carregar les dades.' },
     };
 
     /** Retourne la traduction d'une clé UI dans la langue courante (fallback: français) */
@@ -559,6 +646,26 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
 
     /** Titre traduit d'une suggestion */
     function translateSuggestTitle(suggest) { return (currentLang !== 'fr' && suggest.translations?.[currentLang]?.title) || suggest.title || ''; }
+
+    /**
+     * Retourne la FAQ d'une card traduite dans la langue courante.
+     * Format source : { frQuestion: frAnswer, ... }
+     * Format traductions : faq_translations[locale][frQuestion] = { question, answer }
+     */
+    function translateCardFaq(card) {
+        if (!card.faq || typeof card.faq !== 'object') return {};
+        if (currentLang === 'fr' || !card.faq_translations?.[currentLang]) return card.faq;
+        var langData = card.faq_translations[currentLang], result = {};
+        for (var frQuestion in card.faq) {
+            var t = langData[frQuestion];
+            if (t && typeof t === 'object' && t.question) {
+                result[t.question] = t.answer || card.faq[frQuestion];
+            } else {
+                result[frQuestion] = card.faq[frQuestion];
+            }
+        }
+        return result;
+    }
 
     // ═══════════════════════════════════════
     // COULEURS — Application dynamique du thème
@@ -758,8 +865,11 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
         if (!selectedCategory || !selectedCategory['sub-categories']) return '<p class="ec-error">' + t('no_section') + '</p>';
         return '<div class="ec-subcat-list">' + selectedCategory['sub-categories'].map(function(subCategory, index) {
             var cardCount = (subCategory.cards || []).length;
+            var iconHtml = subCategory.image
+                ? '<img class="ec-subcat-img" src="' + escapeHtml(subCategory.image) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=\\\'ec-subcat-icon\\\'>📋</div>\'">'
+                : '<div class="ec-subcat-icon">📋</div>';
             return '<div class="ec-subcat-row" data-subcategory="' + index + '">'
-                + '<div class="ec-subcat-icon">📋</div>'
+                + iconHtml
                 + '<div class="ec-subcat-info">'
                 + '<p class="ec-subcat-name">' + escapeHtml(translateSubCategoryName(subCategory)) + '</p>'
                 + '<p class="ec-subcat-desc">' + escapeHtml(translateSubCategoryDesc(subCategory)) + ' · ' + cardCount + ' ' + (cardCount > 1 ? t('cards') : t('card')) + '</p>'
@@ -771,14 +881,20 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     function renderCardList() {
         if (!selectedSubCategory || !selectedSubCategory.cards) return '<p class="ec-error">' + t('no_card') + '</p>';
         return '<div class="ec-cards-grid">' + selectedSubCategory.cards.map(function(card, index) {
-            var imageHtml = card.image
-                ? '<img class="ec-card-img" src="' + escapeHtml(card.image) + '" alt="' + escapeHtml(translateCardName(card)) + '" loading="lazy" onerror="' + defaultPicture + '">'
-                : '<img class="ec-card-img" src="' + defaultPicture + '" alt="' + escapeHtml(translateCardName(card)) + '" loading="lazy" onerror="' + defaultPicture + '">';
-            return '<div class="ec-card" data-card="' + index + '">' + imageHtml
+            var imgSrc = card.image
+                ? escapeHtml(card.image)
+                : (getVideoThumbnail(card.video) || defaultPicture);
+            var playOverlay = card.video
+                ? '<div class="ec-card-play-overlay" data-play-video="' + index + '" aria-label="Play video"><div class="ec-card-play-btn">▶</div></div>'
+                : '';
+            return '<div class="ec-card" data-card="' + index + '">'
+                + '<div class="ec-card-media">'
+                + '<img class="ec-card-img" src="' + imgSrc + '" alt="' + escapeHtml(translateCardName(card)) + '" loading="lazy" onerror="this.src=\'' + defaultPicture + '\'">'
+                + playOverlay
+                + '</div>'
                 + '<div class="ec-card-body">'
                 + '<h4 class="ec-card-title">' + escapeHtml(translateCardName(card)) + '</h4>'
                 + '<p class="ec-card-desc">' + escapeHtml(translateCardDesc(card)) + '</p>'
-                + '<button class="ec-card-action">' + t('see_more') + '</button>'
                 + '</div></div>';
         }).join('') + '</div>';
     }
@@ -866,9 +982,15 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
         var cardDesc   = translateCardDesc(card);
         var cardValues = translateCardValues(card);
 
-        // Image (optionnelle)
-        var imageHtml = card.image
-            ? '<img class="ec-sheet-img" src="' + escapeHtml(card.image) + '" alt="' + escapeHtml(cardName) + '" onerror="this.style.display=\'none\'">'
+        // Image (ou miniature vidéo en fallback)
+        var sheetImgSrc = card.image ? escapeHtml(card.image) : getVideoThumbnail(card.video);
+        var imageHtml = sheetImgSrc
+            ? '<img class="ec-sheet-img" src="' + sheetImgSrc + '" alt="' + escapeHtml(cardName) + '" onerror="this.style.display=\'none\'">'
+            : '';
+
+        // Bouton "Voir la vidéo" (optionnel, ouvre la modal embed)
+        var videoBtnHtml = card.video
+            ? '<button class="ec-sheet-video-btn" data-play-video><span class="ec-sheet-video-btn-icon">▶</span><span>' + t('watch_video') + '</span></button>'
             : '';
 
         // Champs clé/valeur
@@ -885,6 +1007,21 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
             });
         }
 
+        // FAQ (questions/réponses) — affichée si le card en a
+        var faqHtml = '';
+        var cardFaq = translateCardFaq(card);
+        if (cardFaq && typeof cardFaq === 'object' && Object.keys(cardFaq).length > 0) {
+            faqHtml = '<p class="ec-sheet-section-title">' + t('faq_title') + '</p>'
+                + '<div class="ec-faq-list">'
+                + Object.entries(cardFaq).map(function(entry) {
+                    return '<div class="ec-faq-item">'
+                        + '<p class="ec-faq-question">' + escapeHtml(entry[0]) + '</p>'
+                        + '<p class="ec-faq-answer">' + escapeHtml(String(entry[1])) + '</p>'
+                        + '</div>';
+                }).join('')
+                + '</div>';
+        }
+
         // Coordonnées GPS (pour mini-carte et bouton itinéraire)
         var hasGpsCoords    = card.latitude && card.longitude;
         var miniMapHtml     = hasGpsCoords ? '<div id="ec-detail-map" class="ec-sheet-map"></div>' : '';
@@ -899,7 +1036,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
             ? '<div class="ec-sheet-actions">'
                 + '<a class="ec-btn ec-btn-primary" style="background:' + headerBg + ';color:' + headerText + '" href="https://www.google.com/maps/dir/?api=1&destination=' + card.latitude + ',' + card.longitude + '" target="_blank" rel="noopener">' + t('directions') + '</a>'
                 + '<button class="ec-btn ec-btn-secondary" data-close-sheet>' + t('close') + '</button></div>'
-            : '<div class="ec-sheet-actions"><button class="ec-btn ec-btn-full" data-close-sheet style="background:gray;color:black">' + t('close') + '</button></div>';
+            : '<div class="ec-sheet-actions"><button class="ec-btn ec-btn-full" data-close-sheet>' + t('close') + '</button></div>';
 
         // Assemblage et injection du bottom sheet
         var overlay = document.createElement('div');
@@ -909,7 +1046,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
             + '<h2 class="ec-sheet-title">' + escapeHtml(cardName) + '</h2>'
             + (subCategoryName ? '<span class="ec-sheet-badge">' + escapeHtml(subCategoryName) + '</span>' : '')
             + '<p class="ec-sheet-desc">' + escapeHtml(cardDesc) + '</p>'
-            + valuesHtml + miniMapHtml + actionsHtml
+            + videoBtnHtml + valuesHtml + faqHtml + miniMapHtml + actionsHtml
             + '</div></div>';
 
         document.body.appendChild(overlay);
@@ -919,6 +1056,16 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
             btn.addEventListener('click', function() { overlay.remove(); });
         });
         overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+
+        // Bouton "Voir la vidéo" dans la sheet
+        var sheetVideoBtn = overlay.querySelector('[data-play-video]');
+        if (sheetVideoBtn && card.video) {
+            sheetVideoBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                openVideoModal(card.video);
+            });
+        }
+
         document.addEventListener('keydown', function escapeHandler(e) {
             if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', escapeHandler); }
         });
@@ -959,6 +1106,70 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
             });
         });
         return points;
+    }
+
+    /** Retourne l'URL de la miniature d'une vidéo (YouTube uniquement) ou null */
+    function getVideoThumbnail(url) {
+        if (!url || typeof url !== 'string') return null;
+        var ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        if (ytMatch) return 'https://img.youtube.com/vi/' + ytMatch[1] + '/hqdefault.jpg';
+        return null;
+    }
+
+    /**
+     * Construit l'URL embeddable et le type d'élément (iframe/video) à partir
+     * d'une URL vidéo brute. Retourne null si le format n'est pas reconnu —
+     * dans ce cas le caller fallback sur window.open (nouvel onglet).
+     */
+    function resolveVideoEmbed(url) {
+        if (!url || typeof url !== 'string') return null;
+        var trimmed = url.trim();
+
+        // YouTube : watch?v= / youtu.be/ / embed/ / shorts/
+        var ytMatch = trimmed.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        if (ytMatch) {
+            return { type: 'iframe', src: 'https://www.youtube.com/embed/' + ytMatch[1] + '?autoplay=1&rel=0' };
+        }
+
+        // Vimeo : vimeo.com/{id}
+        var vimeoMatch = trimmed.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+        if (vimeoMatch) {
+            return { type: 'iframe', src: 'https://player.vimeo.com/video/' + vimeoMatch[1] + '?autoplay=1' };
+        }
+
+        // MP4/WebM/Ogg direct
+        if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(trimmed)) {
+            return { type: 'video', src: trimmed };
+        }
+
+        return null;
+    }
+
+    /** Ouvre une modal vidéo embed (YouTube/Vimeo) ou fallback nouvel onglet */
+    function openVideoModal(videoUrl) {
+        var embed = resolveVideoEmbed(videoUrl);
+        if (!embed) {
+            window.open(videoUrl, '_blank', 'noopener');
+            return;
+        }
+
+        var overlay = document.createElement('div');
+        overlay.className = 'ec-video-overlay';
+        var inner = embed.type === 'iframe'
+            ? '<iframe src="' + escapeHtml(embed.src) + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>'
+            : '<video src="' + escapeHtml(embed.src) + '" controls autoplay playsinline></video>';
+        overlay.innerHTML = '<div class="ec-video-wrap">'
+            + '<button class="ec-video-close" aria-label="Close">×</button>'
+            + inner
+            + '</div>';
+
+        document.body.appendChild(overlay);
+
+        var close = function() { overlay.remove(); document.removeEventListener('keydown', escapeHandler); };
+        var escapeHandler = function(e) { if (e.key === 'Escape') close(); };
+        overlay.querySelector('.ec-video-close').addEventListener('click', close);
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+        document.addEventListener('keydown', escapeHandler);
     }
 
     /** Échappe le HTML pour éviter les injections XSS */
@@ -1056,6 +1267,15 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
         appContainer.querySelectorAll('[data-card]').forEach(function(cardElement) {
             cardElement.addEventListener('click', function() {
                 openDetailSheet(selectedSubCategory.cards[+cardElement.dataset.card]);
+            });
+        });
+
+        // ─── Clic sur le play overlay d'une card → lancer la vidéo (sans ouvrir la sheet) ───
+        appContainer.querySelectorAll('[data-play-video]').forEach(function(overlay) {
+            overlay.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var card = selectedSubCategory.cards[+overlay.dataset.playVideo];
+                if (card && card.video) openVideoModal(card.video);
             });
         });
 
