@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.3] - 2026-05-23
+### Ajouté
+- **Vidéo d'accueil sur la page corpus** : si l'admin renseigne une URL dans MyElaia > Paramétrage (champ "Vidéo d'accueil"), la vidéo se lance automatiquement au premier visit du visiteur. Le marqueur "vue" est stocké dans `localStorage` sous la clé `elaia_welcome_video_seen_<chatbotKey>` et contient l'URL (pas un booléen) : si l'admin change la vidéo, le visiteur la revoit automatiquement.
+- **Bouton "Revoir la vidéo d'accueil"** dans le header de la page corpus (à gauche du sélecteur de langue), affiché uniquement quand une URL est configurée. Traduction `replay_welcome_video` × 9 locales (fr, en, es, de, nl, it, pt, eus, cat).
+- **Design hero aligné sur MyElaia > Paramétrage** (`views/corpus.php`) : nouvelle fonction `buildHeroBackground()` qui applique le bon CSS background selon le type configuré dans AppConfig :
+  - `solid` → couleur unie
+  - `gradient` → `linear-gradient(orientation, start, end)`
+  - `image` → image cover + `text-shadow` automatique sur le titre pour garantir la lisibilité
+- **Avatar, tagline, primary_color, suggestions** désormais pilotés par AppConfig en priorité, fallback gracieux sur les `settings` legacy (`agent_picture`, `hook`, `primary_color`, `suggests`) si AppConfig n'est pas configuré côté admin.
+- **Support des URLs absolues** pour l'avatar (AppConfig renvoie une URL résolue) en plus du chemin relatif legacy (vers `APP_HOST`).
+
+### Modifié
+- `includes/Pages/Corpus.php` : lit le nouveau nœud `app_config` retourné par `/v1/chatbot/{key}` (hero, avatar, tagline, primary_color, welcome_video_url, prompt_suggestions, translations). Le cache transient inclut ce nœud en plus des champs existants.
+
 ## [1.3.2] - 2026-05-11
 ### Corrigé
 - **Compatibilité thèmes FSE (block themes)** :
