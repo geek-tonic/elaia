@@ -170,6 +170,23 @@ JS,
      * 4) NOUVEAU : Détection des formulaires (masquer/afficher le bouton du chatbot)
      *    (accroché à elaia-loader)
      */
+    /**
+     * Leaflet (carte de la page metadatas)
+     *
+     * On enregistre Leaflet dans le head via wp_enqueue_*, plutôt que d'injecter les
+     * balises inline dans la vue. Certains thèmes / optimizers (RocketLoader,
+     * LiteSpeed) déplacent les <script>/<link> du body avec jQuery.prependTo et
+     * cassent le parsing s'ils sont posés en plein milieu du contenu.
+     *
+     * Chargé uniquement si la page contient le shortcode [elaia_metadatas].
+     */
+    global $post;
+    if ($post && has_shortcode($post->post_content ?? '', 'elaia_metadatas')) {
+        wp_enqueue_style('elaia-leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', [], '1.9.4');
+        wp_enqueue_script('elaia-leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', [], '1.9.4', false);
+        wp_enqueue_style('elaia-inter-font', 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap', [], null);
+    }
+
     wp_add_inline_script(
         'elaia-loader',
         <<<JS
