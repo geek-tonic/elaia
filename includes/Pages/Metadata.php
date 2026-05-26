@@ -46,6 +46,15 @@ if (!function_exists('elaia_prepare_metadata_payload')) {
             $api_err  = '';
         } else {
             // Appel API
+            // Quand l'admin force la purge (?elaia_nocache=1 ou ?elaia_clear_cache=1),
+            // on propage `elaia_nocache=1` à l'API côté gt-admin pour buster aussi son
+            // Cache::remember interne — sinon on continue à recevoir un vieux payload
+            // pendant 30 minutes.
+            $api_url = $API_URL;
+            if ($bypass_cache || (is_user_logged_in() && current_user_can('manage_options') && isset($_GET['elaia_clear_cache']) && $_GET['elaia_clear_cache'] == '1')) {
+                $api_url = add_query_arg('elaia_nocache', '1', $API_URL);
+            }
+
             $args = [
                 'timeout' => 20,
                 'headers' => array_filter([
@@ -56,7 +65,7 @@ if (!function_exists('elaia_prepare_metadata_payload')) {
                 'body'    => ['domain' => $domain],
             ];
 
-            $api_wp_response = wp_remote_post($API_URL, $args);
+            $api_wp_response = wp_remote_post($api_url, $args);
 
             $api_ok   = !is_wp_error($api_wp_response);
             $api_code = $api_ok ? (int) wp_remote_retrieve_response_code($api_wp_response) : 0;

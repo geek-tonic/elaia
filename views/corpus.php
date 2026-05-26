@@ -495,6 +495,8 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
          'corpus'         => $corpus,
          'suggests'       => $suggests,
          'hasPlanning'    => $has_planning,
+         'welcomeVideo'   => $welcome_video_url,
+         'hero'           => $hero,
      ])); ?>'>
 </div>
 
@@ -535,11 +537,46 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     var defaultPicture = config.defaultPicture  || null;
     var hookText       = config.hookText        || '';
     var hasPlanning    = !!config.hasPlanning;
+    var welcomeVideoUrl = config.welcomeVideo    || null;
+    var welcomeVideoStorageKey = 'elaia_welcome_video_seen_' + (chatbotKey || 'default');
 
-    // Appliquer la couleur primaire au thème
+    // Hero (MyElaia > Paramétrage) : type solid | gradient | image.
+    var heroConfig = config.hero || {};
+
+    // Appliquer la couleur primaire au thème (utilisée pour les boutons,
+    // accents, badges). Le hero est géré séparément via buildHeroBackground()
+    // pour ne pas polluer les composants qui dépendent de primary_color.
     if (config.primaryColor) {
         themeColors.bg     = config.primaryColor;
         themeColors.accent = config.primaryColor;
+    }
+
+    /**
+     * Construit la valeur CSS background à appliquer sur le hero `.ec-header`
+     * selon le type configuré dans MyElaia > Paramétrage.
+     */
+    function buildHeroBackground() {
+        if (heroConfig.type === 'image' && heroConfig.image_url) {
+            return "center / cover no-repeat url('" + heroConfig.image_url + "'), " + (heroConfig.color || themeColors.bg);
+        }
+        if (heroConfig.type === 'gradient' && heroConfig.gradient_start && heroConfig.gradient_end) {
+            var dir = heroConfig.gradient_orientation || 'to bottom';
+            return 'linear-gradient(' + dir + ', ' + heroConfig.gradient_start + ', ' + heroConfig.gradient_end + ')';
+        }
+        return heroConfig.color || themeColors.bg;
+    }
+
+    /**
+     * Pour calculer la couleur de texte contrastée, on a besoin d'une couleur
+     * de référence. Pour gradient = on prend le start ; pour image = on force
+     * blanc (overlay sombre conseillé via shadow text si besoin).
+     */
+    function heroTextColor() {
+        if (heroConfig.type === 'image') return '#ffffff';
+        var ref = heroConfig.type === 'gradient'
+            ? (heroConfig.gradient_start || themeColors.bg)
+            : (heroConfig.color || themeColors.bg);
+        return getContrastTextColor(ref);
     }
 
     // ═══════════════════════════════════════
@@ -582,15 +619,15 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     // ═══════════════════════════════════════
 
     var UI_TRANSLATIONS = {
-        fr:  { welcome:'Bienvenue !',online:'En ligne',frequent_questions:'💡 Questions fréquentes',home:'Accueil',map:'Carte',planning:'Planning',conversations:'Conversations',contact:'Contact',start_chat:'Commencer la discussion',see_cards:'Voir les fiches',see_on_map:'Voir sur la carte',see_more:'👁 En voir +',detailed_info:'Informations détaillées',faq_title:'❓ Foire aux questions',watch_video:'Voir la vidéo',directions:'🧭 Itinéraires',close:'Fermer',loading:'Chargement...',no_section:'Aucune rubrique.',no_card:'Aucune fiche.',card:'fiche',cards:'fiches',chatbot_unavailable:'Chatbot non disponible',chatbot_not_configured:'Le chatbot n\'est pas configuré pour ce site.',planning_unavailable:'Planning non disponible',planning_not_configured:'Le planning n\'est pas configuré pour ce site.',contact_unavailable:'Contact non disponible',contact_not_configured:'Les informations de contact ne sont pas configurées.',load_error:'Impossible de charger les données.' },
-        en:  { welcome:'Welcome!',online:'Online',frequent_questions:'💡 Frequently asked questions',home:'Home',map:'Map',planning:'Planning',conversations:'Conversations',contact:'Contact',start_chat:'Start a conversation',see_cards:'View cards',see_on_map:'View on map',see_more:'👁 See more',detailed_info:'Detailed information',faq_title:'❓ FAQ',watch_video:'Watch video',directions:'🧭 Directions',close:'Close',loading:'Loading...',no_section:'No section.',no_card:'No card.',card:'card',cards:'cards',chatbot_unavailable:'Chatbot unavailable',chatbot_not_configured:'The chatbot is not configured for this site.',planning_unavailable:'Planning unavailable',planning_not_configured:'The planning is not configured for this site.',contact_unavailable:'Contact unavailable',contact_not_configured:'Contact information is not configured.',load_error:'Unable to load data.' },
-        es:  { welcome:'¡Bienvenido!',online:'En línea',frequent_questions:'💡 Preguntas frecuentes',home:'Inicio',map:'Mapa',planning:'Planning',conversations:'Conversaciones',contact:'Contacto',start_chat:'Iniciar conversación',see_cards:'Ver fichas',see_on_map:'Ver en el mapa',see_more:'👁 Ver más',detailed_info:'Información detallada',faq_title:'❓ Preguntas frecuentes',watch_video:'Ver vídeo',directions:'🧭 Cómo llegar',close:'Cerrar',loading:'Cargando...',no_section:'Sin sección.',no_card:'Sin ficha.',card:'ficha',cards:'fichas',chatbot_unavailable:'Chatbot no disponible',chatbot_not_configured:'El chatbot no está configurado para este sitio.',planning_unavailable:'Planning no disponible',planning_not_configured:'El planning no está configurado para este sitio.',contact_unavailable:'Contacto no disponible',contact_not_configured:'La información de contacto no está configurada.',load_error:'No se pueden cargar los datos.' },
-        de:  { welcome:'Willkommen!',online:'Online',frequent_questions:'💡 Häufige Fragen',home:'Startseite',map:'Karte',planning:'Programm',conversations:'Gespräche',contact:'Kontakt',start_chat:'Gespräch starten',see_cards:'Karten anzeigen',see_on_map:'Auf der Karte',see_more:'👁 Mehr sehen',detailed_info:'Detaillierte Informationen',faq_title:'❓ Häufige Fragen',watch_video:'Video ansehen',directions:'🧭 Wegbeschreibung',close:'Schließen',loading:'Laden...',no_section:'Kein Bereich.',no_card:'Keine Karte.',card:'Karte',cards:'Karten',chatbot_unavailable:'Chatbot nicht verfügbar',chatbot_not_configured:'Der Chatbot ist für diese Seite nicht konfiguriert.',planning_unavailable:'Programm nicht verfügbar',planning_not_configured:'Das Programm ist für diese Seite nicht konfiguriert.',contact_unavailable:'Kontakt nicht verfügbar',contact_not_configured:'Kontaktinformationen sind nicht konfiguriert.',load_error:'Daten konnten nicht geladen werden.' },
-        nl:  { welcome:'Welkom!',online:'Online',frequent_questions:'💡 Veelgestelde vragen',home:'Home',map:'Kaart',planning:'Planning',conversations:'Gesprekken',contact:'Contact',start_chat:'Start een gesprek',see_cards:'Bekijk kaarten',see_on_map:'Op de kaart',see_more:'👁 Meer zien',detailed_info:'Gedetailleerde informatie',faq_title:'❓ Veelgestelde vragen',watch_video:'Video bekijken',directions:'🧭 Routebeschrijving',close:'Sluiten',loading:'Laden...',no_section:'Geen sectie.',no_card:'Geen kaart.',card:'kaart',cards:'kaarten',chatbot_unavailable:'Chatbot niet beschikbaar',chatbot_not_configured:'De chatbot is niet geconfigureerd voor deze site.',planning_unavailable:'Planning niet beschikbaar',planning_not_configured:'De planning is niet geconfigureerd voor deze site.',contact_unavailable:'Contact niet beschikbaar',contact_not_configured:'Contactinformatie is niet geconfigureerd.',load_error:'Kan gegevens niet laden.' },
-        it:  { welcome:'Benvenuto!',online:'Online',frequent_questions:'💡 Domande frequenti',home:'Home',map:'Mappa',planning:'Programma',conversations:'Conversazioni',contact:'Contatto',start_chat:'Inizia una conversazione',see_cards:'Vedi schede',see_on_map:'Vedi sulla mappa',see_more:'👁 Vedi di più',detailed_info:'Informazioni dettagliate',faq_title:'❓ Domande frequenti',watch_video:'Guarda il video',directions:'🧭 Indicazioni',close:'Chiudi',loading:'Caricamento...',no_section:'Nessuna sezione.',no_card:'Nessuna scheda.',card:'scheda',cards:'schede',chatbot_unavailable:'Chatbot non disponibile',chatbot_not_configured:'Il chatbot non è configurato per questo sito.',planning_unavailable:'Programma non disponibile',planning_not_configured:'Il programma non è configurato per questo sito.',contact_unavailable:'Contatto non disponibile',contact_not_configured:'Le informazioni di contatto non sono configurate.',load_error:'Impossibile caricare i dati.' },
-        pt:  { welcome:'Bem-vindo!',online:'Online',frequent_questions:'💡 Perguntas frequentes',home:'Início',map:'Mapa',planning:'Programa',conversations:'Conversas',contact:'Contacto',start_chat:'Iniciar conversa',see_cards:'Ver fichas',see_on_map:'Ver no mapa',see_more:'👁 Ver mais',detailed_info:'Informações detalhadas',faq_title:'❓ Perguntas frequentes',watch_video:'Ver vídeo',directions:'🧭 Direções',close:'Fechar',loading:'A carregar...',no_section:'Sem secção.',no_card:'Sem ficha.',card:'ficha',cards:'fichas',chatbot_unavailable:'Chatbot indisponível',chatbot_not_configured:'O chatbot não está configurado para este site.',planning_unavailable:'Programa indisponível',planning_not_configured:'O programa não está configurado para este site.',contact_unavailable:'Contacto indisponível',contact_not_configured:'As informações de contacto não estão configuradas.',load_error:'Não foi possível carregar os dados.' },
-        eus: { welcome:'Ongi etorri!',online:'Linean',frequent_questions:'💡 Maiz egiten diren galderak',home:'Hasiera',map:'Mapa',planning:'Programa',conversations:'Elkarrizketak',contact:'Kontaktua',start_chat:'Elkarrizketa hasi',see_cards:'Fitxak ikusi',see_on_map:'Mapan ikusi',see_more:'👁 Gehiago ikusi',detailed_info:'Informazio xehatua',faq_title:'❓ Maiz egiten diren galderak',watch_video:'Bideoa ikusi',directions:'🧭 Nola iritsi',close:'Itxi',loading:'Kargatzen...',no_section:'Atalik ez.',no_card:'Fitxarik ez.',card:'fitxa',cards:'fitxa',chatbot_unavailable:'Chatbot-a ez dago eskuragarri',chatbot_not_configured:'Chatbot-a ez dago gune honetarako konfiguratuta.',planning_unavailable:'Programa ez dago eskuragarri',planning_not_configured:'Programa ez dago gune honetarako konfiguratuta.',contact_unavailable:'Kontaktua ez dago eskuragarri',contact_not_configured:'Kontaktu informazioa ez dago konfiguratuta.',load_error:'Ezin izan dira datuak kargatu.' },
-        cat: { welcome:'Benvingut!',online:'En línia',frequent_questions:'💡 Preguntes freqüents',home:'Inici',map:'Mapa',planning:'Programa',conversations:'Converses',contact:'Contacte',start_chat:'Iniciar conversa',see_cards:'Veure fitxes',see_on_map:'Veure al mapa',see_more:'👁 Veure més',detailed_info:'Informació detallada',faq_title:'❓ Preguntes freqüents',watch_video:'Veure el vídeo',directions:'🧭 Com arribar-hi',close:'Tancar',loading:'Carregant...',no_section:'Cap secció.',no_card:'Cap fitxa.',card:'fitxa',cards:'fitxes',chatbot_unavailable:'Chatbot no disponible',chatbot_not_configured:'El chatbot no està configurat per a aquest lloc.',planning_unavailable:'Programa no disponible',planning_not_configured:'El programa no està configurat per a aquest lloc.',contact_unavailable:'Contacte no disponible',contact_not_configured:'La informació de contacte no està configurada.',load_error:'No s\'han pogut carregar les dades.' },
+        fr:  { welcome:'Bienvenue !',online:'En ligne',frequent_questions:'💡 Questions fréquentes',home:'Accueil',map:'Carte',planning:'Planning',conversations:'Conversations',contact:'Contact',start_chat:'Commencer la discussion',see_cards:'Voir les fiches',see_on_map:'Voir sur la carte',see_more:'👁 En voir +',detailed_info:'Informations détaillées',faq_title:'❓ Foire aux questions',watch_video:'Voir la vidéo',replay_welcome_video:"Revoir la vidéo d'accueil",directions:'🧭 Itinéraires',close:'Fermer',loading:'Chargement...',no_section:'Aucune rubrique.',no_card:'Aucune fiche.',card:'fiche',cards:'fiches',chatbot_unavailable:'Chatbot non disponible',chatbot_not_configured:'Le chatbot n\'est pas configuré pour ce site.',planning_unavailable:'Planning non disponible',planning_not_configured:'Le planning n\'est pas configuré pour ce site.',contact_unavailable:'Contact non disponible',contact_not_configured:'Les informations de contact ne sont pas configurées.',load_error:'Impossible de charger les données.' },
+        en:  { welcome:'Welcome!',online:'Online',frequent_questions:'💡 Frequently asked questions',home:'Home',map:'Map',planning:'Planning',conversations:'Conversations',contact:'Contact',start_chat:'Start a conversation',see_cards:'View cards',see_on_map:'View on map',see_more:'👁 See more',detailed_info:'Detailed information',faq_title:'❓ FAQ',watch_video:'Watch video',replay_welcome_video:'Replay welcome video',directions:'🧭 Directions',close:'Close',loading:'Loading...',no_section:'No section.',no_card:'No card.',card:'card',cards:'cards',chatbot_unavailable:'Chatbot unavailable',chatbot_not_configured:'The chatbot is not configured for this site.',planning_unavailable:'Planning unavailable',planning_not_configured:'The planning is not configured for this site.',contact_unavailable:'Contact unavailable',contact_not_configured:'Contact information is not configured.',load_error:'Unable to load data.' },
+        es:  { welcome:'¡Bienvenido!',online:'En línea',frequent_questions:'💡 Preguntas frecuentes',home:'Inicio',map:'Mapa',planning:'Planning',conversations:'Conversaciones',contact:'Contacto',start_chat:'Iniciar conversación',see_cards:'Ver fichas',see_on_map:'Ver en el mapa',see_more:'👁 Ver más',detailed_info:'Información detallada',faq_title:'❓ Preguntas frecuentes',watch_video:'Ver vídeo',replay_welcome_video:'Volver a ver el vídeo de bienvenida',directions:'🧭 Cómo llegar',close:'Cerrar',loading:'Cargando...',no_section:'Sin sección.',no_card:'Sin ficha.',card:'ficha',cards:'fichas',chatbot_unavailable:'Chatbot no disponible',chatbot_not_configured:'El chatbot no está configurado para este sitio.',planning_unavailable:'Planning no disponible',planning_not_configured:'El planning no está configurado para este sitio.',contact_unavailable:'Contacto no disponible',contact_not_configured:'La información de contacto no está configurada.',load_error:'No se pueden cargar los datos.' },
+        de:  { welcome:'Willkommen!',online:'Online',frequent_questions:'💡 Häufige Fragen',home:'Startseite',map:'Karte',planning:'Programm',conversations:'Gespräche',contact:'Kontakt',start_chat:'Gespräch starten',see_cards:'Karten anzeigen',see_on_map:'Auf der Karte',see_more:'👁 Mehr sehen',detailed_info:'Detaillierte Informationen',faq_title:'❓ Häufige Fragen',watch_video:'Video ansehen',replay_welcome_video:'Willkommensvideo erneut ansehen',directions:'🧭 Wegbeschreibung',close:'Schließen',loading:'Laden...',no_section:'Kein Bereich.',no_card:'Keine Karte.',card:'Karte',cards:'Karten',chatbot_unavailable:'Chatbot nicht verfügbar',chatbot_not_configured:'Der Chatbot ist für diese Seite nicht konfiguriert.',planning_unavailable:'Programm nicht verfügbar',planning_not_configured:'Das Programm ist für diese Seite nicht konfiguriert.',contact_unavailable:'Kontakt nicht verfügbar',contact_not_configured:'Kontaktinformationen sind nicht konfiguriert.',load_error:'Daten konnten nicht geladen werden.' },
+        nl:  { welcome:'Welkom!',online:'Online',frequent_questions:'💡 Veelgestelde vragen',home:'Home',map:'Kaart',planning:'Planning',conversations:'Gesprekken',contact:'Contact',start_chat:'Start een gesprek',see_cards:'Bekijk kaarten',see_on_map:'Op de kaart',see_more:'👁 Meer zien',detailed_info:'Gedetailleerde informatie',faq_title:'❓ Veelgestelde vragen',watch_video:'Video bekijken',replay_welcome_video:'Welkomstvideo opnieuw bekijken',directions:'🧭 Routebeschrijving',close:'Sluiten',loading:'Laden...',no_section:'Geen sectie.',no_card:'Geen kaart.',card:'kaart',cards:'kaarten',chatbot_unavailable:'Chatbot niet beschikbaar',chatbot_not_configured:'De chatbot is niet geconfigureerd voor deze site.',planning_unavailable:'Planning niet beschikbaar',planning_not_configured:'De planning is niet geconfigureerd voor deze site.',contact_unavailable:'Contact niet beschikbaar',contact_not_configured:'Contactinformatie is niet geconfigureerd.',load_error:'Kan gegevens niet laden.' },
+        it:  { welcome:'Benvenuto!',online:'Online',frequent_questions:'💡 Domande frequenti',home:'Home',map:'Mappa',planning:'Programma',conversations:'Conversazioni',contact:'Contatto',start_chat:'Inizia una conversazione',see_cards:'Vedi schede',see_on_map:'Vedi sulla mappa',see_more:'👁 Vedi di più',detailed_info:'Informazioni dettagliate',faq_title:'❓ Domande frequenti',watch_video:'Guarda il video',replay_welcome_video:'Riproduci video di benvenuto',directions:'🧭 Indicazioni',close:'Chiudi',loading:'Caricamento...',no_section:'Nessuna sezione.',no_card:'Nessuna scheda.',card:'scheda',cards:'schede',chatbot_unavailable:'Chatbot non disponibile',chatbot_not_configured:'Il chatbot non è configurato per questo sito.',planning_unavailable:'Programma non disponibile',planning_not_configured:'Il programma non è configurato per questo sito.',contact_unavailable:'Contatto non disponibile',contact_not_configured:'Le informazioni di contatto non sono configurate.',load_error:'Impossibile caricare i dati.' },
+        pt:  { welcome:'Bem-vindo!',online:'Online',frequent_questions:'💡 Perguntas frequentes',home:'Início',map:'Mapa',planning:'Programa',conversations:'Conversas',contact:'Contacto',start_chat:'Iniciar conversa',see_cards:'Ver fichas',see_on_map:'Ver no mapa',see_more:'👁 Ver mais',detailed_info:'Informações detalhadas',faq_title:'❓ Perguntas frequentes',watch_video:'Ver vídeo',replay_welcome_video:'Reproduzir vídeo de boas-vindas',directions:'🧭 Direções',close:'Fechar',loading:'A carregar...',no_section:'Sem secção.',no_card:'Sem ficha.',card:'ficha',cards:'fichas',chatbot_unavailable:'Chatbot indisponível',chatbot_not_configured:'O chatbot não está configurado para este site.',planning_unavailable:'Programa indisponível',planning_not_configured:'O programa não está configurado para este site.',contact_unavailable:'Contacto indisponível',contact_not_configured:'As informações de contacto não estão configuradas.',load_error:'Não foi possível carregar os dados.' },
+        eus: { welcome:'Ongi etorri!',online:'Linean',frequent_questions:'💡 Maiz egiten diren galderak',home:'Hasiera',map:'Mapa',planning:'Programa',conversations:'Elkarrizketak',contact:'Kontaktua',start_chat:'Elkarrizketa hasi',see_cards:'Fitxak ikusi',see_on_map:'Mapan ikusi',see_more:'👁 Gehiago ikusi',detailed_info:'Informazio xehatua',faq_title:'❓ Maiz egiten diren galderak',watch_video:'Bideoa ikusi',replay_welcome_video:'Ongi etorri bideoa berriz ikusi',directions:'🧭 Nola iritsi',close:'Itxi',loading:'Kargatzen...',no_section:'Atalik ez.',no_card:'Fitxarik ez.',card:'fitxa',cards:'fitxa',chatbot_unavailable:'Chatbot-a ez dago eskuragarri',chatbot_not_configured:'Chatbot-a ez dago gune honetarako konfiguratuta.',planning_unavailable:'Programa ez dago eskuragarri',planning_not_configured:'Programa ez dago gune honetarako konfiguratuta.',contact_unavailable:'Kontaktua ez dago eskuragarri',contact_not_configured:'Kontaktu informazioa ez dago konfiguratuta.',load_error:'Ezin izan dira datuak kargatu.' },
+        cat: { welcome:'Benvingut!',online:'En línia',frequent_questions:'💡 Preguntes freqüents',home:'Inici',map:'Mapa',planning:'Programa',conversations:'Converses',contact:'Contacte',start_chat:'Iniciar conversa',see_cards:'Veure fitxes',see_on_map:'Veure al mapa',see_more:'👁 Veure més',detailed_info:'Informació detallada',faq_title:'❓ Preguntes freqüents',watch_video:'Veure el vídeo',replay_welcome_video:'Tornar a veure el vídeo de benvinguda',directions:'🧭 Com arribar-hi',close:'Tancar',loading:'Carregant...',no_section:'Cap secció.',no_card:'Cap fitxa.',card:'fitxa',cards:'fitxes',chatbot_unavailable:'Chatbot no disponible',chatbot_not_configured:'El chatbot no està configurat per a aquest lloc.',planning_unavailable:'Programa no disponible',planning_not_configured:'El programa no està configurat per a aquest lloc.',contact_unavailable:'Contacte no disponible',contact_not_configured:'La informació de contacte no està configurada.',load_error:'No s\'han pogut carregar les dades.' },
     };
 
     /** Retourne la traduction d'une clé UI dans la langue courante (fallback: français) */
@@ -781,22 +818,39 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
 
     /** Rend le header : avatar, nom de l'agent, statut en ligne, sélecteur de langue, CTA */
     function renderHeader() {
-        var headerBg   = themeColors.bg;
-        var headerText = getContrastTextColor(headerBg);
+        var headerBg   = buildHeroBackground();
+        var headerText = heroTextColor();
         var mutedColor = headerText === '#ffffff' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.5)';
+        // Sur fond image, on ajoute un text-shadow pour garantir la lisibilité
+        // même si l'image est claire à certains endroits.
+        var heroTextShadow = heroConfig.type === 'image' ? ';text-shadow:0 1px 3px rgba(0,0,0,0.45)' : '';
 
-        // Avatar de l'agent
-        var avatarHtml = agentPicture
-            ? '<img class="ec-header-avatar" src="' + APP_HOST + '/' + escapeHtml(agentPicture) + '" alt="" onerror="this.className=\'ec-header-avatar-placeholder\';this.textContent=\'👤\';">'
+        // Avatar (priorité AppConfig.avatar.image_url — URL absolue ; sinon
+        // legacy agent_picture qui est un chemin relatif vers APP_HOST).
+        var avatarSrc = null;
+        if (agentPicture) {
+            avatarSrc = /^https?:\/\//.test(agentPicture)
+                ? agentPicture
+                : APP_HOST + '/' + agentPicture;
+        }
+        var avatarHtml = avatarSrc
+            ? '<img class="ec-header-avatar" src="' + escapeHtml(avatarSrc) + '" alt="" onerror="this.className=\'ec-header-avatar-placeholder\';this.textContent=\'👤\';">'
             : '<div class="ec-header-avatar-placeholder">👤</div>';
 
         // Locale courante pour le bouton langue
         var currentLocale = AVAILABLE_LOCALES.find(function(l) { return l.code === currentLang; }) || AVAILABLE_LOCALES[0];
         var title = agentName || t('welcome');
 
-        return '<div class="ec-header" style="background:' + headerBg + ';color:' + headerText + '">'
+        // Bouton "Revoir la vidéo d'accueil" — affiché uniquement si l'URL est définie
+        var welcomeReplayBtn = welcomeVideoUrl
+            ? '<button class="ec-lang-btn" id="ec-welcome-replay" title="' + escapeHtml(t('replay_welcome_video')) + '" style="margin-right:6px">▶</button>'
+            : '';
+
+        return '<div class="ec-header" style="background:' + headerBg + ';color:' + headerText + heroTextShadow + '">'
             + '<div class="ec-header-top">'
             + '<div class="ec-header-status" style="color:' + mutedColor + '"><span class="ec-header-status-dot"></span> ' + t('online') + '</div>'
+            + '<div style="display:flex;align-items:center">'
+            + welcomeReplayBtn
             // Sélecteur de langue
             + '<div class="ec-lang-switcher"><button class="ec-lang-btn" id="ec-lang-toggle">' + currentLocale.flag + '</button>'
             + '<div class="ec-lang-dropdown" id="ec-lang-dropdown">'
@@ -804,7 +858,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
                 return '<button class="ec-lang-option ' + (locale.code === currentLang ? 'active' : '') + '" data-lang="' + locale.code + '">'
                     + '<span>' + locale.flag + '</span><span>' + locale.label + '</span></button>';
             }).join('')
-            + '</div></div></div>'
+            + '</div></div></div></div>'
             + avatarHtml
             + '<h1 class="ec-header-title" style="color:' + headerText + '">' + escapeHtml(title) + '</h1>'
             + (hookText ? '<span class="ec-header-badge">' + escapeHtml(hookText) + '</span>' : '')
@@ -1206,6 +1260,15 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
             });
         }
 
+        // ─── Bouton "Revoir la vidéo d'accueil" ───
+        var welcomeReplayBtnEl = document.getElementById('ec-welcome-replay');
+        if (welcomeReplayBtnEl) {
+            welcomeReplayBtnEl.addEventListener('click', function(e) {
+                e.stopPropagation();
+                playWelcomeVideo();
+            });
+        }
+
         // ─── Bouton CTA "Commencer la discussion" ───
         var startChatBtn = document.getElementById('ec-start-chat');
         if (startChatBtn) {
@@ -1332,9 +1395,43 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     }
 
     // ═══════════════════════════════════════
+    // VIDÉO D'ACCUEIL — auto-play au 1er visit
+    // ═══════════════════════════════════════
+
+    /** Renvoie true si l'utilisateur n'a pas encore vu CETTE URL pour ce chatbot */
+    function shouldPlayWelcomeVideo() {
+        if (!welcomeVideoUrl) return false;
+        try {
+            return localStorage.getItem(welcomeVideoStorageKey) !== welcomeVideoUrl;
+        } catch (e) {
+            return false; // localStorage indispo (mode privé) → ne joue pas pour éviter le spam
+        }
+    }
+
+    /** Marque l'URL comme vue */
+    function markWelcomeVideoSeen() {
+        if (!welcomeVideoUrl) return;
+        try { localStorage.setItem(welcomeVideoStorageKey, welcomeVideoUrl); } catch (e) {}
+    }
+
+    /** Ouvre la vidéo d'accueil (réutilise openVideoModal qui gère YT/Vimeo/MP4) */
+    function playWelcomeVideo() {
+        if (welcomeVideoUrl) openVideoModal(welcomeVideoUrl);
+    }
+
+    // ═══════════════════════════════════════
     // BOOT — Lancement de l'application
     // ═══════════════════════════════════════
 
     render();
+
+    // Auto-play vidéo d'accueil après le 1er render (laisse la home s'afficher
+    // en arrière-plan pour que la fermeture ait quelque chose à afficher).
+    if (shouldPlayWelcomeVideo()) {
+        setTimeout(function() {
+            markWelcomeVideoSeen();
+            playWelcomeVideo();
+        }, 300);
+    }
 })();
 </script>

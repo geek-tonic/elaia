@@ -1,10 +1,10 @@
 <?php if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit; ?>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" data-no-optimize="1">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" data-no-optimize="1" data-no-minify="1" data-cfasync="false"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<?php
+// Leaflet (CSS+JS) et la police Inter sont enqueués via includes/enqueues.php pour
+// éviter que le thème / les optimizers JS (RocketLoader, LiteSpeed) ne déplacent
+// les balises inline du body avec jQuery.prependTo et cassent leur parsing.
+?>
 
 <?php
 // ═══════════════════════════════════════════════════════════════
@@ -26,13 +26,15 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
 
     display: flex;
     flex-direction: column;
-    height: calc(100vh - var(--em-header-offset, 0px));
+    /* Hauteur auto : la page coule naturellement et le footer du thème suit le contenu.
+       Anciennement height:calc(100vh - --em-header-offset) qui forçait un viewport entier
+       et faisait apparaître le footer à un endroit bizarre. */
 
     font-family: 'Inter', -apple-system, sans-serif !important;
     color: #0f172a;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 0 24px 40px;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -111,10 +113,6 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     display: flex;
     flex-direction: column;
     gap: 24px;
-    min-height: 0;
-    /* ou hauteur fixe */
-    overflow: hidden;
-    /* empêche le débordement */
   }
 
   /* ─── Onglets — Filtrage par catégorie ─── */
@@ -174,13 +172,8 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
   }
 
   .em-main-body {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    /* le scroll est ici, pas sur le body global */
-    min-height: 0;
-    /* crucial en flexbox */
     gap: 24px;
   }
 
@@ -364,20 +357,16 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
   .em-layout {
     display: flex;
     gap: 24px;
-    overflow: hidden;
-    position: sticky;
-    top: calc(var(--em-header-offset, 0px) + 24px);
-    /* height: calc(100vh - var(--em-header-offset, 0px) - 24px); */
-    height: calc(100vh - var(--em-header-offset, 0px) - 24px - var(--em-footer-height, 0px));
+    align-items: flex-start;
   }
 
   .em-sidebar {
     flex: 0 0 285px;
-    /* position: sticky; */
-    /* top: calc(var(--em-header-offset, 0px) + 24px); */
-    /* height: fit-content; */
+    position: sticky;
+    top: calc(var(--em-header-offset, 0px) + 24px);
+    align-self: flex-start;
+    max-height: calc(100vh - var(--em-header-offset, 0px) - 48px);
     overflow-y: auto;
-    height: 100%;
   }
 
 
@@ -872,6 +861,81 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     white-space: pre-line;
   }
 
+  /* Badge date d'événement */
+  .em-modal-event {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    margin-bottom: 16px;
+    background: #fff7ed;
+    color: #c2410c;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* Player vidéo */
+  .em-modal-video-wrap {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #000;
+  }
+
+  .em-modal-video-wrap iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .em-modal-video-file {
+    width: 100%;
+    border-radius: 8px;
+    background: #000;
+    display: block;
+  }
+
+  /* Questions fréquentes */
+  .em-modal-faq {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .em-modal-faq-item {
+    margin-top: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f8fafc;
+  }
+
+  .em-modal-faq-q {
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .em-modal-faq-a {
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.5;
+    border-top: 1px solid #e2e8f0;
+    background: #fff;
+    white-space: pre-line;
+  }
+
+  .em-modal-faq-a-empty {
+    color: #94a3b8;
+    font-style: italic;
+  }
+
   /* Pied de modal */
   .em-modal-footer {
     padding: 16px 24px;
@@ -1248,12 +1312,39 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
       if (!empty($data['near_pool']))                                     $features[] = 'pool';
     }
 
+    // Métadonnées riches (FAQ children, dates d'événement, vidéo intégrable)
+    // ajoutées par l'API V2 à partir de novembre 2026. Tolérant aux anciens payloads V1.
+    $itemFaq = [];
+    if (!empty($metaItem['faq'])) {
+      $rawFaq = is_string($metaItem['faq']) ? json_decode($metaItem['faq'], true) : $metaItem['faq'];
+      if (is_array($rawFaq)) {
+        foreach ($rawFaq as $qa) {
+          if (!is_array($qa)) continue;
+          $q = (string)($qa['question'] ?? '');
+          if (trim($q) === '') continue;
+          $itemFaq[] = ['question' => $q, 'answer' => (string)($qa['answer'] ?? '')];
+        }
+      }
+    }
+
+    $itemEvent = (string)($metaItem['event'] ?? '');
+    $itemVideoUrl = (string)($metaItem['video_url'] ?? '');
+    $itemVideoEmbed = $metaItem['video_embed'] ?? null;
+    if (is_string($itemVideoEmbed)) {
+      $decoded = json_decode($itemVideoEmbed, true);
+      $itemVideoEmbed = is_array($decoded) ? $decoded : null;
+    }
+
     $allItems[] = [
-      'data'     => $data,
-      'type'     => $type,
-      'name'     => $name,
-      'features' => $features,
-      'idx'      => $itemIndex,
+      'data'        => $data,
+      'type'        => $type,
+      'name'        => $name,
+      'features'    => $features,
+      'idx'         => $itemIndex,
+      'faq'         => $itemFaq,
+      'event'       => $itemEvent,
+      'video_url'   => $itemVideoUrl,
+      'video_embed' => $itemVideoEmbed,
     ];
     $itemIndex++;
   }
@@ -1292,7 +1383,11 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
   function em_field_label($key, $fieldLabels)
   {
     if (isset($fieldLabels[$key])) return $fieldLabels[$key];
-    return ucfirst(str_replace('_', ' ', $key));
+    // Suffixe legacy `_xxxxxxx` (7 alphanum) injecté par l'ancien V1 quand le
+    // field_key était vide — on le retire pour ne pas le montrer à l'utilisateur.
+    $cleaned = preg_replace('/_[a-z0-9]{7}$/i', '', $key);
+    if (isset($fieldLabels[$cleaned])) return $fieldLabels[$cleaned];
+    return ucfirst(str_replace('_', ' ', $cleaned));
   }
 
   // Champs affichés en tags colorés sur les cards (avec suffixe et classe CSS)
@@ -1436,11 +1531,15 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
                 data-features="<?php echo esc_attr($itemFeatures); ?>"
                 data-name="<?php echo esc_attr(strtolower($itemName)); ?>"
                 data-json="<?php echo esc_attr(wp_json_encode([
-                              'name'     => $itemName,
-                              'image'    => $itemImage,
-                              'link'     => $itemLink,
-                              'data'     => $itemData,
-                              'category' => $categoryInfo['label'],
+                              'name'        => $itemName,
+                              'image'       => $itemImage,
+                              'link'        => $itemLink,
+                              'data'        => $itemData,
+                              'category'    => $categoryInfo['label'],
+                              'faq'         => $item['faq'] ?? [],
+                              'event'       => $item['event'] ?? '',
+                              'video_url'   => $item['video_url'] ?? '',
+                              'video_embed' => $item['video_embed'] ?? null,
                             ])); ?>">
 
                 <!-- Image + badge catégorie -->
@@ -1531,7 +1630,11 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
        * Utilise les labels API si disponibles, sinon formate la clé
        */
       function getFieldLabel(key) {
-        return FIELD_LABELS[key] || key.replace(/_/g, ' ').replace(/^\w/, function(c) {
+        if (FIELD_LABELS[key]) return FIELD_LABELS[key];
+        // Suffixe legacy `_xxxxxxx` (7 alphanum) — cf. em_field_label() côté PHP.
+        var cleaned = key.replace(/_[a-z0-9]{7}$/i, '');
+        if (FIELD_LABELS[cleaned]) return FIELD_LABELS[cleaned];
+        return cleaned.replace(/_/g, ' ').replace(/^\w/, function(c) {
           return c.toUpperCase();
         });
       }
@@ -1831,12 +1934,51 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
         }
 
         html += '<div class="em-modal-body">';
+
+        // Badge date d'événement
+        if (item.event) {
+          html += '<div class="em-modal-event">' +
+            '<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="vertical-align:middle;margin-right:6px">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3.75 18.75V7.5a2.25 2.25 0 012.25-2.25h12a2.25 2.25 0 012.25 2.25v11.25m-16.5 0A2.25 2.25 0 006 21h12a2.25 2.25 0 002.25-2.25m-16.5 0V11.25h16.5v7.5M3.75 11.25h16.5"/></svg>' +
+            escapeHtml(item.event) + '</div>';
+        }
+
+        // Champs génériques
         entries.forEach(function(entry) {
           html += '<div class="em-modal-entry">' +
             '<p class="em-modal-entry-label">' + escapeHtml(entry.label) + '</p>' +
             '<p class="em-modal-entry-value">' + escapeHtml(entry.value) + '</p>' +
             '</div>';
         });
+
+        // Vidéo (iframe ou <video>)
+        if (item.video_url) {
+          html += '<div class="em-modal-entry"><p class="em-modal-entry-label">Vidéo</p>';
+          var embed = item.video_embed;
+          if (embed && (embed.type === 'youtube' || embed.type === 'vimeo')) {
+            html += '<div class="em-modal-video-wrap"><iframe src="' + escapeHtml(embed.src) + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>';
+          } else if (embed && embed.type === 'file') {
+            html += '<video src="' + escapeHtml(embed.src) + '" controls preload="metadata" class="em-modal-video-file"></video>';
+          } else {
+            html += '<a href="' + escapeHtml(item.video_url) + '" target="_blank" rel="noopener" class="em-modal-link">' + escapeHtml(item.video_url) + '</a>';
+          }
+          html += '</div>';
+        }
+
+        // Questions fréquentes
+        if (Array.isArray(item.faq) && item.faq.length > 0) {
+          html += '<div class="em-modal-faq">' +
+            '<p class="em-modal-entry-label">Questions fréquentes (' + item.faq.length + ')</p>';
+          item.faq.forEach(function(qa) {
+            html += '<div class="em-modal-faq-item">' +
+              '<div class="em-modal-faq-q">' + escapeHtml(qa.question) + '</div>' +
+              '<div class="em-modal-faq-a' + (qa.answer ? '' : ' em-modal-faq-a-empty') + '">' +
+              escapeHtml(qa.answer || 'Pas encore de réponse.') +
+              '</div></div>';
+          });
+          html += '</div>';
+        }
+
         html += '</div>';
 
         html += '<div class="em-modal-footer">';

@@ -35,12 +35,14 @@ if (!function_exists('elaia_prepare_corpus_payload')) {
         $chatbot_key = null;
         $settings = null;
         $suggests = [];
+        $app_config = null;
 
         if ($cached !== false) {
             $corpus = $cached['corpus'] ?? [];
             $chatbot_key = $cached['chatbot_key'] ?? null;
             $settings = $cached['settings'] ?? null;
             $suggests = $cached['suggests'] ?? [];
+            $app_config = $cached['app_config'] ?? null;
             $api_ok = true;
             $api_code = 200;
         } else {
@@ -75,6 +77,7 @@ if (!function_exists('elaia_prepare_corpus_payload')) {
                         $chatbot_body = json_decode(wp_remote_retrieve_body($chatbot_response), true);
                         $settings = $chatbot_body['settings'] ?? null;
                         $suggests = $chatbot_body['suggests'] ?? [];
+                        $app_config = $chatbot_body['app_config'] ?? null;
                     }
                 }
 
@@ -84,19 +87,51 @@ if (!function_exists('elaia_prepare_corpus_payload')) {
                     'chatbot_key' => $chatbot_key,
                     'settings'    => $settings,
                     'suggests'    => $suggests,
+                    'app_config'  => $app_config ?? null,
                 ], $ttl);
             }
         }
 
-        // Extraire les variables pour la vue
+        // Extraire les variables pour la vue.
+        // Tout ce qui touche au DESIGN (couleur, hero, avatar, tagline, suggestions)
+        // est piloté par AppConfig (MyElaia > Paramétrage) — source unique partagée
+        // avec l'app mobile. Les `settings` legacy ne servent plus que pour les
+        // champs non migrés (agent_name, default_picture, etc.).
         $agent_name = $settings['agent_name'] ?? '';
-        $agent_picture = $settings['agent_picture'] ?? null;
         $default_picture = $settings['default_picture'] ?? null;
-        $hook_text = $settings['hook'] ?? '';
-        $primary_color = $settings['primary_color'] ?? '#16a34a';
         $has_planning = !empty($settings['has_planning']);
         $chat_host = 'https://chatbot.ela-ia.com';
         $app_host = 'https://app.ela-ia.com';
+
+        $agent_picture = $app_config['avatar']['image_url'] ?? ($settings['agent_picture'] ?? null);
+        $hook_text = $app_config['tagline'] ?? ($settings['hook'] ?? '');
+        $primary_color = $app_config['primary_color'] ?? ($settings['primary_color'] ?? '#16a34a');
+        $welcome_video_url = $app_config['welcome_video_url'] ?? ($settings['welcome_video_url'] ?? null);
+
+        // Hero : type + valeurs associées. Si AppConfig absent on retombe sur
+        // solid avec primary_color.
+        $hero = [
+            'type' => $app_config['hero']['type'] ?? 'solid',
+            'color' => $app_config['hero']['color'] ?? $primary_color,
+            'gradient_start' => $app_config['hero']['gradient_start'] ?? null,
+            'gradient_end' => $app_config['hero']['gradient_end'] ?? null,
+            'gradient_orientation' => $app_config['hero']['gradient_orientation'] ?? 'to bottom',
+            'image_url' => $app_config['hero']['image_url'] ?? null,
+        ];
+
+        // Suggestions : on privilégie le nouveau format AppConfig si présent,
+        // sinon on garde les suggests legacy. On normalise pour que le JS ait
+        // toujours { title, real_prompt, translations? }.
+        if (!empty($app_config['prompt_suggestions'])) {
+            $suggests = array_map(function ($s) {
+                return [
+                    'title' => $s['title'] ?? '',
+                    'real_prompt' => $s['prompt'] ?? '',
+                    'color' => $s['color'] ?? null,
+                    'translations' => null, // les traductions AppConfig sont gérées séparément côté payload `translations`
+                ];
+            }, $app_config['prompt_suggestions']);
+        }
 
         include_once ELAIA_PLUGIN_DIR . 'views/corpus.php';
     }
