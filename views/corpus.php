@@ -590,6 +590,28 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     var leafletMapInstance  = null;           // Instance Leaflet de la carte plein écran
     var isShowingMap        = false;          // Affichage carte dans la vue cards
 
+    /**
+     * Icône de marqueur Leaflet auto-portante (SVG inline, aucune image externe).
+     * On n'utilise PAS le marqueur PNG par défaut de Leaflet : sa détection de chemin
+     * casse dès qu'un optimiseur FSE déplace les scripts → le pin « saute ».
+     */
+    function createPinIcon() {
+        var color = (getComputedStyle(document.documentElement)
+            .getPropertyValue('--ec-accent-color') || '').trim() || '#e53935';
+        var svg =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40">' +
+            '<path d="M14 0C6.27 0 0 6.27 0 14c0 9.6 12.27 24.4 12.83 25.05a1.55 1.55 0 0 0 2.34 0' +
+            'C15.73 38.4 28 23.6 28 14 28 6.27 21.73 0 14 0z" fill="' + color + '"/>' +
+            '<circle cx="14" cy="14" r="5" fill="#ffffff"/></svg>';
+        return L.divIcon({
+            className: 'ec-pin',
+            html: svg,
+            iconSize: [28, 40],
+            iconAnchor: [14, 40],
+            popupAnchor: [0, -36]
+        });
+    }
+
     // ═══════════════════════════════════════
     // CONSTANTES — Icônes et locales
     // ═══════════════════════════════════════
@@ -974,7 +996,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
 
             var bounds = [];
             allPoints.forEach(function(card) {
-                var marker = L.marker([card.latitude, card.longitude]).addTo(leafletMapInstance);
+                var marker = L.marker([card.latitude, card.longitude], { icon: createPinIcon() }).addTo(leafletMapInstance);
                 marker.bindPopup('<strong>' + escapeHtml(translateCardName(card)) + '</strong><br>' + escapeHtml(translateCardDesc(card)));
                 marker.on('click', function() { openDetailSheet(card); });
                 bounds.push([card.latitude, card.longitude]);
@@ -1131,7 +1153,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
                 if (!miniMapElement || typeof L === 'undefined') return;
                 var miniMap = L.map(miniMapElement, { zoomControl: false }).setView([card.latitude, card.longitude], 14);
                 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(miniMap);
-                L.marker([card.latitude, card.longitude]).addTo(miniMap);
+                L.marker([card.latitude, card.longitude], { icon: createPinIcon() }).addTo(miniMap);
                 setTimeout(function() { miniMap.invalidateSize(); }, 100);
             }, 50);
         }
@@ -1377,7 +1399,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
 
                         var bounds = [];
                         geoCards.forEach(function(card) {
-                            var marker = L.marker([card.latitude, card.longitude]).addTo(miniMap);
+                            var marker = L.marker([card.latitude, card.longitude], { icon: createPinIcon() }).addTo(miniMap);
                             marker.bindPopup('<strong>' + escapeHtml(translateCardName(card)) + '</strong>');
                             marker.on('click', function() { openDetailSheet(card); });
                             bounds.push([card.latitude, card.longitude]);
