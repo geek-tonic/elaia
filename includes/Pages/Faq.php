@@ -10,8 +10,6 @@ if (!function_exists('elaia_prepare_faq_payload')) {
         global $elaia_faq_domain;
         $dev_domain = (defined('WP_DEBUG') && WP_DEBUG) ? getenv('ELAIA_DEV_DOMAIN') : '';
         $domain  = $dev_domain ?: ($elaia_faq_domain ?: ElaiaPagesMethods::detect_domain());
-        $referer = $dev_domain ? 'https://' . $dev_domain . '/' : ElaiaPagesMethods::detect_referer();
-        
 
         $API_URL = 'https://app.ela-ia.com/api/v1/chatbot/corpus';
 
@@ -50,7 +48,7 @@ if (!function_exists('elaia_prepare_faq_payload')) {
                 'headers' => array_filter([
                     'Accept'       => 'application/json',
                     'Content-Type' => 'application/x-www-form-urlencoded',
-                    'Referer'      => $referer ?: null,
+                    'Referer'      => $domain ?: null,
                 ]),
                 'body'    => [
                     'domain' => $domain,
