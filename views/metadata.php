@@ -1,4 +1,6 @@
-<?php if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit; ?>
+<?php if (! defined('ABSPATH') || ! defined('ELAIA_PLUGIN_DIR')) {
+    exit;
+} ?>
 
 <?php
 // Leaflet (CSS+JS) et la police Inter sont enqueués via includes/enqueues.php pour
@@ -11,8 +13,8 @@
 // VARIABLES DE STYLE
 // ═══════════════════════════════════════════════════════════════
 
-$primaryColor      = $style['primary_color'] ?? '#3b82f6';
-$primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/focus
+$primaryColor = $style['primary_color'] ?? '#3b82f6';
+$primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/focus
 ?>
 
 <style>
@@ -899,6 +901,94 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
     display: block;
   }
 
+  /* Galerie d'images */
+  .em-modal-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  @media (min-width: 480px) {
+    .em-modal-gallery {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .em-modal-gallery-item {
+    display: block;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    background: #f1f5f9;
+    transition: transform .15s ease, border-color .15s ease;
+  }
+
+  .em-modal-gallery-item:hover {
+    transform: scale(1.03);
+    border-color: #cbd5e1;
+  }
+
+  .em-modal-gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Documents PDF */
+  .em-modal-docs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .em-modal-doc {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid #fce7f3;
+    background: rgba(253, 242, 248, .6);
+    color: #be185d;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: border-color .15s ease, background .15s ease;
+  }
+
+  .em-modal-doc:hover {
+    border-color: #f9a8d4;
+    background: #fdf2f8;
+  }
+
+  .em-modal-doc svg {
+    flex-shrink: 0;
+  }
+
+  .em-modal-doc-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .em-modal-doc-type {
+    flex-shrink: 0;
+    padding: 2px 6px;
+    background: #fce7f3;
+    color: #be185d;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
   /* Questions fréquentes */
   .em-modal-faq {
     margin-top: 16px;
@@ -1179,23 +1269,23 @@ $primaryColorLight = $primaryColor . '18'; // Variante transparente pour hover/f
 // ═══════════════════════════════════════════════════════════════
 ?>
 
-<?php if (!$api_ok): ?>
+<?php if (! $api_ok) { ?>
   <div style="max-width:1200px;margin:20px auto;padding:20px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;color:#b91c1c;">
     <strong>Erreur réseau API :</strong> <?php echo esc_html($api_err); ?>
   </div>
-<?php elseif ($api_code < 200 || $api_code >= 300): ?>
+<?php } elseif ($api_code < 200 || $api_code >= 300) { ?>
   <div style="max-width:1200px;margin:20px auto;padding:20px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;color:#b91c1c;">
-    <strong>Réponse API inattendue (code <?php echo (int)$api_code; ?>)</strong>
+    <strong>Réponse API inattendue (code <?php echo (int) $api_code; ?>)</strong>
   </div>
-<?php endif; ?>
+<?php } ?>
 
 <?php
 // ═══════════════════════════════════════════════════════════════
 // INJECTION DES DONNÉES STRUCTURÉES (Schema.org)
 // ═══════════════════════════════════════════════════════════════
 
-if (is_array($geoMetadatas) && !empty($geoMetadatas)) {
-  echo '<script type="application/ld+json">' . wp_json_encode($geoMetadatas, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
+if (is_array($geoMetadatas) && ! empty($geoMetadatas)) {
+    echo '<script type="application/ld+json">'.wp_json_encode($geoMetadatas, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES).'</script>';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1203,14 +1293,16 @@ if (is_array($geoMetadatas) && !empty($geoMetadatas)) {
 // ═══════════════════════════════════════════════════════════════
 
 $fieldLabels = [];
-if (is_array($payload) && !empty($payload['field_labels'])) {
-  $rawLabels = $payload['field_labels'];
-  $fieldLabels = is_string($rawLabels) ? json_decode($rawLabels, true) : $rawLabels;
-  if (!is_array($fieldLabels)) $fieldLabels = [];
+if (is_array($payload) && ! empty($payload['field_labels'])) {
+    $rawLabels = $payload['field_labels'];
+    $fieldLabels = is_string($rawLabels) ? json_decode($rawLabels, true) : $rawLabels;
+    if (! is_array($fieldLabels)) {
+        $fieldLabels = [];
+    }
 }
 ?>
 
-<?php if (is_array($metas) && !empty($metas)): ?>
+<?php if (is_array($metas) && ! empty($metas)) { ?>
 
   <?php
   // ═══════════════════════════════════════════════════════════════
@@ -1218,197 +1310,245 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
   // ═══════════════════════════════════════════════════════════════
 
   $categories = [];   // Catégories indexées par slug (type)
-  $mapPoints  = [];   // Points GPS pour la carte Leaflet
-  $allItems   = [];   // Toutes les fiches à afficher
-  $itemIndex  = 0;    // Index courant pour lier cards ↔ marqueurs
+    $mapPoints = [];   // Points GPS pour la carte Leaflet
+    $allItems = [];   // Toutes les fiches à afficher
+    $itemIndex = 0;    // Index courant pour lier cards ↔ marqueurs
 
-  // Correspondances type → label lisible
-  $categoryLabels = [
-    'accommodation' => 'Hébergements',
-    'accomodation' => 'Hébergements',
-    'city' => 'Villes',
-    'activity' => 'Activités',
-    'event' => 'Événements',
-    'restaurant' => 'Restaurants',
-    'service' => 'Services',
-  ];
-
-  // Correspondances type → couleur de marqueur/badge
-  $categoryColors = [
-    'accommodation' => '#10b981',
-    'accomodation' => '#10b981',
-    'city' => '#3b82f6',
-    'activity' => '#a855f7',
-    'event' => '#ef4444',
-    'restaurant' => '#f59e0b',
-    'service' => '#6366f1',
-  ];
-
-  // Correspondances type → classe CSS du badge
-  $categoryBadges = [
-    'accommodation' => 'badge-accom',
-    'accomodation' => 'badge-accom',
-    'city' => 'badge-city',
-    'activity' => 'badge-activity',
-    'event' => 'badge-event',
-    'restaurant' => 'badge-restaurant',
-    'service' => 'badge-service',
-  ];
-
-  // Couleurs de secours pour les catégories inconnues
-  $fallbackColors = ['#0891b2', '#db2777', '#65a30d', '#c026d3', '#ea580c', '#0d9488', '#7c3aed'];
-  $fallbackColorIndex = 0;
-
-  // ─── Parcours des métadonnées retournées par l'API ───
-
-  foreach ($metas as $metaItem) {
-    if (!is_array($metaItem)) continue;
-
-    $type = isset($metaItem['type']) ? strtolower(trim((string)$metaItem['type'])) : '';
-    $data = isset($metaItem['data']) ? (is_string($metaItem['data']) ? json_decode($metaItem['data'], true) : $metaItem['data']) : [];
-    if (!is_array($data) || empty($type)) continue;
-
-    $name = $data['name'] ?? '';
-    if (empty($name)) continue;
-
-    $apiLabel = $metaItem['type_label'] ?? null;
-
-    // Enregistrer la catégorie si première occurrence
-    if (!isset($categories[$type])) {
-      $label = $apiLabel ?? $categoryLabels[$type] ?? ucfirst(str_replace(['-', '_'], ' ', $type));
-      $color = $categoryColors[$type] ?? $fallbackColors[$fallbackColorIndex % count($fallbackColors)];
-      if (!isset($categoryColors[$type])) $fallbackColorIndex++;
-
-      $categories[$type] = [
-        'slug'  => $type,
-        'count' => 0,
-        'label' => $label,
-        'color' => $color,
-        'badge' => $categoryBadges[$type] ?? 'badge-default',
-      ];
-    }
-    $categories[$type]['count']++;
-
-    // Extraire les coordonnées GPS (plusieurs formats possibles)
-    $latitude  = $data['latitude'] ?? $data['gps_coordinates_latitude'] ?? $data['latitude_deg'] ?? null;
-    $longitude = $data['longitude'] ?? $data['gps_coordinates_longitude'] ?? $data['longitude_deg'] ?? null;
-
-    if ($latitude && $longitude && is_numeric($latitude) && is_numeric($longitude)) {
-      $mapPoints[] = [
-        'lat'  => (float)$latitude,
-        'lng'  => (float)$longitude,
-        'name' => $name,
-        'type' => $type,
-        'idx'  => $itemIndex,
-      ];
-    }
-
-    // Détecter les équipements pour les hébergements (filtres)
-    $features = [];
-    if (in_array($type, ['accommodation', 'accomodation'])) {
-      if (!empty($data['wifi']))                                          $features[] = 'wifi';
-      if (!empty($data['parking']))                                       $features[] = 'parking';
-      if (!empty($data['pets_policy']) && $data['pets_policy'] !== 'Refusés') $features[] = 'pets';
-      if (!empty($data['near_pool']))                                     $features[] = 'pool';
-    }
-
-    // Métadonnées riches (FAQ children, dates d'événement, vidéo intégrable)
-    // ajoutées par l'API V2 à partir de novembre 2026. Tolérant aux anciens payloads V1.
-    $itemFaq = [];
-    if (!empty($metaItem['faq'])) {
-      $rawFaq = is_string($metaItem['faq']) ? json_decode($metaItem['faq'], true) : $metaItem['faq'];
-      if (is_array($rawFaq)) {
-        foreach ($rawFaq as $qa) {
-          if (!is_array($qa)) continue;
-          $q = (string)($qa['question'] ?? '');
-          if (trim($q) === '') continue;
-          $itemFaq[] = ['question' => $q, 'answer' => (string)($qa['answer'] ?? '')];
-        }
-      }
-    }
-
-    $itemEvent = (string)($metaItem['event'] ?? '');
-    $itemVideoUrl = (string)($metaItem['video_url'] ?? '');
-    $itemVideoEmbed = $metaItem['video_embed'] ?? null;
-    if (is_string($itemVideoEmbed)) {
-      $decoded = json_decode($itemVideoEmbed, true);
-      $itemVideoEmbed = is_array($decoded) ? $decoded : null;
-    }
-
-    $allItems[] = [
-      'data'        => $data,
-      'type'        => $type,
-      'name'        => $name,
-      'features'    => $features,
-      'idx'         => $itemIndex,
-      'faq'         => $itemFaq,
-      'event'       => $itemEvent,
-      'video_url'   => $itemVideoUrl,
-      'video_embed' => $itemVideoEmbed,
+    // Correspondances type → label lisible
+    $categoryLabels = [
+        'accommodation' => 'Hébergements',
+        'accomodation' => 'Hébergements',
+        'city' => 'Villes',
+        'activity' => 'Activités',
+        'event' => 'Événements',
+        'restaurant' => 'Restaurants',
+        'service' => 'Services',
     ];
-    $itemIndex++;
-  }
 
-  $totalItems = count($allItems);
+    // Correspondances type → couleur de marqueur/badge
+    $categoryColors = [
+        'accommodation' => '#10b981',
+        'accomodation' => '#10b981',
+        'city' => '#3b82f6',
+        'activity' => '#a855f7',
+        'event' => '#ef4444',
+        'restaurant' => '#f59e0b',
+        'service' => '#6366f1',
+    ];
 
-  // ═══════════════════════════════════════════════════════════════
-  // CONFIGURATION D'AFFICHAGE DES CARDS
-  // ═══════════════════════════════════════════════════════════════
+    // Correspondances type → classe CSS du badge
+    $categoryBadges = [
+        'accommodation' => 'badge-accom',
+        'accomodation' => 'badge-accom',
+        'city' => 'badge-city',
+        'activity' => 'badge-activity',
+        'event' => 'badge-event',
+        'restaurant' => 'badge-restaurant',
+        'service' => 'badge-service',
+    ];
 
-  // Clés à exclure de l'affichage dans les cards et la modal
-  $excludedKeys = [
-    'name',
-    'image',
-    'images',
-    'link',
-    'image_url',
-    'latitude',
-    'longitude',
-    'gps_coordinates_latitude',
-    'gps_coordinates_longitude',
-    'latitude_deg',
-    'longitude_deg',
-    'description',
-    'desciption',
-    'comment',
-    'address',
-    'available_image_urls',
-    'site_officiel',
-  ];
+    // Couleurs de secours pour les catégories inconnues
+    $fallbackColors = ['#0891b2', '#db2777', '#65a30d', '#c026d3', '#ea580c', '#0d9488', '#7c3aed'];
+    $fallbackColorIndex = 0;
 
-  /**
-   * Retourne le label lisible d'un champ
-   * Priorité : labels API > formatage automatique de la clé
-   */
-  function em_field_label($key, $fieldLabels)
-  {
-    if (isset($fieldLabels[$key])) return $fieldLabels[$key];
-    // Suffixe legacy `_xxxxxxx` (7 alphanum) injecté par l'ancien V1 quand le
-    // field_key était vide — on le retire pour ne pas le montrer à l'utilisateur.
-    $cleaned = preg_replace('/_[a-z0-9]{7}$/i', '', $key);
-    if (isset($fieldLabels[$cleaned])) return $fieldLabels[$cleaned];
-    return ucfirst(str_replace('_', ' ', $cleaned));
-  }
+    // ─── Parcours des métadonnées retournées par l'API ───
 
-  // Champs affichés en tags colorés sur les cards (avec suffixe et classe CSS)
-  $tagFields = [
-    'nb_persons'           => ['suffix' => ' pers.',  'class' => 'em-tag-blue'],
-    'surface_avg'          => ['suffix' => ' m²',     'class' => 'em-tag-green'],
-    'surface_min'          => ['suffix' => ' m²',     'class' => 'em-tag-green'],
-    'distance_kilometers'  => ['suffix' => ' km',     'class' => 'em-tag-blue'],
-    'distance_camper_km'   => ['suffix' => '',         'class' => 'em-tag-blue'],
-    'driving_time_minutes' => ['suffix' => ' min',    'class' => 'em-tag-orange'],
-    'temps_camper_min'     => ['suffix' => '',         'class' => 'em-tag-orange'],
-    'price'                => ['suffix' => '',         'class' => 'em-tag-green'],
-    'date'                 => ['suffix' => '',         'class' => 'em-tag-orange'],
-    'city'                 => ['suffix' => '',         'class' => 'em-tag-blue'],
-    'department'           => ['suffix' => '',         'class' => 'em-tag-purple'],
-    'place'                => ['suffix' => '',         'class' => 'em-tag-blue'],
-    'category_type'        => ['suffix' => '',         'class' => 'em-tag-purple'],
-    'labels_touristiques'  => ['suffix' => '',         'class' => 'em-tag-green'],
-  ];
-  $tagFieldKeys = array_keys($tagFields);
-  ?>
+    foreach ($metas as $metaItem) {
+        if (! is_array($metaItem)) {
+            continue;
+        }
+
+        $type = isset($metaItem['type']) ? strtolower(trim((string) $metaItem['type'])) : '';
+        $data = isset($metaItem['data']) ? (is_string($metaItem['data']) ? json_decode($metaItem['data'], true) : $metaItem['data']) : [];
+        if (! is_array($data) || empty($type)) {
+            continue;
+        }
+
+        $name = $data['name'] ?? '';
+        if (empty($name)) {
+            continue;
+        }
+
+        $apiLabel = $metaItem['type_label'] ?? null;
+
+        // Enregistrer la catégorie si première occurrence
+        if (! isset($categories[$type])) {
+            $label = $apiLabel ?? $categoryLabels[$type] ?? ucfirst(str_replace(['-', '_'], ' ', $type));
+            $color = $categoryColors[$type] ?? $fallbackColors[$fallbackColorIndex % count($fallbackColors)];
+            if (! isset($categoryColors[$type])) {
+                $fallbackColorIndex++;
+            }
+
+            $categories[$type] = [
+                'slug' => $type,
+                'count' => 0,
+                'label' => $label,
+                'color' => $color,
+                'badge' => $categoryBadges[$type] ?? 'badge-default',
+            ];
+        }
+        $categories[$type]['count']++;
+
+        // Extraire les coordonnées GPS (plusieurs formats possibles)
+        $latitude = $data['latitude'] ?? $data['gps_coordinates_latitude'] ?? $data['latitude_deg'] ?? null;
+        $longitude = $data['longitude'] ?? $data['gps_coordinates_longitude'] ?? $data['longitude_deg'] ?? null;
+
+        if ($latitude && $longitude && is_numeric($latitude) && is_numeric($longitude)) {
+            $mapPoints[] = [
+                'lat' => (float) $latitude,
+                'lng' => (float) $longitude,
+                'name' => $name,
+                'type' => $type,
+                'idx' => $itemIndex,
+            ];
+        }
+
+        // Détecter les équipements pour les hébergements (filtres)
+        $features = [];
+        if (in_array($type, ['accommodation', 'accomodation'])) {
+            if (! empty($data['wifi'])) {
+                $features[] = 'wifi';
+            }
+            if (! empty($data['parking'])) {
+                $features[] = 'parking';
+            }
+            if (! empty($data['pets_policy']) && $data['pets_policy'] !== 'Refusés') {
+                $features[] = 'pets';
+            }
+            if (! empty($data['near_pool'])) {
+                $features[] = 'pool';
+            }
+        }
+
+        // Métadonnées riches (FAQ children, dates d'événement, vidéo intégrable)
+        // ajoutées par l'API V2 à partir de novembre 2026. Tolérant aux anciens payloads V1.
+        $itemFaq = [];
+        if (! empty($metaItem['faq'])) {
+            $rawFaq = is_string($metaItem['faq']) ? json_decode($metaItem['faq'], true) : $metaItem['faq'];
+            if (is_array($rawFaq)) {
+                foreach ($rawFaq as $qa) {
+                    if (! is_array($qa)) {
+                        continue;
+                    }
+                    $q = (string) ($qa['question'] ?? '');
+                    if (trim($q) === '') {
+                        continue;
+                    }
+                    $itemFaq[] = ['question' => $q, 'answer' => (string) ($qa['answer'] ?? '')];
+                }
+            }
+        }
+
+        $itemEvent = (string) ($metaItem['event'] ?? '');
+        $itemVideoUrl = (string) ($metaItem['video_url'] ?? '');
+        $itemVideoEmbed = $metaItem['video_embed'] ?? null;
+        if (is_string($itemVideoEmbed)) {
+            $decoded = json_decode($itemVideoEmbed, true);
+            $itemVideoEmbed = is_array($decoded) ? $decoded : null;
+        }
+
+        // Documents PDF et galerie d'images (templates avec has_documents / has_gallery)
+        $itemDocuments = $metaItem['documents'] ?? [];
+        if (is_string($itemDocuments)) {
+            $decoded = json_decode($itemDocuments, true);
+            $itemDocuments = is_array($decoded) ? $decoded : [];
+        }
+        if (! is_array($itemDocuments)) {
+            $itemDocuments = [];
+        }
+
+        $itemGallery = $metaItem['gallery'] ?? [];
+        if (is_string($itemGallery)) {
+            $decoded = json_decode($itemGallery, true);
+            $itemGallery = is_array($decoded) ? $decoded : [];
+        }
+        if (! is_array($itemGallery)) {
+            $itemGallery = [];
+        }
+
+        $allItems[] = [
+            'data' => $data,
+            'type' => $type,
+            'name' => $name,
+            'features' => $features,
+            'idx' => $itemIndex,
+            'faq' => $itemFaq,
+            'event' => $itemEvent,
+            'video_url' => $itemVideoUrl,
+            'video_embed' => $itemVideoEmbed,
+            'documents' => $itemDocuments,
+            'gallery' => $itemGallery,
+        ];
+        $itemIndex++;
+    }
+
+    $totalItems = count($allItems);
+
+    // ═══════════════════════════════════════════════════════════════
+    // CONFIGURATION D'AFFICHAGE DES CARDS
+    // ═══════════════════════════════════════════════════════════════
+
+    // Clés à exclure de l'affichage dans les cards et la modal
+    $excludedKeys = [
+        'name',
+        'image',
+        'images',
+        'link',
+        'image_url',
+        'latitude',
+        'longitude',
+        'gps_coordinates_latitude',
+        'gps_coordinates_longitude',
+        'latitude_deg',
+        'longitude_deg',
+        'description',
+        'desciption',
+        'comment',
+        'address',
+        'available_image_urls',
+        'site_officiel',
+        'documents',
+        'gallery',
+    ];
+
+    /**
+     * Retourne le label lisible d'un champ
+     * Priorité : labels API > formatage automatique de la clé
+     */
+    function em_field_label($key, $fieldLabels)
+    {
+        if (isset($fieldLabels[$key])) {
+            return $fieldLabels[$key];
+        }
+        // Suffixe legacy `_xxxxxxx` (7 alphanum) injecté par l'ancien V1 quand le
+        // field_key était vide — on le retire pour ne pas le montrer à l'utilisateur.
+        $cleaned = preg_replace('/_[a-z0-9]{7}$/i', '', $key);
+        if (isset($fieldLabels[$cleaned])) {
+            return $fieldLabels[$cleaned];
+        }
+
+        return ucfirst(str_replace('_', ' ', $cleaned));
+    }
+
+    // Champs affichés en tags colorés sur les cards (avec suffixe et classe CSS)
+    $tagFields = [
+        'nb_persons' => ['suffix' => ' pers.',  'class' => 'em-tag-blue'],
+        'surface_avg' => ['suffix' => ' m²',     'class' => 'em-tag-green'],
+        'surface_min' => ['suffix' => ' m²',     'class' => 'em-tag-green'],
+        'distance_kilometers' => ['suffix' => ' km',     'class' => 'em-tag-blue'],
+        'distance_camper_km' => ['suffix' => '',         'class' => 'em-tag-blue'],
+        'driving_time_minutes' => ['suffix' => ' min',    'class' => 'em-tag-orange'],
+        'temps_camper_min' => ['suffix' => '',         'class' => 'em-tag-orange'],
+        'price' => ['suffix' => '',         'class' => 'em-tag-green'],
+        'date' => ['suffix' => '',         'class' => 'em-tag-orange'],
+        'city' => ['suffix' => '',         'class' => 'em-tag-blue'],
+        'department' => ['suffix' => '',         'class' => 'em-tag-purple'],
+        'place' => ['suffix' => '',         'class' => 'em-tag-blue'],
+        'category_type' => ['suffix' => '',         'class' => 'em-tag-purple'],
+        'labels_touristiques' => ['suffix' => '',         'class' => 'em-tag-green'],
+    ];
+    $tagFieldKeys = array_keys($tagFields);
+    ?>
 
   <!-- Injection des labels pour le JS (modal) -->
   <script>
@@ -1446,11 +1586,11 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
           </div>
           <div class="em-filter-group">
             <label class="em-filter-label">Type</label>
-            <?php foreach ($categories as $categorySlug => $categoryInfo): ?>
+            <?php foreach ($categories as $categorySlug => $categoryInfo) { ?>
               <label class="em-filter-check"><input type="checkbox" value="<?php echo esc_attr($categorySlug); ?>" class="em-filter-type" checked><span><?php echo esc_html($categoryInfo['label']); ?></span></label>
-            <?php endforeach; ?>
+            <?php } ?>
           </div>
-          <?php if (isset($categories['accommodation']) || isset($categories['accomodation'])): ?>
+          <?php if (isset($categories['accommodation']) || isset($categories['accomodation'])) { ?>
             <div class="em-filter-group">
               <label class="em-filter-label">Équipements</label>
               <label class="em-filter-check"><input type="checkbox" value="wifi" class="em-filter-feat"><span>WiFi</span></label>
@@ -1458,7 +1598,7 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
               <label class="em-filter-check"><input type="checkbox" value="pets" class="em-filter-feat"><span>Animaux acceptés</span></label>
               <label class="em-filter-check"><input type="checkbox" value="pool" class="em-filter-feat"><span>Proche piscine</span></label>
             </div>
-          <?php endif; ?>
+          <?php } ?>
 
           <!-- ─── Recherche (sous les filtres) ─── -->
           <div class="em-search-wrap">
@@ -1475,81 +1615,89 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
       <main class="em-main">
 
         <!-- ─── Onglets de catégories (affichés si > 1 catégorie) ─── -->
-        <?php if (count($categories) > 1): ?>
+        <?php if (count($categories) > 1) { ?>
           <div class="em-tabs" id="em-tabs">
 
             <button class="em-tab active" data-filter="all">Tout<span class="em-tab-count"><?php echo $totalItems; ?></span></button>
-            <?php foreach ($categories as $categorySlug => $categoryInfo): ?>
+            <?php foreach ($categories as $categorySlug => $categoryInfo) { ?>
               <button class="em-tab" data-filter="<?php echo esc_attr($categorySlug); ?>"><?php echo esc_html($categoryInfo['label']); ?><span class="em-tab-count"><?php echo $categoryInfo['count']; ?></span></button>
-            <?php endforeach; ?>
+            <?php } ?>
           </div>
-        <?php endif; ?>
+        <?php } ?>
 
         <div class="em-main-body">
           <!-- ─── Carte interactive (affichée si des points GPS existent) ─── -->
-          <?php if (!empty($mapPoints)):
-            $categoriesWithPoints = [];
-            foreach ($mapPoints as $point) {
-              $categoriesWithPoints[$point['type']] = true;
-            }
-          ?>
+          <?php if (! empty($mapPoints)) {
+              $categoriesWithPoints = [];
+              foreach ($mapPoints as $point) {
+                  $categoriesWithPoints[$point['type']] = true;
+              }
+              ?>
             <div class="em-map-section">
               <div class="em-map-wrap" id="em-map-wrap">
                 <div id="em-map" class="em-map"></div>
                 <div class="em-map-legend">
-                  <?php foreach ($categories as $categorySlug => $categoryInfo): ?>
-                    <?php if (!isset($categoriesWithPoints[$categorySlug])) continue; ?>
+                  <?php foreach ($categories as $categorySlug => $categoryInfo) { ?>
+                    <?php if (! isset($categoriesWithPoints[$categorySlug])) {
+                        continue;
+                    } ?>
                     <div class="em-map-legend-item" data-type="<?php echo esc_attr($categorySlug); ?>">
                       <span class="em-map-legend-dot" style="background:<?php echo $categoryInfo['color']; ?>;"></span>
                       <?php echo esc_html($categoryInfo['label']); ?>
                     </div>
-                  <?php endforeach; ?>
+                  <?php } ?>
                 </div>
               </div>
             </div>
-          <?php endif; ?>
+          <?php } ?>
 
           <div class="em-cards" id="em-cards">
-            <?php foreach ($allItems as $item):
-              $itemData     = $item['data'];
-              $itemType     = $item['type'];
-              $itemName     = $item['name'];
-              $itemFeatures = implode(',', $item['features']);
-              $categoryInfo = $categories[$itemType];
+            <?php foreach ($allItems as $item) {
+                $itemData = $item['data'];
+                $itemType = $item['type'];
+                $itemName = $item['name'];
+                $itemFeatures = implode(',', $item['features']);
+                $categoryInfo = $categories[$itemType];
 
-              // Extraire l'image (peut être string multi-lignes ou tableau)
-              $itemImage = $itemData['image'] ?? $itemData['images'] ?? '';
-              if (is_string($itemImage) && strpos($itemImage, "\n") !== false) $itemImage = explode("\n", $itemImage)[0];
-              if (is_array($itemImage)) $itemImage = $itemImage[0] ?? '';
-              $itemImage = trim($itemImage);
+                // Extraire l'image (peut être string multi-lignes ou tableau)
+                $itemImage = $itemData['image'] ?? $itemData['images'] ?? '';
+                if (is_string($itemImage) && strpos($itemImage, "\n") !== false) {
+                    $itemImage = explode("\n", $itemImage)[0];
+                }
+                if (is_array($itemImage)) {
+                    $itemImage = $itemImage[0] ?? '';
+                }
+                $itemImage = trim($itemImage);
 
-              // Lien externe
-              $itemLink = $itemData['link'] ?? $itemData['site_officiel'] ?? '';
-            ?>
+                // Lien externe
+                $itemLink = $itemData['link'] ?? $itemData['site_officiel'] ?? '';
+                ?>
               <article class="em-card"
                 data-type="<?php echo esc_attr($itemType); ?>"
                 data-features="<?php echo esc_attr($itemFeatures); ?>"
                 data-name="<?php echo esc_attr(strtolower($itemName)); ?>"
                 data-json="<?php echo esc_attr(wp_json_encode([
-                              'name'        => $itemName,
-                              'image'       => $itemImage,
-                              'link'        => $itemLink,
-                              'data'        => $itemData,
-                              'category'    => $categoryInfo['label'],
-                              'faq'         => $item['faq'] ?? [],
-                              'event'       => $item['event'] ?? '',
-                              'video_url'   => $item['video_url'] ?? '',
-                              'video_embed' => $item['video_embed'] ?? null,
-                            ])); ?>">
+                    'name' => $itemName,
+                    'image' => $itemImage,
+                    'link' => $itemLink,
+                    'data' => $itemData,
+                    'category' => $categoryInfo['label'],
+                    'faq' => $item['faq'] ?? [],
+                    'event' => $item['event'] ?? '',
+                    'video_url' => $item['video_url'] ?? '',
+                    'video_embed' => $item['video_embed'] ?? null,
+                    'documents' => $item['documents'] ?? [],
+                    'gallery' => $item['gallery'] ?? [],
+                ])); ?>">
 
                 <!-- Image + badge catégorie -->
                 <div class="em-card-img-wrap">
-                  <?php if ($itemImage && filter_var($itemImage, FILTER_VALIDATE_URL)): ?>
+                  <?php if ($itemImage && filter_var($itemImage, FILTER_VALIDATE_URL)) { ?>
                     <img class="em-card-img" src="<?php echo esc_url($itemImage); ?>" alt="<?php echo esc_attr($itemName); ?>" loading="lazy" onerror="this.style.setProperty('display','none','important');this.nextElementSibling.style.display='flex';">
                     <div class="em-card-placeholder" style="display:none;">📷 Image indisponible</div>
-                  <?php else: ?>
+                  <?php } else { ?>
                     <div class="em-card-placeholder">📷 Pas d'image</div>
-                  <?php endif; ?>
+                  <?php } ?>
                   <span class="em-card-badge <?php echo esc_attr($categoryInfo['badge']); ?>"><?php echo esc_html($categoryInfo['label']); ?></span>
                 </div>
 
@@ -1560,29 +1708,38 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
                   <!-- Tags résumés (max 4) -->
                   <div class="em-card-tags">
                     <?php $tagCount = 0;
-                    foreach ($tagFields as $tagKey => $tagConfig):
-                      if ($tagCount >= 4) break;
-                      if (!empty($itemData[$tagKey]) && !is_array($itemData[$tagKey])): $tagCount++; ?>
-                        <span class="em-tag <?php echo $tagConfig['class']; ?>"><?php echo esc_html($itemData[$tagKey] . $tagConfig['suffix']); ?></span>
-                    <?php endif;
-                    endforeach; ?>
-                    <?php if (!empty($itemData['wifi'])): ?><span class="em-tag em-tag-purple">WiFi</span><?php endif; ?>
+                foreach ($tagFields as $tagKey => $tagConfig) {
+                    if ($tagCount >= 4) {
+                        break;
+                    }
+                    if (! empty($itemData[$tagKey]) && ! is_array($itemData[$tagKey])) {
+                        $tagCount++; ?>
+                        <span class="em-tag <?php echo $tagConfig['class']; ?>"><?php echo esc_html($itemData[$tagKey].$tagConfig['suffix']); ?></span>
+                    <?php }
+                    } ?>
+                    <?php if (! empty($itemData['wifi'])) { ?><span class="em-tag em-tag-purple">WiFi</span><?php } ?>
                   </div>
 
                   <!-- Champs supplémentaires (max 3) -->
                   <div class="em-card-fields">
                     <?php $fieldCount = 0;
-                    foreach ($itemData as $fieldKey => $fieldValue):
-                      if (in_array($fieldKey, $excludedKeys) || in_array($fieldKey, $tagFieldKeys) || $fieldKey === 'wifi') continue;
-                      if (is_array($fieldValue) || is_object($fieldValue) || empty($fieldValue)) continue;
-                      if ($fieldCount >= 3) break;
-                      $fieldCount++;
+                foreach ($itemData as $fieldKey => $fieldValue) {
+                    if (in_array($fieldKey, $excludedKeys) || in_array($fieldKey, $tagFieldKeys) || $fieldKey === 'wifi') {
+                        continue;
+                    }
+                    if (is_array($fieldValue) || is_object($fieldValue) || empty($fieldValue)) {
+                        continue;
+                    }
+                    if ($fieldCount >= 3) {
+                        break;
+                    }
+                    $fieldCount++;
                     ?>
                       <div class="em-card-field">
                         <span class="em-card-field-label"><?php echo esc_html(em_field_label($fieldKey, $fieldLabels)); ?> :</span>
-                        <span class="em-card-field-value"><?php echo esc_html(is_bool($fieldValue) ? ($fieldValue ? 'Oui' : 'Non') : mb_substr((string)$fieldValue, 0, 60)); ?></span>
+                        <span class="em-card-field-value"><?php echo esc_html(is_bool($fieldValue) ? ($fieldValue ? 'Oui' : 'Non') : mb_substr((string) $fieldValue, 0, 60)); ?></span>
                       </div>
-                    <?php endforeach; ?>
+                    <?php } ?>
                   </div>
 
                   <!-- Lien vers le détail -->
@@ -1594,7 +1751,7 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
                   </div>
                 </div>
               </article>
-            <?php endforeach; ?>
+            <?php } ?>
           </div>
 
           <!-- État vide (aucun résultat après filtrage) -->
@@ -1965,6 +2122,36 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
           html += '</div>';
         }
 
+        // Galerie d'images (template has_gallery=true)
+        if (Array.isArray(item.gallery) && item.gallery.length > 0) {
+          html += '<div class="em-modal-entry"><p class="em-modal-entry-label">Galerie (' + item.gallery.length + ')</p>' +
+            '<div class="em-modal-gallery">';
+          item.gallery.forEach(function(imgUrl) {
+            if (typeof imgUrl !== 'string' || imgUrl === '') return;
+            html += '<a href="' + escapeHtml(imgUrl) + '" target="_blank" rel="noopener" class="em-modal-gallery-item">' +
+              '<img src="' + escapeHtml(imgUrl) + '" alt="" loading="lazy" /></a>';
+          });
+          html += '</div></div>';
+        }
+
+        // Documents PDF (template has_documents=true)
+        if (Array.isArray(item.documents) && item.documents.length > 0) {
+          html += '<div class="em-modal-entry"><p class="em-modal-entry-label">Documents (' + item.documents.length + ')</p>' +
+            '<ul class="em-modal-docs">';
+          item.documents.forEach(function(doc) {
+            if (!doc || typeof doc !== 'object' || !doc.url) return;
+            var docName = doc.nom || 'Document';
+            var docType = (doc.type || '').toString().toLowerCase();
+            html += '<li><a href="' + escapeHtml(doc.url) + '" target="_blank" rel="noopener" class="em-modal-doc">' +
+              '<svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">' +
+              '<path fill-rule="evenodd" d="M4 4a2 2 0 0 1 2-2h4.586A2 2 0 0 1 12 2.586L15.414 6A2 2 0 0 1 16 7.414V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Z" clip-rule="evenodd" /></svg>' +
+              '<span class="em-modal-doc-name">' + escapeHtml(docName) + '</span>' +
+              (docType ? '<span class="em-modal-doc-type">' + escapeHtml(docType) + '</span>' : '') +
+              '</a></li>';
+          });
+          html += '</ul></div>';
+        }
+
         // Questions fréquentes
         if (Array.isArray(item.faq) && item.faq.length > 0) {
           html += '<div class="em-modal-faq">' +
@@ -2081,8 +2268,8 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
 
         // Données injectées depuis PHP
         var gpsPoints = <?php echo wp_json_encode($mapPoints); ?>;
-        var categoryColorMap = <?php echo wp_json_encode(array_map(fn($c) => $c['color'], $categories)); ?>;
-        var categoryLabelMap = <?php echo wp_json_encode(array_map(fn($c) => $c['label'], $categories)); ?>;
+        var categoryColorMap = <?php echo wp_json_encode(array_map(fn ($c) => $c['color'], $categories)); ?>;
+        var categoryLabelMap = <?php echo wp_json_encode(array_map(fn ($c) => $c['label'], $categories)); ?>;
 
         var markers = []; // Tous les marqueurs [{marker, type, latLng, idx}]
         var allBounds = []; // Coordonnées pour le fitBounds initial
@@ -2468,4 +2655,4 @@ if (is_array($payload) && !empty($payload['field_labels'])) {
     })();
   </script>
 
-<?php endif; ?>
+<?php } ?>
