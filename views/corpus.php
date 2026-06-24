@@ -346,6 +346,23 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
 .ec-detail-label { font-size: 12px; color: var(--ec-text-hint); font-weight: 500; margin: 0 0 2px; }
 .ec-detail-value { font-size: 15px; color: var(--ec-text-color); margin: 0; word-break: break-word; font-weight: 500; }
 
+/* Documents et galerie dans le détail */
+.ec-sheet-documents { display: flex; flex-direction: column; gap: 8px; }
+.ec-sheet-document {
+    display: flex; align-items: center; gap: 10px; padding: 11px 12px;
+    border: 1px solid var(--ec-border); border-radius: 10px;
+    color: var(--ec-text-color); text-decoration: none; background: #fafafa;
+}
+.ec-sheet-document:hover { border-color: var(--ec-accent-color); background: var(--ec-accent-light); }
+.ec-sheet-document-icon { flex: 0 0 auto; font-size: 20px; }
+.ec-sheet-document-name { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.ec-sheet-document-action { flex: 0 0 auto; color: var(--ec-accent-color); font-size: 12px; font-weight: 700; }
+.ec-sheet-gallery {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
+}
+.ec-sheet-gallery-link { display: block; border-radius: 10px; overflow: hidden; background: #f3f4f6; }
+.ec-sheet-gallery-img { display: block; width: 100%; height: 130px; object-fit: cover; }
+
 /* Boutons d'action dans le bottom sheet */
 .ec-sheet-actions { display: flex; gap: 10px; margin-top: 24px; }
 .ec-btn {
@@ -363,6 +380,21 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
 
 /* Mini-carte dans le bottom sheet (détail d'une fiche géolocalisée) */
 .ec-sheet-map { width: 100%; height: 180px; border-radius: 12px; overflow: hidden; margin-top: 16px; border: 1px solid var(--ec-border); }
+
+/* Marqueur Leaflet autonome : SVG inline, sans image distante */
+.ec-map-marker {
+    background: transparent;
+    border: 0;
+}
+.ec-map-marker svg {
+    display: block;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.28));
+}
+.ec-map-popup-action {
+    display: inline-block; margin-top: 8px; padding: 7px 10px;
+    border: 0; border-radius: 8px; background: var(--ec-accent-color);
+    color: #fff; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+}
 
 /* Modal vidéo (iframe embed plein écran) */
 .ec-video-overlay {
@@ -633,6 +665,22 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     /** Retourne la traduction d'une clé UI dans la langue courante (fallback: français) */
     function t(key) { return UI_TRANSLATIONS[currentLang]?.[key] || UI_TRANSLATIONS.fr[key] || key; }
 
+    var RESOURCE_TRANSLATIONS = {
+        fr:  { documents: 'Documents', gallery: 'Galerie', open: 'Ouvrir' },
+        en:  { documents: 'Documents', gallery: 'Gallery', open: 'Open' },
+        es:  { documents: 'Documentos', gallery: 'Galería', open: 'Abrir' },
+        de:  { documents: 'Dokumente', gallery: 'Galerie', open: 'Öffnen' },
+        nl:  { documents: 'Documenten', gallery: 'Galerij', open: 'Openen' },
+        it:  { documents: 'Documenti', gallery: 'Galleria', open: 'Apri' },
+        pt:  { documents: 'Documentos', gallery: 'Galeria', open: 'Abrir' },
+        eus: { documents: 'Dokumentuak', gallery: 'Galeria', open: 'Ireki' },
+        cat: { documents: 'Documents', gallery: 'Galeria', open: 'Obrir' }
+    };
+
+    function resourceText(key) {
+        return RESOURCE_TRANSLATIONS[currentLang]?.[key] || RESOURCE_TRANSLATIONS.fr[key] || key;
+    }
+
     // ═══════════════════════════════════════
     // HELPERS DE TRADUCTION DU CORPUS
     // Les données du corpus ont des traductions
@@ -653,8 +701,18 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
 
     /** Nom traduit d'une card (fiche) */
     function translateCardName(card) {
-        if (currentLang === 'fr') return card.name;
-        return card.name_translations?.[currentLang] || card.translations?.[currentLang]?.name || card.name;
+        if (!card || typeof card !== 'object') return '';
+        var translatedName = currentLang !== 'fr'
+            ? card.name_translations?.[currentLang] || card.translations?.[currentLang]?.name
+            : '';
+        return firstNonEmptyString([
+            translatedName,
+            card.name,
+            card.title,
+            card.label,
+            card.values?.original_name,
+            getFileNameFromUrl(getCardDocumentUrl(card))
+        ]) || t('card');
     }
 
     /** Description traduite d'une card */
@@ -702,6 +760,183 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
             }
         }
         return result;
+    }
+
+    /** Retourne la première chaîne non vide d'une liste de valeurs */
+    function firstNonEmptyString(values) {
+        for (var i = 0; i < values.length; i++) {
+            if (typeof values[i] === 'string' && values[i].trim()) return values[i].trim();
+        }
+        return '';
+    }
+
+    /** Extrait une URL depuis une valeur texte ou un objet fichier courant */
+    function extractResourceUrl(value) {
+        if (typeof value === 'string') return value.trim();
+        if (!value || typeof value !== 'object') return '';
+        return firstNonEmptyString([
+            value.cloud_url, value.origin_url,
+            value.url, value.src, value.href, value.path
+        ]);
+    }
+
+    /** Normalise tous les formats de documents d'une fiche */
+    function getCardDocuments(card) {
+        if (!card || typeof card !== 'object') return [];
+        var rawDocuments = [];
+
+        if (Array.isArray(card.documents)) rawDocuments = rawDocuments.concat(card.documents);
+        if (card.values?.cloud_url || card.values?.origin_url) {
+            rawDocuments.push({
+                url: card.values.cloud_url || card.values.origin_url,
+                name: card.values.original_name,
+                type: card.values.type || card.values.file_type
+            });
+        }
+        [
+            card.document, card.file, card.pdf, card.attachment,
+            card.document_url, card.documentUrl,
+            card.file_url, card.fileUrl,
+            card.pdf_url, card.pdfUrl,
+            card.attachment_url, card.attachmentUrl,
+            card.cloud_url, card.origin_url
+        ].forEach(function(document) {
+            if (document) rawDocuments.push(document);
+        });
+
+        var seenUrls = {};
+        return rawDocuments.map(function(document) {
+            var url = extractResourceUrl(document);
+            if (!url || seenUrls[url]) return null;
+            seenUrls[url] = true;
+
+            var documentObject = document && typeof document === 'object' ? document : {};
+            var name = firstNonEmptyString([
+                documentObject.nom,
+                documentObject.name,
+                documentObject.original_name,
+                getFileNameFromUrl(url)
+            ]);
+            var type = firstNonEmptyString([
+                documentObject.type,
+                documentObject.file_type,
+                documentObject.mime_type,
+                documentObject.mime
+            ]).toLowerCase();
+
+            return { url: url, name: name || t('card'), type: type };
+        }).filter(Boolean);
+    }
+
+    /** Retourne l'URL du premier document associé à une fiche */
+    function getCardDocumentUrl(card) {
+        var documents = getCardDocuments(card);
+        return documents.length ? documents[0].url : '';
+    }
+
+    /** Retourne les URLs valides et uniques de la galerie */
+    function getCardGallery(card) {
+        if (!card || !Array.isArray(card.gallery)) return [];
+        var seenUrls = {};
+        return card.gallery.map(extractResourceUrl).filter(function(url) {
+            if (!url || seenUrls[url]) return false;
+            seenUrls[url] = true;
+            return true;
+        });
+    }
+
+    /** Retourne le nom de fichier lisible d'une URL */
+    function getFileNameFromUrl(url) {
+        if (!url || typeof url !== 'string') return '';
+        try {
+            var pathname = new URL(url, window.location.href).pathname;
+            return decodeURIComponent(pathname.split('/').pop() || '').replace(/\.pdf$/i, '');
+        } catch (e) {
+            return '';
+        }
+    }
+
+    /** Détecte un PDF à partir du MIME déclaré ou de son URL */
+    function isPdfCard(card) {
+        if (!card || typeof card !== 'object') return false;
+        var mime = firstNonEmptyString([
+            card.mime_type, card.mimetype, card.content_type,
+            card.file?.mime_type, card.file?.mime, card.document?.mime_type, card.document?.mime,
+            card.values?.mime_type, card.values?.mime, card.values?.content_type
+        ]).toLowerCase();
+        var declaredType = firstNonEmptyString([
+            card.file_type, card.document_type,
+            card.file?.type, card.document?.type,
+            card.values?.file_type, card.values?.document_type, card.values?.type
+        ]).toLowerCase();
+        var url = getCardDocumentUrl(card);
+        var originalName = firstNonEmptyString([
+            card.original_name, card.values?.original_name
+        ]);
+        var documents = getCardDocuments(card);
+        return documents.some(function(document) {
+            return document.type === 'pdf'
+                || document.type === 'application/pdf'
+                || /\.pdf$/i.test(document.name)
+                || /^data:application\/pdf(?:;|,)/i.test(document.url)
+                || /\.pdf(?:$|[?#])/i.test(document.url);
+        }) || mime === 'application/pdf'
+            || declaredType === 'pdf'
+            || declaredType === 'application/pdf'
+            || /\.pdf$/i.test(originalName)
+            || /^data:application\/pdf(?:;|,)/i.test(url)
+            || /\.pdf(?:$|[?#])/i.test(url);
+    }
+
+    /** Ouvre un PDF dans un nouvel onglet, sinon affiche le détail de la fiche */
+    function openCard(card) {
+        var documents = getCardDocuments(card);
+        var hasGallery = getCardGallery(card).length > 0;
+        if (documents.length === 1 && !hasGallery && isPdfCard(card)) {
+            window.open(documents[0].url, '_blank', 'noopener,noreferrer');
+            return;
+        }
+        openDetailSheet(card);
+    }
+
+    /** Crée le pin SVG avec la couleur principale de l'application */
+    function createMapMarkerIcon() {
+        var color = typeof themeColors.accent === 'string' && themeColors.accent.trim()
+            ? themeColors.accent.trim()
+            : '#e63946';
+        if (window.CSS && CSS.supports && !CSS.supports('color', color)) color = '#e63946';
+
+        return L.divIcon({
+            className: 'ec-map-marker',
+            html: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 44" width="32" height="44" aria-hidden="true">'
+                + '<path d="M16 0C7.2 0 0 7.2 0 16c0 11.6 16 28 16 28s16-16.4 16-28C32 7.2 24.8 0 16 0z" fill="' + escapeHtml(color) + '" />'
+                + '<circle cx="16" cy="16" r="6" fill="#ffffff" />'
+                + '</svg>',
+            iconSize: [32, 44],
+            iconAnchor: [16, 44],
+            popupAnchor: [0, -42]
+        });
+    }
+
+    var markerPopupSequence = 0;
+
+    /** Lie une popup titrée et son action à un marqueur */
+    function bindCardMarker(marker, card, includeDescription) {
+        var popupId = 'ec-map-popup-action-' + (++markerPopupSequence);
+        var title = translateCardName(card);
+        var description = includeDescription ? translateCardDesc(card) : '';
+        var documents = getCardDocuments(card);
+        var opensPdfDirectly = documents.length === 1 && getCardGallery(card).length === 0 && isPdfCard(card);
+        var actionLabel = opensPdfDirectly ? 'Ouvrir le PDF' : t('see_more');
+        var popupHtml = '<strong>' + escapeHtml(title) + '</strong>'
+            + (description ? '<br>' + escapeHtml(description) : '')
+            + '<br><button type="button" class="ec-map-popup-action" id="' + popupId + '">' + escapeHtml(actionLabel) + '</button>';
+
+        marker.bindPopup(popupHtml);
+        marker.on('popupopen', function() {
+            var action = document.getElementById(popupId);
+            if (action) action.addEventListener('click', function() { openCard(card); }, { once: true });
+        });
     }
 
     // ═══════════════════════════════════════
@@ -935,9 +1170,10 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     function renderCardList() {
         if (!selectedSubCategory || !selectedSubCategory.cards) return '<p class="ec-error">' + t('no_card') + '</p>';
         return '<div class="ec-cards-grid">' + selectedSubCategory.cards.map(function(card, index) {
+            var gallery = getCardGallery(card);
             var imgSrc = card.image
                 ? escapeHtml(card.image)
-                : (getVideoThumbnail(card.video) || defaultPicture);
+                : (gallery[0] || getVideoThumbnail(card.video) || defaultPicture);
             var playOverlay = card.video
                 ? '<div class="ec-card-play-overlay" data-play-video="' + index + '" aria-label="Play video"><div class="ec-card-play-btn">▶</div></div>'
                 : '';
@@ -974,9 +1210,10 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
 
             var bounds = [];
             allPoints.forEach(function(card) {
-                var marker = L.marker([card.latitude, card.longitude]).addTo(leafletMapInstance);
-                marker.bindPopup('<strong>' + escapeHtml(translateCardName(card)) + '</strong><br>' + escapeHtml(translateCardDesc(card)));
-                marker.on('click', function() { openDetailSheet(card); });
+                var marker = L.marker([card.latitude, card.longitude], {
+                    icon: createMapMarkerIcon()
+                }).addTo(leafletMapInstance);
+                bindCardMarker(marker, card, true);
                 bounds.push([card.latitude, card.longitude]);
             });
 
@@ -1035,9 +1272,13 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
         var cardName   = translateCardName(card);
         var cardDesc   = translateCardDesc(card);
         var cardValues = translateCardValues(card);
+        var cardDocuments = getCardDocuments(card);
+        var cardGallery = getCardGallery(card);
 
         // Image (ou miniature vidéo en fallback)
-        var sheetImgSrc = card.image ? escapeHtml(card.image) : getVideoThumbnail(card.video);
+        var sheetImgSrc = card.image
+            ? escapeHtml(card.image)
+            : (cardGallery[0] || getVideoThumbnail(card.video));
         var imageHtml = sheetImgSrc
             ? '<img class="ec-sheet-img" src="' + sheetImgSrc + '" alt="' + escapeHtml(cardName) + '" onerror="this.style.display=\'none\'">'
             : '';
@@ -1052,6 +1293,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
         if (cardValues && typeof cardValues === 'object' && Object.keys(cardValues).length > 0) {
             valuesHtml = '<p class="ec-sheet-section-title">' + t('detailed_info') + '</p>';
             Object.entries(cardValues).forEach(function(entry) {
+                if (['original_name', 'cloud_url', 'origin_url'].indexOf(entry[0]) !== -1) return;
                 valuesHtml += '<div class="ec-detail-row">'
                     + '<span class="ec-detail-icon">ℹ️</span>'
                     + '<div class="ec-detail-content">'
@@ -1059,6 +1301,38 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
                     + '<p class="ec-detail-value">' + escapeHtml(String(entry[1])) + '</p>'
                     + '</div></div>';
             });
+        }
+
+        // Documents téléchargeables — une action distincte par fichier
+        var documentsHtml = '';
+        if (cardDocuments.length > 0) {
+            documentsHtml = '<p class="ec-sheet-section-title">' + resourceText('documents') + '</p>'
+                + '<div class="ec-sheet-documents">'
+                + cardDocuments.map(function(document) {
+                    var isPdf = document.type === 'pdf'
+                        || document.type === 'application/pdf'
+                        || /\.pdf$/i.test(document.name)
+                        || /\.pdf(?:$|[?#])/i.test(document.url);
+                    return '<a class="ec-sheet-document" href="' + escapeHtml(document.url) + '" target="_blank" rel="noopener noreferrer">'
+                        + '<span class="ec-sheet-document-icon">' + (isPdf ? 'PDF' : '↗') + '</span>'
+                        + '<span class="ec-sheet-document-name">' + escapeHtml(document.name) + '</span>'
+                        + '<span class="ec-sheet-document-action">' + resourceText('open') + '</span>'
+                        + '</a>';
+                }).join('')
+                + '</div>';
+        }
+
+        // Galerie — chaque image peut être ouverte dans un nouvel onglet
+        var galleryHtml = '';
+        if (cardGallery.length > 0) {
+            galleryHtml = '<p class="ec-sheet-section-title">' + resourceText('gallery') + '</p>'
+                + '<div class="ec-sheet-gallery">'
+                + cardGallery.map(function(imageUrl, index) {
+                    return '<a class="ec-sheet-gallery-link" href="' + escapeHtml(imageUrl) + '" target="_blank" rel="noopener noreferrer">'
+                        + '<img class="ec-sheet-gallery-img" src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(cardName) + ' ' + (index + 1) + '" loading="lazy">'
+                        + '</a>';
+                }).join('')
+                + '</div>';
         }
 
         // FAQ (questions/réponses) — affichée si le card en a
@@ -1100,7 +1374,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
             + '<h2 class="ec-sheet-title">' + escapeHtml(cardName) + '</h2>'
             + (subCategoryName ? '<span class="ec-sheet-badge">' + escapeHtml(subCategoryName) + '</span>' : '')
             + '<p class="ec-sheet-desc">' + escapeHtml(cardDesc) + '</p>'
-            + videoBtnHtml + valuesHtml + faqHtml + miniMapHtml + actionsHtml
+            + videoBtnHtml + valuesHtml + documentsHtml + galleryHtml + faqHtml + miniMapHtml + actionsHtml
             + '</div></div>';
 
         document.body.appendChild(overlay);
@@ -1131,7 +1405,9 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
                 if (!miniMapElement || typeof L === 'undefined') return;
                 var miniMap = L.map(miniMapElement, { zoomControl: false }).setView([card.latitude, card.longitude], 14);
                 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(miniMap);
-                L.marker([card.latitude, card.longitude]).addTo(miniMap);
+                L.marker([card.latitude, card.longitude], {
+                    icon: createMapMarkerIcon()
+                }).addTo(miniMap).bindPopup('<strong>' + escapeHtml(cardName) + '</strong>');
                 setTimeout(function() { miniMap.invalidateSize(); }, 100);
             }, 50);
         }
@@ -1329,7 +1605,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
         // ─── Clic sur une card → ouvrir le bottom sheet ───
         appContainer.querySelectorAll('[data-card]').forEach(function(cardElement) {
             cardElement.addEventListener('click', function() {
-                openDetailSheet(selectedSubCategory.cards[+cardElement.dataset.card]);
+                openCard(selectedSubCategory.cards[+cardElement.dataset.card]);
             });
         });
 
@@ -1377,9 +1653,10 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
 
                         var bounds = [];
                         geoCards.forEach(function(card) {
-                            var marker = L.marker([card.latitude, card.longitude]).addTo(miniMap);
-                            marker.bindPopup('<strong>' + escapeHtml(translateCardName(card)) + '</strong>');
-                            marker.on('click', function() { openDetailSheet(card); });
+                            var marker = L.marker([card.latitude, card.longitude], {
+                                icon: createMapMarkerIcon()
+                            }).addTo(miniMap);
+                            bindCardMarker(marker, card, false);
                             bounds.push([card.latitude, card.longitude]);
                         });
 
