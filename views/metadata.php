@@ -18,6 +18,14 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
 ?>
 
 <style>
+  html {
+    scroll-behavior: smooth;
+  }
+
+  .em-wrap.em-mobile-filters-open {
+    z-index: 100000 !important;
+  }
+
   /* ═══════════════════════════════════════
      BASE — Layout principal et typographie
      ═══════════════════════════════════════ */
@@ -112,6 +120,8 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
 
   .em-main {
     flex: 1;
+    min-width: 0;
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -143,7 +153,8 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
   }
 
   .em-tab {
-    flex-shrink: 0;
+    flex: 0 1 auto;
+    max-width: 100%;
     padding: 8px 16px;
     border-radius: 8px;
     font-size: 14px;
@@ -154,7 +165,9 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
     color: #64748b;
     transition: all 0.15s;
     font-family: inherit;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: left;
   }
 
   .em-tab:hover {
@@ -271,6 +284,8 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
 
   .em-map-legend-item {
     display: flex;
+    min-width: 0;
+    max-width: 100%;
     align-items: center;
     gap: 6px;
     font-size: 12px;
@@ -278,6 +293,7 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
     color: #64748b;
     cursor: pointer;
     transition: opacity 0.15s;
+    overflow-wrap: anywhere;
   }
 
   .em-map-legend-item:hover {
@@ -358,8 +374,11 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
      ═══════════════════════════════════════ */
   .em-layout {
     display: flex;
+    min-width: 0;
+    width: 100%;
     gap: 24px;
     align-items: flex-start;
+    scroll-margin-top: calc(var(--em-header-offset, 0px) + 16px);
   }
 
   .em-sidebar {
@@ -369,6 +388,7 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
     align-self: flex-start;
     max-height: calc(100vh - var(--em-header-offset, 0px) - 48px);
     overflow-y: auto;
+    scroll-behavior: smooth;
   }
 
 
@@ -382,10 +402,32 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
   }
 
   .em-filters-title {
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: left;
+    font-family: inherit;
     font-size: 15px !important;
     font-weight: 700 !important;
     margin: 0 0 16px !important;
     color: #0f172a;
+  }
+
+  .em-filters-title-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .em-filters-title-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .em-filters-title-hint {
+    display: none;
   }
 
   .em-filter-group {
@@ -532,6 +574,7 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
     position: absolute;
     top: 10px;
     left: 10px;
+    max-width: calc(100% - 20px);
     padding: 4px 10px;
     border-radius: 6px;
     font-size: 11px;
@@ -539,6 +582,9 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
     text-transform: uppercase;
     letter-spacing: 0.3px;
     backdrop-filter: blur(8px);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
   }
 
   /* Badges de catégorie (couleurs par type) */
@@ -840,6 +886,7 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
     padding: 20px 24px;
     overflow-y: auto;
     flex: 1;
+    scroll-behavior: smooth;
   }
 
   .em-modal-entry {
@@ -1075,6 +1122,10 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
     .em-sidebar {
       flex-basis: auto;
       height: auto;
+      position: static;
+      width: 100%;
+      max-height: none;
+      overflow: visible;
     }
 
     /* Sidebar collapsible sur mobile */
@@ -1095,17 +1146,40 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
       justify-content: space-between;
     }
 
-    .em-filters-title::after {
-      content: '▾';
+    .em-filters-title-hint {
+      display: block;
+      margin-top: 2px;
       font-size: 12px;
-      color: #94a3b8;
-      transition: transform 0.2s;
+      line-height: 1.3;
+      font-weight: 500;
+      color: #64748b;
+    }
+
+    .em-filters-title::after {
+      content: 'Fermer';
+      margin-left: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: <?php echo $primaryColor; ?>;
     }
 
     .em-filters.collapsed .em-filters-title::after {
-      transform: rotate(-90deg);
+      content: 'Ouvrir →';
+      transform: none;
     }
 
+    .em-filters.collapsed {
+      padding: 0;
+      border-color: <?php echo $primaryColor; ?>55;
+      background: <?php echo $primaryColorLight; ?>;
+      box-shadow: none;
+    }
+
+    .em-filters.collapsed .em-filters-title {
+      padding: 14px 16px;
+    }
+
+    .em-filters.collapsed .em-stats,
     .em-filters.collapsed .em-filter-group,
     .em-filters.collapsed .em-filter-reset,
     .em-filters.collapsed .em-search-wrap {
@@ -1114,6 +1188,11 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
   }
 
   @media (max-width: 720px) {
+    html.em-filters-open,
+    html.em-filters-open body {
+      overflow: hidden !important;
+    }
+
     .em-wrap {
       padding: 0 12px;
     }
@@ -1146,6 +1225,51 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
     .em-tabs .em-map-toggle {
       padding: 6px 12px;
       font-size: 13px;
+    }
+
+    .em-filter-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100000;
+      background: rgba(15, 23, 42, 0.48);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+
+    .em-filter-backdrop.is-visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .em-filters:not(.collapsed) {
+      position: fixed;
+      z-index: 100001;
+      top: max(16px, env(safe-area-inset-top));
+      right: 12px;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      left: 12px;
+      max-height: none;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scroll-behavior: smooth;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+    }
+
+    .em-filters:not(.collapsed) .em-filters-title {
+      position: sticky;
+      top: -14px;
+      z-index: 1;
+      margin: -14px -14px 16px !important;
+      padding: 14px;
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .em-filters:not(.collapsed) .em-filters-title::after {
+      content: '✕';
+      transform: none;
+      font-size: 16px;
     }
 
     /* Carte mobile */
@@ -1577,8 +1701,18 @@ if (is_array($payload) && ! empty($payload['field_labels'])) {
 
       <!-- Sidebar — Filtres par type et équipements -->
       <aside class="em-sidebar">
-        <div class="em-filters">
-          <h3 class="em-filters-title">Filtres</h3>
+        <div class="em-filters collapsed">
+          <button type="button" class="em-filters-title" aria-expanded="false">
+            <span>
+              <span class="em-filters-title-main">
+                <svg class="em-filters-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M4 6h16M7 12h10M10 18h4"></path>
+                </svg>
+                <span>Filtres</span>
+              </span>
+              <span class="em-filters-title-hint">Affiner les résultats par type ou équipement</span>
+            </span>
+          </button>
           <div class="em-stats">
 
             <div class="em-stat">Total : <strong id="em-stat-total"><?php echo $totalItems; ?></strong></div>
@@ -1920,6 +2054,24 @@ if (is_array($payload) && ! empty($payload['field_labels'])) {
         });
       }
 
+      /**
+       * Replace le début du layout sous l'éventuel header sticky du thème.
+       */
+      function scrollToLayoutTop() {
+        var layout = document.querySelector('.em-layout');
+        if (!layout) return;
+
+        var headerOffset = parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue('--em-header-offset')
+        ) || 0;
+        var top = window.scrollY + layout.getBoundingClientRect().top - headerOffset - 16;
+
+        window.scrollTo({
+          top: Math.max(0, top),
+          behavior: 'smooth'
+        });
+      }
+
       // ─── Onglets de catégories ───
       document.querySelectorAll('.em-tab').forEach(function(tab) {
         tab.addEventListener('click', function() {
@@ -1938,13 +2090,7 @@ if (is_array($payload) && ! empty($payload['field_labels'])) {
           }
 
           applyFilters();
-
-          // Remonte en haut du body scrollable
-          var mainBody = document.querySelector('.em-main-body');
-          if (mainBody) mainBody.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-          });
+          scrollToLayoutTop();
         });
       });
 
@@ -1985,6 +2131,7 @@ if (is_array($payload) && ! empty($payload['field_labels'])) {
           }
 
           applyFilters();
+          scrollToLayoutTop();
         });
       });
 
@@ -2442,13 +2589,56 @@ if (is_array($payload) && ! empty($payload['field_labels'])) {
         var filtersTitle = document.querySelector('.em-filters-title');
         if (!filtersContainer || !filtersTitle) return;
 
+        var wrap = filtersContainer.closest('.em-wrap');
+        var backdrop = document.createElement('div');
+        backdrop.className = 'em-filter-backdrop';
+        filtersContainer.parentNode.insertBefore(backdrop, filtersContainer);
+
+        function isMobileOverlay() {
+          return window.innerWidth <= 720;
+        }
+
+        function setFiltersOpen(isOpen) {
+          filtersContainer.classList.toggle('collapsed', !isOpen);
+          filtersTitle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          backdrop.classList.toggle('is-visible', isOpen && isMobileOverlay());
+          document.documentElement.classList.toggle('em-filters-open', isOpen && isMobileOverlay());
+          if (wrap) wrap.classList.toggle('em-mobile-filters-open', isOpen && isMobileOverlay());
+        }
+
         if (window.innerWidth <= 1024) {
-          filtersContainer.classList.add('collapsed');
+          setFiltersOpen(false);
+        } else {
+          setFiltersOpen(true);
         }
 
         filtersTitle.addEventListener('click', function() {
           if (window.innerWidth <= 1024) {
-            filtersContainer.classList.toggle('collapsed');
+            setFiltersOpen(filtersContainer.classList.contains('collapsed'));
+          }
+        });
+
+        backdrop.addEventListener('click', function() {
+          setFiltersOpen(false);
+        });
+
+        document.addEventListener('keydown', function(event) {
+          if (event.key === 'Escape' && !filtersContainer.classList.contains('collapsed')) {
+            setFiltersOpen(false);
+          }
+        });
+
+        window.addEventListener('resize', function() {
+          if (window.innerWidth > 1024) {
+            setFiltersOpen(true);
+          } else if (window.innerWidth > 720) {
+            backdrop.classList.remove('is-visible');
+            document.documentElement.classList.remove('em-filters-open');
+            if (wrap) wrap.classList.remove('em-mobile-filters-open');
+          } else if (!filtersContainer.classList.contains('collapsed')) {
+            backdrop.classList.add('is-visible');
+            document.documentElement.classList.add('em-filters-open');
+            if (wrap) wrap.classList.add('em-mobile-filters-open');
           }
         });
       }
@@ -2499,158 +2689,6 @@ if (is_array($payload) && ! empty($payload['field_labels'])) {
       }, {
         passive: true
       });
-
-
-      // Gestion du scroll (priorité au .em-main-body vers la bas et à la page vers le haut)
-      const wrap = document.querySelector('.em-wrap');
-      const mainBody = document.querySelector('.em-main-body');
-
-      if (wrap && mainBody) {
-        let mode = 'page';
-        let touchStartY = 0;
-
-        const clampDelta = (deltaY) => Math.max(-100, Math.min(100, deltaY));
-
-        function getHeaderOffset() {
-          return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--em-header-offset')) || 0;
-        }
-
-        const getState = () => {
-          const headerOffset = getHeaderOffset();
-          const wrapTop = wrap.getBoundingClientRect().top;
-          return {
-            wrapReached: wrapTop <= headerOffset + 1,
-            wrapVisible: wrapTop >= headerOffset - 1,
-            mainAtTop: mainBody.scrollTop <= 0,
-            mainAtBottom: mainBody.scrollTop + mainBody.clientHeight >= mainBody.scrollHeight - 2,
-            pageAtTop: window.scrollY <= 0,
-          };
-        };
-
-        function scrollPageTowardWrap(delta) {
-          const headerOffset = getHeaderOffset();
-          const wrapTop = wrap.getBoundingClientRect().top;
-
-          if (delta > 0 && wrapTop <= headerOffset + 1) {
-            mode = 'main';
-            return;
-          }
-
-          // Clamp delta pour ne jamais dépasser headerOffset en un seul event.
-          // Sans ça, un scroll rapide (events qui s'accumulent avant la prochaine frame)
-          // peut faire passer wrap.top largement au-dessus de headerOffset ; le snap de
-          // correction n'intervient qu'à la frame suivante, après que main a déjà repris
-          // la main — d'où un overshoot visible.
-          const maxDown = wrapTop - headerOffset; // distance positive jusqu'à headerOffset
-          const clamped = delta > 0 ? Math.min(delta, maxDown) : delta;
-          window.scrollBy(0, clamped);
-
-          requestAnimationFrame(() => {
-            const newWrapTop = wrap.getBoundingClientRect().top;
-            if (newWrapTop <= headerOffset + 1) {
-              window.scrollBy(0, newWrapTop - headerOffset);
-              mode = 'main';
-            }
-          });
-        }
-
-        function handleDelta(delta) {
-          const state = getState();
-
-          // =========================
-          // MODE PAGE (montée/descente initiale)
-          // =========================
-          if (mode === 'page') {
-            if (delta < 0) {
-              // Remonte librement jusqu'en haut
-              window.scrollBy(0, delta);
-              return;
-            }
-            scrollPageTowardWrap(delta);
-            return;
-          }
-
-          // =========================
-          // MODE MAIN (scroll des fiches)
-          // =========================
-          if (mode === 'main') {
-            if (delta < 0 && state.mainAtTop) {
-              // Remonte la page jusqu'à ce que le wrap soit visible
-              mode = 'page';
-              return;
-            }
-
-            if (delta > 0 && state.mainAtBottom) {
-              mode = 'page-bottom';
-              return;
-            }
-
-            mainBody.scrollTop += delta;
-            return;
-          }
-
-          // =========================
-          // MODE PAGE-BOTTOM (fin de page)
-          // =========================
-          if (mode === 'page-bottom') {
-            if (delta < 0) {
-              // Clamp delta pour ne jamais dépasser headerOffset en un seul event
-              // (symétrique au clamp de scrollPageTowardWrap, évite l'overshoot en scroll rapide).
-              const headerOffset = getHeaderOffset();
-              const wrapTop = wrap.getBoundingClientRect().top;
-              const maxUp = wrapTop - headerOffset; // négatif tant que wrap est sous headerOffset
-              const clamped = Math.max(delta, maxUp);
-              window.scrollBy(0, clamped);
-              requestAnimationFrame(() => {
-                const newOffset = getHeaderOffset();
-                const newWrapTop = wrap.getBoundingClientRect().top;
-                if (newWrapTop >= newOffset - 1) {
-                  // Snap symétrique (correction d'overshoot résiduel)
-                  if (newWrapTop > newOffset) {
-                    window.scrollBy(0, newWrapTop - newOffset);
-                  }
-                  mode = 'main';
-                  // Replace le main body tout en bas pour reprendre depuis le bas
-                  mainBody.scrollTop = mainBody.scrollHeight;
-                }
-              });
-              return;
-            }
-            window.scrollBy(0, delta);
-          }
-        }
-
-        // =========================
-        // WHEEL (desktop)
-        // =========================
-        document.addEventListener('wheel', (e) => {
-          if (!wrap.contains(e.target)) return;
-          e.preventDefault();
-          handleDelta(clampDelta(e.deltaY));
-        }, {
-          passive: false
-        });
-
-        // =========================
-        // TOUCH (mobile/tablette)
-        // =========================
-        document.addEventListener('touchstart', (e) => {
-          if (!wrap.contains(e.target)) return;
-          touchStartY = e.touches[0].clientY;
-        }, {
-          passive: true
-        });
-
-        document.addEventListener('touchmove', (e) => {
-          if (!wrap.contains(e.target)) return;
-          e.preventDefault();
-          const delta = clampDelta(touchStartY - e.touches[0].clientY);
-          touchStartY = e.touches[0].clientY;
-          handleDelta(delta);
-        }, {
-          passive: false
-        });
-      }
 
     })();
   </script>

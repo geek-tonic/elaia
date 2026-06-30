@@ -39,14 +39,20 @@ function elaia_maybe_run_upgrade_fallback()
   if (!current_user_can('manage_options')) return;
 
   $installed = get_option('elaia_plugin_version');
-  if (!$installed || version_compare($installed, ELAIA_VERSION, '<')) {
+  if (!$installed || version_compare(elaia_normalize_version($installed), elaia_normalize_version(ELAIA_VERSION), '<')) {
     elaia_run_upgrade_tasks($installed ?: '0.0.0', ELAIA_VERSION);
     update_option('elaia_plugin_version', ELAIA_VERSION, false);
   }
 }
 
+function elaia_normalize_version($version)
+{
+  return preg_replace('/^[vV]\.?/', '', trim((string) $version));
+}
+
 function elaia_run_upgrade_tasks($from_version, $to_version)
 {
+  $from_version = elaia_normalize_version($from_version);
   // Version où tu introduis la migration (mets la vraie)
   if (version_compare($from_version, '1.2.10', '<')) {
     if (function_exists('elaia_create_or_update_pages')) {

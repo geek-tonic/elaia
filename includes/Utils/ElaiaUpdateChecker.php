@@ -51,6 +51,15 @@ class ElaiaUpdateChecker
     return json_decode(wp_remote_retrieve_body($remote));
   }
 
+  /**
+   * Normalise un numéro de version en retirant un éventuel préfixe
+   * "v" / "V" suivi d'un point optionnel (v1.3.3, V1.3.3, v.1.3.3, V.1.3.3).
+   */
+  private function normalize_version($version)
+  {
+    return preg_replace('/^[vV]\.?/', '', trim((string) $version));
+  }
+
   public function info($res, $action, $args)
   {
     if ('plugin_information' !== $action) {
@@ -92,7 +101,7 @@ class ElaiaUpdateChecker
     $remote = $this->request();
     if (
       $remote &&
-      version_compare($this->version, $remote->version, '<') &&
+      version_compare($this->normalize_version($this->version), $this->normalize_version($remote->version), '<') &&
       version_compare($remote->requires, get_bloginfo('version'), '<=') &&
       version_compare($remote->requires_php, PHP_VERSION, '<=')
     ) {

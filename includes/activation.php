@@ -72,10 +72,7 @@ function elaia_activate_plugin()
 /**
  * Fonction appelée lors de la désactivation du plugin (par site)
  */
-function elaia_deactivate_plugin()
-{
-
-}
+function elaia_deactivate_plugin() {}
 
 /**
  * Crée/met à jour les pages selon les droits du client :
