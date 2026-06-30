@@ -16,7 +16,7 @@ jobs:
       - name: Extract version
         id: version
         run: |
-          echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
 
       - name: Update plugin_infos.json
         run: |
