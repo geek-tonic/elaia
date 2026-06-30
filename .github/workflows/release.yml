@@ -15,16 +15,8 @@ jobs:
 
       - name: Extract version
         id: version
-        env:
-          RAW_TAG: ${{ github.event.release.tag_name || github.ref_name }}
         run: |
-          VERSION="$(echo "${RAW_TAG}" | sed -E 's/^[vV]\.?//')"
-          if [ -z "${VERSION}" ]; then
-            echo "::error::Version vide (tag introuvable: '${RAW_TAG}')"
-            exit 1
-          fi
-          echo "Version extraite: ${VERSION}"
-          echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
 
       - name: Update plugin_infos.json
         run: |
