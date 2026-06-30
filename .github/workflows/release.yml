@@ -16,7 +16,8 @@ jobs:
       - name: Extract version
         id: version
         run: |
-          echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          VERSION="$(echo "${GITHUB_REF_NAME}" | sed -E 's/^[vV]\.?//')"
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Update plugin_infos.json
         run: |
