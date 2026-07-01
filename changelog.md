@@ -1,5 +1,34 @@
 # Changelog
 
+## [Non publié]
+### Corrigé
+- **`ElaiaUpdateChecker`** : la version renvoyée à WordPress (`new_version`, `version`) est désormais normalisée (préfixe `v` retiré) afin que le cœur WP ne stocke jamais un numéro qui casse ses propres comparaisons. `slug` corrigé vers le dossier `elaia` (au lieu du chemin `elaia/elaia.php`) — conforme à `plugins_api`, répare le lien « Voir les détails » et les bascules de mise à jour auto. Garde `is_object()` sur le transient. Transmission des `icons` distantes si présentes.
+
+### Ajouté
+- **`upgrade.php`** : `elaia_create_or_update_pages()` s'exécute à **chaque** mise à jour du plugin (plus seulement depuis une version < 1.2.10). Les liens `elaia-glossary` / `elaia-metadatas` / `my-elaia-plugin` sont donc (re)créés automatiquement après une MAJ, **sans désactivation/réactivation ni flush des permaliens** (ce sont des pages WP standard, fonctionnelles dès leur publication).
+- **`upgrade.php`** : auto-réparation sur `admin_init` — si une page Elaia attendue est absente, la création est relancée (vérifié au plus 1×/h, recherche par slug indépendante du parent → compatible mode groupe). La page corpus `my-elaia-plugin` n'est attendue publiée que si le client a un abonnement my-elaia.
+
+## [1.3.7] - 2026-06-30
+### Corrigé
+- **Workflow de release** : la version est lue depuis `github.event.release.tag_name` (extraction fiabilisée après plusieurs itérations).
+
+## [1.3.6] - 2026-06-30
+### Corrigé
+- **Workflow de release** : extraction de version depuis `release.tag_name` + garde anti-version-vide (itérations de la chaîne de déploiement).
+
+## [1.3.5] - 2026-06-30
+### Corrigé
+- **`ElaiaUpdateChecker`** : normalisation du préfixe `v` dans la comparaison de versions (`normalize_version()`). **Corrige le bug majeur qui empêchait de proposer les mises à jour** : les tags mélangeaient `v1.3.x` et `1.3.x`, or `version_compare('1.3.3', 'v1.3.4', '<')` renvoie `false` à cause du `v` → WordPress ne voyait jamais la version distante comme plus récente. ⚠️ Les installs restées sur une version antérieure à 1.3.5 (ancien checker) doivent être mises à jour manuellement une fois pour se débloquer.
+- Convention de tag standardisée **sans préfixe `v`** à partir de cette version.
+
+## [1.3.4] - 2026-06-24
+### Corrigé
+- **Erreur 403 / referer** (`Corpus.php`, `Metadata.php`, `Faq.php`) : utilisation du domaine courant au lieu du `Referer` pour la résolution du chatbot — corrige les accès refusés selon le contexte de navigation.
+- **Marqueur Leaflet cassé** : remplacement par un `divIcon` SVG épinglé (évite l'icône par défaut manquante/brisée derrière un CDN ou un optimiseur).
+
+### Ajouté
+- **Page Metadata** : affichage de la galerie d'images et des documents PDF dans la modale détail, avec nouvelles cartes dédiées (PDF / Galerie).
+
 ## [1.3.3] - 2026-05-23
 ### Ajouté
 - **Vidéo d'accueil sur la page corpus** : si l'admin renseigne une URL dans MyElaia > Paramétrage (champ "Vidéo d'accueil"), la vidéo se lance automatiquement au premier visit du visiteur. Le marqueur "vue" est stocké dans `localStorage` sous la clé `elaia_welcome_video_seen_<chatbotKey>` et contient l'URL (pas un booléen) : si l'admin change la vidéo, le visiteur la revoit automatiquement.
