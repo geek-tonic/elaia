@@ -53,11 +53,61 @@ function elaia_normalize_version($version)
 function elaia_run_upgrade_tasks($from_version, $to_version)
 {
   $from_version = elaia_normalize_version($from_version);
-  // Version où tu introduis la migration (mets la vraie)
+
+  if (!function_exists('elaia_create_or_update_pages')) return;
+
+  // À CHAQUE mise à jour : (re)crée/actualise les pages Elaia.
+  // Les liens elaia-glossary / elaia-metadatas / my-elaia-plugin sont des pages
+  // WordPress standard : elles fonctionnent dès leur publication, sans flush des
+  // permaliens ni désactivation/réactivation. La fonction est idempotente
+  // (create-or-update) et l'API est cachée 1h, donc l'appel est sûr et peu coûteux.
+  elaia_create_or_update_pages();
+
+  // Migration historique < 1.2.10 : flush des règles conservé à l'identique.
   if (version_compare($from_version, '1.2.10', '<')) {
-    if (function_exists('elaia_create_or_update_pages')) {
+    flush_rewrite_rules(false);
+  }
+}
+
+/**
+ * Auto-réparation : si une des pages Elaia manque (supprimée, non publiée…),
+ * on relance la création — sans attendre une MAJ ni une réactivation.
+ * Vérifié au plus une fois par heure, et la création n'est déclenchée que si
+ * une page est réellement absente.
+ */
+add_action('admin_init', 'elaia_maybe_selfheal_pages', 2);
+
+function elaia_maybe_selfheal_pages()
+{
+  if (!current_user_can('manage_options')) return;
+  if (!function_exists('elaia_create_or_update_pages')) return;
+
+  if (get_transient('elaia_pages_checked')) return;
+  set_transient('elaia_pages_checked', 1, HOUR_IN_SECONDS);
+
+  // FAQ + Metadatas : toujours attendues publiées.
+  $slugs = [ELAIA_PAGE_FAQ_REWRITE, ELAIA_PAGE_METADATA_REWRITE];
+
+  // Corpus (my-elaia-plugin) : attendu publié UNIQUEMENT si le client a un
+  // abonnement my-elaia (sinon son état normal est "dépubliée"). L'appel API
+  // est mis en cache 1h, donc pas de surcoût réseau à chaque check.
+  $sub = function_exists('elaia_get_myelaia_domains') ? elaia_get_myelaia_domains() : [];
+  if (!empty($sub['has_subscription'])) {
+    $slugs[] = ELAIA_PAGE_CORPUS_REWRITE;
+  }
+
+  // Recherche par slug indépendamment du parent (compatible mode groupe/paths).
+  foreach ($slugs as $slug) {
+    $found = get_posts([
+      'post_type'   => 'page',
+      'post_status' => 'publish',
+      'name'        => $slug,
+      'numberposts' => 1,
+      'fields'      => 'ids',
+    ]);
+    if (empty($found)) {
       elaia_create_or_update_pages();
-      flush_rewrite_rules(false);
+      return;
     }
   }
 }
