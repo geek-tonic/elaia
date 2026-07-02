@@ -109,13 +109,17 @@ class ElaiaUpdateChecker
       version_compare($remote->requires_php, PHP_VERSION, '<=')
     ) {
       $res = new \stdClass();
+      $res->id          = $this->plugin_slug;          // identifiant attendu par les gestionnaires (WP Umbrella, ManageWP…)
       $res->slug        = dirname($this->plugin_slug); // 'elaia' (dossier)
       $res->plugin      = $this->plugin_slug;          // 'elaia/elaia.php'
       // Version normalisée (sans préfixe v) pour que WordPress ne stocke jamais
       // un numéro qui casserait ses propres comparaisons internes.
-      $res->new_version = $this->normalize_version($remote->version);
-      $res->tested      = $remote->tested;
-      $res->package     = $remote->download_url;
+      $res->new_version  = $this->normalize_version($remote->version);
+      $res->url          = isset($remote->homepage) ? $remote->homepage : 'https://ela-ia.com/';
+      $res->tested       = $remote->tested;
+      $res->requires     = isset($remote->requires) ? $remote->requires : '';
+      $res->requires_php = isset($remote->requires_php) ? $remote->requires_php : '';
+      $res->package      = $remote->download_url;
 
       if (!empty($remote->icons)) {
         $res->icons = (array) $remote->icons;

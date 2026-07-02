@@ -3,6 +3,7 @@
 ## [Non publié]
 ### Corrigé
 - **`ElaiaUpdateChecker`** : la version renvoyée à WordPress (`new_version`, `version`) est désormais normalisée (préfixe `v` retiré) afin que le cœur WP ne stocke jamais un numéro qui casse ses propres comparaisons. `slug` corrigé vers le dossier `elaia` (au lieu du chemin `elaia/elaia.php`) — conforme à `plugins_api`, répare le lien « Voir les détails » et les bascules de mise à jour auto. Garde `is_object()` sur le transient. Transmission des `icons` distantes si présentes.
+- **`ElaiaUpdateChecker`** : objet de mise à jour complété (`id`, `url`, `requires`, `requires_php`) pour que les gestionnaires tiers (WP Umbrella, ManageWP, MainWP…) détectent et proposent bien la MAJ — ils lisent le transient `update_plugins` de WordPress et ignorent parfois les entrées incomplètes.
 
 ### Ajouté
 - **`upgrade.php`** : `elaia_create_or_update_pages()` s'exécute à **chaque** mise à jour du plugin (plus seulement depuis une version < 1.2.10). Les liens `elaia-glossary` / `elaia-metadatas` / `my-elaia-plugin` sont donc (re)créés automatiquement après une MAJ, **sans désactivation/réactivation ni flush des permaliens** (ce sont des pages WP standard, fonctionnelles dès leur publication).
