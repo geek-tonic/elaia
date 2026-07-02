@@ -105,6 +105,18 @@ if (!function_exists('elaia_prepare_corpus_payload')) {
         $agent_picture = $app_config['avatar']['image_url'] ?? ($settings['agent_picture'] ?? null);
         $hook_text = $app_config['tagline'] ?? ($settings['hook'] ?? '');
         $primary_color = $app_config['primary_color'] ?? ($settings['primary_color'] ?? '#16a34a');
+
+        // Traductions AppConfig (source partagée avec l'app MyElaia) :
+        //   translations[locale] = { tagline, default_prompt, prompt_suggestions[] }
+        // On expose le tagline traduit par locale ; le fallback FR est géré côté vue.
+        $app_translations = (isset($app_config['translations']) && is_array($app_config['translations']))
+            ? $app_config['translations'] : [];
+        $hook_text_translations = [];
+        foreach ($app_translations as $locale => $trans) {
+            if (!empty($trans['tagline'])) {
+                $hook_text_translations[$locale] = $trans['tagline'];
+            }
+        }
         $welcome_video_url = $app_config['welcome_video_url'] ?? ($settings['welcome_video_url'] ?? null);
 
         // Hero : type + valeurs associées. Si AppConfig absent on retombe sur
@@ -122,14 +134,41 @@ if (!function_exists('elaia_prepare_corpus_payload')) {
         // sinon on garde les suggests legacy. On normalise pour que le JS ait
         // toujours { title, real_prompt, translations? }.
         if (!empty($app_config['prompt_suggestions'])) {
-            $suggests = array_map(function ($s) {
-                return [
+            $base = array_values($app_config['prompt_suggestions']);
+            $suggests = [];
+            foreach ($base as $index => $s) {
+                $position = isset($s['position']) ? $s['position'] : $index;
+
+                // Traductions par locale : match par position (comme l'app MyElaia),
+                // fallback par index. On ne garde que les titres non vides.
+                $trans = [];
+                foreach ($app_translations as $locale => $data) {
+                    $localeSuggestions = (isset($data['prompt_suggestions']) && is_array($data['prompt_suggestions']))
+                        ? array_values($data['prompt_suggestions']) : [];
+                    if (empty($localeSuggestions)) continue;
+
+                    $match = null;
+                    foreach ($localeSuggestions as $ls) {
+                        if (isset($ls['position']) && $ls['position'] == $position) {
+                            $match = $ls;
+                            break;
+                        }
+                    }
+                    if ($match === null && isset($localeSuggestions[$index])) {
+                        $match = $localeSuggestions[$index];
+                    }
+                    if ($match !== null && !empty($match['title'])) {
+                        $trans[$locale] = ['title' => $match['title']];
+                    }
+                }
+
+                $suggests[] = [
                     'title' => $s['title'] ?? '',
                     'real_prompt' => $s['prompt'] ?? '',
                     'color' => $s['color'] ?? null,
-                    'translations' => null, // les traductions AppConfig sont gérées séparément côté payload `translations`
+                    'translations' => !empty($trans) ? $trans : null,
                 ];
-            }, $app_config['prompt_suggestions']);
+            }
         }
 
         include_once ELAIA_PLUGIN_DIR . 'views/corpus.php';

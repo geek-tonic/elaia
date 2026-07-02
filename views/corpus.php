@@ -523,6 +523,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
          'agentPicture'   => $agent_picture,
          'defaultPicture' => $default_picture,
          'hookText'       => $hook_text,
+         'hookTextTranslations' => $hook_text_translations,
          'primaryColor'   => $primary_color,
          'corpus'         => $corpus,
          'suggests'       => $suggests,
@@ -568,6 +569,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
     var agentPicture   = config.agentPicture    || null;
     var defaultPicture = config.defaultPicture  || null;
     var hookText       = config.hookText        || '';
+    var hookTextTranslations = config.hookTextTranslations || {};
     var hasPlanning    = !!config.hasPlanning;
     var welcomeVideoUrl = config.welcomeVideo    || null;
     var welcomeVideoStorageKey = 'elaia_welcome_video_seen_' + (chatbotKey || 'default');
@@ -763,6 +765,8 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
 
     /** Titre traduit d'une suggestion */
     function translateSuggestTitle(suggest) { return (currentLang !== 'fr' && suggest.translations?.[currentLang]?.title) || suggest.title || ''; }
+    // Tagline (accroche) : traduction AppConfig par locale, fallback sur le texte de base (FR)
+    function translateHook() { return (currentLang !== 'fr' && hookTextTranslations[currentLang]) || hookText; }
 
     /**
      * Retourne la FAQ d'une card traduite dans la langue courante.
@@ -1118,7 +1122,7 @@ $accentColor  = esc_attr($primary_color);                    // Couleur d'accent
             + '</div></div></div></div>'
             + avatarHtml
             + '<h1 class="ec-header-title" style="color:' + headerText + '">' + escapeHtml(title) + '</h1>'
-            + (hookText ? '<span class="ec-header-badge">' + escapeHtml(hookText) + '</span>' : '')
+            + (translateHook() ? '<span class="ec-header-badge">' + escapeHtml(translateHook()) + '</span>' : '')
             + '</div>'
             // Bouton CTA "Commencer la discussion"
             + '<div class="ec-cta-wrap"><button class="ec-start-chat-btn" id="ec-start-chat">'
