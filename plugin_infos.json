@@ -1,6 +1,6 @@
 {
   "name": "Elaia",
-  "slug": "elaia/elaia.php",
+  "slug": "elaia",
   "author": "<a href='https://ela-ia.com'>Elaia</a>",
   "author_profile": "https://geek-tonic.com",
   "version": "%RELEASE_VERSION%",
@@ -12,7 +12,7 @@
   "sections": {
     "description": "Elaia WP Plugin",
     "installation": "Install and activate our plugin",
-    "changelog": "<h2>%RELEASE_VERSION%</h2><ul><li>Compatibilité thèmes FSE (block themes) : header/footer désormais rendus correctement, JS inline non cassé par wptexturize, carte Leaflet qui s'initialise même si différée par un optimiseur JS</li><li>Refonte complète de la page Metadata : filtres latéraux dynamiques (type + équipements), recherche insensible aux accents, carte Leaflet améliorée (légende synchronisée, popup avec lien fiche, recentrage), modale détail, scroll en 3 phases page→main→page-bottom, responsive desktop/tablette/mobile</li><li>Compatibilité thèmes classiques sans the_content() préservée (Falconheavy, Flower Campings)</li><li>Carte Leaflet exclue des optimiseurs WP Rocket / CloudFlare Auto-Minify</li><li>Multisite : cache d'abonnement partitionné par sous-site (plus de pollution croisée)</li><li>Gate 404 sur la page corpus si le client n'a pas d'abonnement my-elaia</li><li>Mode dev : override du domaine via ELAIA_DEV_DOMAIN + environnement VS Code .devcontainer (Docker WordPress + MySQL)</li></ul>"
+    "changelog": "<h2>%RELEASE_VERSION%</h2><ul><li>Mises à jour automatiques fiabilisées : correction de la comparaison de versions (préfixe v) qui empêchait la MAJ d'être proposée, objet de mise à jour complété pour les gestionnaires (WP Umbrella, ManageWP, MainWP)</li><li>Création/actualisation automatique des pages FAQ, Metadatas et Corpus à chaque mise à jour, sans réactivation du plugin ni réglage des permaliens ; auto-réparation si une page vient à manquer</li><li>Compatibilité thèmes FSE (block themes) et thèmes classiques sans the_content() ; carte Leaflet robuste face aux optimiseurs (WP Rocket / Cloudflare)</li><li>Page Metadata : filtres latéraux dynamiques, recherche insensible aux accents, carte améliorée, galerie d'images et documents PDF dans la modale</li><li>Multisite : cache d'abonnement partitionné par sous-site (plus de pollution croisée)</li><li>Gate 404 sur la page corpus si le client n'a pas d'abonnement my-elaia</li></ul>"
   },
   "banners": {
     "low": "https://ela-ia.com/wp-content/uploads/elaia/banniere-elaia-772x250.jpg",

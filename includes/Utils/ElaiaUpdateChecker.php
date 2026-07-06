@@ -75,8 +75,8 @@ class ElaiaUpdateChecker
 
     $res = new \stdClass();
     $res->name           = $remote->name;
-    $res->slug           = $this->plugin_slug;
-    $res->version        = $remote->version;
+    $res->slug           = dirname($this->plugin_slug); // 'elaia' (dossier attendu par plugins_api)
+    $res->version        = $this->normalize_version($remote->version);
     $res->tested         = $remote->tested;
     $res->requires       = $remote->requires;
     $res->requires_php   = $remote->requires_php;
@@ -94,6 +94,9 @@ class ElaiaUpdateChecker
 
   public function update($transient)
   {
+    if (!is_object($transient)) {
+      $transient = new \stdClass();
+    }
     if (empty($transient->checked)) {
       return $transient;
     }
@@ -106,11 +109,21 @@ class ElaiaUpdateChecker
       version_compare($remote->requires_php, PHP_VERSION, '<=')
     ) {
       $res = new \stdClass();
-      $res->slug        = $this->plugin_slug;
-      $res->plugin      = $this->plugin_slug;
-      $res->new_version = $remote->version;
-      $res->tested      = $remote->tested;
-      $res->package     = $remote->download_url;
+      $res->id          = $this->plugin_slug;          // identifiant attendu par les gestionnaires (WP Umbrella, ManageWP…)
+      $res->slug        = dirname($this->plugin_slug); // 'elaia' (dossier)
+      $res->plugin      = $this->plugin_slug;          // 'elaia/elaia.php'
+      // Version normalisée (sans préfixe v) pour que WordPress ne stocke jamais
+      // un numéro qui casserait ses propres comparaisons internes.
+      $res->new_version  = $this->normalize_version($remote->version);
+      $res->url          = isset($remote->homepage) ? $remote->homepage : 'https://ela-ia.com/';
+      $res->tested       = $remote->tested;
+      $res->requires     = isset($remote->requires) ? $remote->requires : '';
+      $res->requires_php = isset($remote->requires_php) ? $remote->requires_php : '';
+      $res->package      = $remote->download_url;
+
+      if (!empty($remote->icons)) {
+        $res->icons = (array) $remote->icons;
+      }
 
       $transient->response[$this->plugin_slug] = $res;
     }
