@@ -22,6 +22,24 @@ class ElaiaUpdateChecker
     add_filter('plugins_api', array($this, 'info'), 20, 3);
     add_filter('site_transient_update_plugins', array($this, 'update'));
     add_action('upgrader_process_complete', array($this, 'purge'), 10, 2);
+    // La version d'en-tête vient du tag GitHub (ex. "v1.3.3"). Les gestionnaires
+    // tiers (WP Umbrella, ManageWP…) refont leur propre version_compare sur cette
+    // valeur et le préfixe "v" casse la détection de MAJ. On normalise donc la
+    // version telle qu'exposée par get_plugins().
+    add_filter('all_plugins', array($this, 'normalize_listed_version'));
+  }
+
+  /**
+   * Retire le préfixe "v" de la version d'Elaia dans la liste des extensions,
+   * afin que les gestionnaires externes comparent bien "1.3.3" et non "v1.3.3".
+   */
+  public function normalize_listed_version($plugins)
+  {
+    if (isset($plugins[$this->plugin_slug]['Version'])) {
+      $plugins[$this->plugin_slug]['Version'] = $this->normalize_version($plugins[$this->plugin_slug]['Version']);
+    }
+
+    return $plugins;
   }
 
   private function request()

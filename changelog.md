@@ -6,6 +6,7 @@
 
 ### Corrigé
 - **Loader de langue du chatbot** ([enqueues.php](includes/enqueues.php)) : le basque était exclu et toute langue non listée forçait `en`, d'où un chatbot en **anglais sur les pages basques** (client Lehena) alors que les traductions `eus` existent. Désormais : `eu` ajouté aux langues autorisées, mapping des codes site → widget (`eu→eus`, `ca→cat`), et **repli sur `fr`** (langue de base) au lieu de `en`. Corrige au passage un bug latent catalan (`ca` transmis tel quel au lieu de `cat`).
+- **`ElaiaUpdateChecker`** : nouveau filtre `all_plugins` (`normalize_listed_version`) qui retire le préfixe `v` de la **version affichée** par `get_plugins()`. Les gestionnaires tiers (WP Umbrella, ManageWP…) refont leur propre `version_compare` sur cette valeur : `v1.3.3` cassait leur détection de MAJ. Complète la normalisation déjà faite sur les données de MAJ.
 
 ## [1.3.9] - 2026-07-02
 ### Corrigé
