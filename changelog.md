@@ -1,14 +1,25 @@
 # Changelog
 
 ## [Non publié]
+### Ajouté
+- **Shortcode `[elaia_faq_group]`** ([FaqGroup.php](includes/Pages/FaqGroup.php), [views/faq-group.php](views/faq-group.php)) : publie un **groupe de FAQ ciblé** (sous-ensemble du corpus public) sur n'importe quelle page ou article. Rendu **côté serveur** (endpoint `/v1/chatbot/faq-group`) avec cache transient et balisage **JSON-LD FAQPage** pour le SEO/GEO. Usage : `[elaia_faq_group group="slug-du-groupe"]`, attribut `domain` optionnel pour le mode groupe. Les shortcodes existants (`[elaia_faq]`, `[elaia_metadatas]`, `[elaia_corpus]`) restent inchangés.
+
 ### Corrigé
-- **Page corpus — traduction du tagline et des suggestions FAQ** ([Corpus.php](includes/Pages/Corpus.php), [views/corpus.php](views/corpus.php)) : le tagline (« accroche ») et les chips de suggestions restaient en français quel que soit le choix de langue. Le plugin ne lisait pas le nœud `app_config.translations` (le tagline n'avait aucun mécanisme de traduction, les suggestions voyaient leurs traductions forcées à `null`). Désormais : `translateHook()` applique `translations[locale].tagline`, et les suggestions récupèrent leur titre traduit par correspondance de `position` (fallback index), avec repli FR — logique alignée sur l'app MyElaia (`localizedTagline` / `localizedSuggestions`).
-- **`ElaiaUpdateChecker`** : la version renvoyée à WordPress (`new_version`, `version`) est désormais normalisée (préfixe `v` retiré) afin que le cœur WP ne stocke jamais un numéro qui casse ses propres comparaisons. `slug` corrigé vers le dossier `elaia` (au lieu du chemin `elaia/elaia.php`) — conforme à `plugins_api`, répare le lien « Voir les détails » et les bascules de mise à jour auto. Garde `is_object()` sur le transient. Transmission des `icons` distantes si présentes.
-- **`ElaiaUpdateChecker`** : objet de mise à jour complété (`id`, `url`, `requires`, `requires_php`) pour que les gestionnaires tiers (WP Umbrella, ManageWP, MainWP…) détectent et proposent bien la MAJ — ils lisent le transient `update_plugins` de WordPress et ignorent parfois les entrées incomplètes.
+- **Loader de langue du chatbot** ([enqueues.php](includes/enqueues.php)) : le basque était exclu et toute langue non listée forçait `en`, d'où un chatbot en **anglais sur les pages basques** (client Lehena) alors que les traductions `eus` existent. Désormais : `eu` ajouté aux langues autorisées, mapping des codes site → widget (`eu→eus`, `ca→cat`), et **repli sur `fr`** (langue de base) au lieu de `en`. Corrige au passage un bug latent catalan (`ca` transmis tel quel au lieu de `cat`).
+
+## [1.3.9] - 2026-07-02
+### Corrigé
+- **Mises à jour automatiques du plugin fiabilisées** ([ElaiaUpdateChecker.php](includes/Utils/ElaiaUpdateChecker.php)) :
+  - Normalisation du préfixe `v` dans **toutes** les comparaisons **et** dans la version renvoyée à WordPress (`new_version`, `version`) — le mélange de tags `v1.3.x` / `1.3.x` cassait `version_compare` et empêchait la MAJ d'être proposée.
+  - `slug` renvoyé corrigé vers le dossier `elaia` (conforme à `plugins_api`), objet de MAJ complété (`id`, `url`, `requires`, `requires_php`, `icons`) pour la détection par les gestionnaires tiers (WP Umbrella, ManageWP, MainWP), garde `is_object()` sur le transient.
+  - ⚠️ Les installs restées **antérieures à 1.3.5** (ancien checker) doivent être mises à jour manuellement une fois pour se débloquer.
+- **Page corpus — traduction du tagline et des suggestions FAQ** ([Corpus.php](includes/Pages/Corpus.php), [views/corpus.php](views/corpus.php)) : ils restaient en français quelle que soit la langue choisie, car le plugin ne lisait pas `app_config.translations`. Désormais `translateHook()` applique `translations[locale].tagline`, et les suggestions récupèrent leur titre traduit par correspondance de `position` (fallback index), avec repli FR — logique alignée sur l'app MyElaia (`localizedTagline` / `localizedSuggestions`).
 
 ### Ajouté
-- **`upgrade.php`** : `elaia_create_or_update_pages()` s'exécute à **chaque** mise à jour du plugin (plus seulement depuis une version < 1.2.10). Les liens `elaia-glossary` / `elaia-metadatas` / `my-elaia-plugin` sont donc (re)créés automatiquement après une MAJ, **sans désactivation/réactivation ni flush des permaliens** (ce sont des pages WP standard, fonctionnelles dès leur publication).
-- **`upgrade.php`** : auto-réparation sur `admin_init` — si une page Elaia attendue est absente, la création est relancée (vérifié au plus 1×/h, recherche par slug indépendante du parent → compatible mode groupe). La page corpus `my-elaia-plugin` n'est attendue publiée que si le client a un abonnement my-elaia.
+- **(Re)création automatique des pages à chaque mise à jour** ([upgrade.php](includes/upgrade.php)) : `elaia_create_or_update_pages()` s'exécute désormais à **chaque** MAJ (plus seulement depuis une version < 1.2.10). Les pages `elaia-glossary` / `elaia-metadatas` / `my-elaia-plugin` sont donc restaurées automatiquement **sans désactivation/réactivation ni flush des permaliens** (pages WP standard, actives dès publication).
+- **Auto-réparation des pages** ([upgrade.php](includes/upgrade.php)) : sur `admin_init`, si une page attendue est absente, la création est relancée (vérifié au plus 1×/h, recherche par slug indépendante du parent → compatible mode groupe et multisite). La page corpus n'est attendue publiée que si le client a un abonnement my-elaia.
+
+_Note : builds intermédiaires 1.3.8 le même jour, remplacés par 1.3.9._
 
 ## [1.3.7] - 2026-06-30
 ### Corrigé

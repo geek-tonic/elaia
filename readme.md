@@ -12,8 +12,21 @@ Actuellement à la version **%RELEASE_VERSION%**.
 - **Page FAQ** (`/elaia-glossary/`) : questions fréquentes générées par le chatbot, au format Schema.org FAQPage
 - **Page Métadonnées** (`/elaia-metadatas/`) : carte interactive des points d'intérêt autour de vous (hébergements, activités, villes…)
 - **Page Corpus** (`/my-elaia-plugin/`) : application mobile-like avec accès au chatbot et aux informations pratiques (abonnés My Elaia uniquement)
+- **Groupe de FAQ** (shortcode `[elaia_faq_group]`) : publiez un sous-ensemble ciblé de FAQ sur n'importe quelle page, avec balisage Schema.org FAQPage (SEO/GEO)
+- **Multilingue** : chatbot et pages traduits selon la langue du site (fr, en, es, de, nl, it, pt, basque, catalan), avec repli automatique sur le français
 - **Mode groupe** : support des sites mono-domaine avec plusieurs sous-sites (pages créées automatiquement sous chaque path)
 - **Sitemap** : les pages Elaia apparaissent automatiquement dans les sitemaps (Yoast, RankMath, SEOPress, natif WP)
+
+## Shortcodes
+
+| Shortcode | Rôle |
+|---|---|
+| `[elaia_faq]` | Page FAQ complète générée par le chatbot |
+| `[elaia_faq_group group="slug"]` | Groupe de FAQ ciblé (rendu serveur + JSON-LD FAQPage) |
+| `[elaia_metadatas]` | Carte interactive des points d'intérêt |
+| `[elaia_corpus]` | Application corpus (abonnés My Elaia) |
+
+Chaque shortcode accepte un attribut optionnel `domain="…"` pour forcer le domaine résolu (utile en mode groupe).
 
 ## Installation
 
@@ -26,7 +39,9 @@ Les pages FAQ et Métadonnées sont créées automatiquement à l'activation. La
 
 ## Mise à jour
 
-Le plugin se met à jour automatiquement depuis l'interface WordPress. Vous pouvez également le mettre à jour manuellement en téléchargeant la dernière version.
+Le plugin se met à jour automatiquement depuis l'interface WordPress (compatible avec les gestionnaires de maintenance type WP Umbrella / ManageWP / MainWP). Vous pouvez également le mettre à jour manuellement en téléchargeant la dernière version.
+
+À chaque mise à jour, les pages Elaia (FAQ, Métadonnées, Corpus) sont vérifiées et restaurées automatiquement si nécessaire — **sans réactivation du plugin ni réglage des permaliens**.
 
 ## Prérequis
 
