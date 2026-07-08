@@ -1,11 +1,15 @@
 <?php
 
-if (!defined('ABSPATH') || !defined('ELAIA_PLUGIN_DIR')) exit;
+if (! defined('ABSPATH') || ! defined('ELAIA_PLUGIN_DIR')) {
+    exit;
+}
 
 add_action('wp_enqueue_scripts', function () {
 
     global $post;
-    if ($post && $post->post_name === ELAIA_PAGE_CORPUS_REWRITE) return;
+    if ($post && $post->post_name === ELAIA_PAGE_CORPUS_REWRITE) {
+        return;
+    }
 
     /**
      * 1) Styles
@@ -14,7 +18,7 @@ add_action('wp_enqueue_scripts', function () {
     wp_enqueue_style('elaia-window-style');
     wp_add_inline_style(
         'elaia-window-style',
-        <<<CSS
+        <<<'CSS'
 .elaia-window-open{
     position: fixed;
     inset: 0;
@@ -49,10 +53,14 @@ CSS
 
     wp_add_inline_script(
         'elaia-loader',
-        <<<JS
+        <<<'JS'
 (function () {
-  // Langues autorisées côté Elaia
-  var ALLOWED = ['es','fr','nl','en','de','ca','it','pt'];
+  // Langues autorisées côté Elaia (codes 2 lettres tels qu'exposés par le site)
+  var ALLOWED = ['es','fr','nl','en','de','ca','it','pt','eu'];
+
+  // Correspondance code site (2 lettres) -> code attendu par le widget Elaia.
+  // Le basque et le catalan utilisent un code 3 lettres côté chatbot (eus/cat).
+  var MAP = { eu: 'eus', ca: 'cat' };
 
   function normalizeLang(input) {
     if (!input) return '';
@@ -72,14 +80,16 @@ CSS
   // Fallback URL : "/de/..." "/es/..." etc.
   function getLangFromPath() {
     var p = (location.pathname || '').toLowerCase();
-    var match = p.match(/^\\/(es|fr|nl|en|de|ca|it|pt)(\\/|$)/);
+    var match = p.match(/^\/(es|fr|nl|en|de|ca|it|pt|eu)(\/|$)/);
     return match ? match[1] : '';
   }
 
   function getFinalLang() {
     var lang = getLangFromHtml() || getLangFromPath();
-    if (ALLOWED.indexOf(lang) === -1) lang = 'en';
-    return lang;
+    // Repli sur la langue de base du chatbot (français) plutôt que l'anglais :
+    // une langue non listée retombe ainsi sur le contenu source, pas sur 'en'.
+    if (ALLOWED.indexOf(lang) === -1) lang = 'fr';
+    return MAP[lang] || lang;
   }
 
   function loadScript(src) {
@@ -107,7 +117,7 @@ JS,
      */
     wp_add_inline_script(
         'elaia-loader',
-        <<<JS
+        <<<'JS'
 (function(){
     const iframeReady = () => {
         const iframe = document.getElementById('elaia-window-iframe');
@@ -189,7 +199,7 @@ JS,
 
     wp_add_inline_script(
         'elaia-loader',
-        <<<JS
+        <<<'JS'
 (function(){
     const TARGET_CLASSES = ['opened', 'toggled'];
     let formStates = new Map();
