@@ -558,16 +558,16 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
     background: #f1f5f9;
   }
 
-  .em-card-placeholder {
-    width: 100%;
-    height: 160px;
-    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    font-size: 14px;
-    font-weight: 500;
+  /* Image absente / non chargée : on masque la zone image et on
+     ramène le badge catégorie dans le flux, en haut de la card. */
+  .em-card-img-wrap--empty {
+    padding: 12px 12px 0;
+  }
+
+  .em-card-img-wrap--empty .em-card-badge {
+    position: static;
+    display: inline-block;
+    max-width: 100%;
   }
 
   .em-card-badge {
@@ -1298,8 +1298,7 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
       gap: 14px !important;
     }
 
-    .em-card-img,
-    .em-card-placeholder {
+    .em-card-img {
       height: 140px !important;
     }
 
@@ -1376,8 +1375,7 @@ $primaryColorLight = $primaryColor.'18'; // Variante transparente pour hover/foc
       height: 220px;
     }
 
-    .em-card-img,
-    .em-card-placeholder {
+    .em-card-img {
       height: 120px !important;
     }
 
@@ -1825,12 +1823,10 @@ if (is_array($payload) && ! empty($payload['field_labels'])) {
                 ])); ?>">
 
                 <!-- Image + badge catégorie -->
-                <div class="em-card-img-wrap">
-                  <?php if ($itemImage && filter_var($itemImage, FILTER_VALIDATE_URL)) { ?>
-                    <img class="em-card-img" src="<?php echo esc_url($itemImage); ?>" alt="<?php echo esc_attr($itemName); ?>" loading="lazy" onerror="this.style.setProperty('display','none','important');this.nextElementSibling.style.display='flex';">
-                    <div class="em-card-placeholder" style="display:none;">📷 Image indisponible</div>
-                  <?php } else { ?>
-                    <div class="em-card-placeholder">📷 Pas d'image</div>
+                <?php $hasImage = $itemImage && filter_var($itemImage, FILTER_VALIDATE_URL); ?>
+                <div class="em-card-img-wrap<?php echo $hasImage ? '' : ' em-card-img-wrap--empty'; ?>">
+                  <?php if ($hasImage) { ?>
+                    <img class="em-card-img" src="<?php echo esc_url($itemImage); ?>" alt="<?php echo esc_attr($itemName); ?>" loading="lazy" onerror="var w=this.closest('.em-card-img-wrap');this.remove();w.classList.add('em-card-img-wrap--empty');">
                   <?php } ?>
                   <span class="em-card-badge <?php echo esc_attr($categoryInfo['badge']); ?>"><?php echo esc_html($categoryInfo['label']); ?></span>
                 </div>
